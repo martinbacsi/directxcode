@@ -234,7 +234,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 
 	HWND hWnd = CreateWindowEx(NULL,  
 		winClass.lpszClassName,		// window class name
-		"Ambient Color",					// window caption
+		"Ambient Color",			// window caption
 		WS_OVERLAPPEDWINDOW, 		// window style
 		32,							// initial x position
 		32,							// initial y position
