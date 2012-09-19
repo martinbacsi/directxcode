@@ -158,7 +158,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
 	case   WM_PAINT:
 		DrawRectangle() ;
-		ValidateRect(g_Hwnd, NULL) ;
 		return 0 ;
 
 	case WM_KEYDOWN: 
