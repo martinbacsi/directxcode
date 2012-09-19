@@ -17,15 +17,15 @@ VOID DrawPoint(HWND hwnd, int x, int y, COLORREF pixelColor)
 
 VOID DrawCircle(HWND hwnd, int centerX, int centerY, int radius)
 {
-	int startX = centerX + radius;
-	int startY = centerY;
+	// Start from the most right point of the circle
+	int startX = radius;
+	int startY = 0;
 
-	for (int angle = 0; angle < 360; ++angle)
+	for (int angle = 0; angle < 1000; ++angle)
 	{
 		int currentX = startX * cosf(angle) - startY * sinf(angle) + centerX;
-		int currentY = startX * sinf(angle) + startY * cosf(angle) ;
-		currentY = -currentY;
-		DrawPoint(hwnd, currentX, -currentY, 0x00ff0000);
+		int currentY = startX * sinf(angle) + startY * cosf(angle) + centerY;
+		DrawPoint(hwnd, currentX, currentY, 0x00ff0000);
 	}
 }
         
@@ -41,7 +41,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		hdc = BeginPaint (hwnd, &ps) ;
 		GetClientRect (hwnd, &rect) ;
 		DrawText (hdc, TEXT ("Hello, World!"), -1, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER) ;
-		DrawCircle(hwnd, 100, 100, 100);
+		DrawCircle(hwnd, 500, 500, 100);
 		EndPaint (hwnd, &ps) ;
 		return 0 ;
 	
