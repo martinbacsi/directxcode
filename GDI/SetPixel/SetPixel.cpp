@@ -21,7 +21,7 @@ VOID DrawCircle(HWND hwnd, int centerX, int centerY, int radius)
 	int startX = radius;
 	int startY = 0;
 
-	for (int angle = 0; angle < 1000; ++angle)
+	for (int angle = 0; angle < 100; ++angle)
 	{
 		int currentX = startX * cosf(angle) - startY * sinf(angle) + centerX;
 		int currentY = startX * sinf(angle) + startY * cosf(angle) + centerY;
