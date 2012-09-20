@@ -52,18 +52,47 @@ VOID CreateD2DResource(HWND hWnd)
 	}
 }
 
+VOID CalculateTranslationMatrix(D2D1_MATRIX_3X2_F* matrix)
+{
+	static float totalTime = 0.0f;
+
+	// Get start time
+	static DWORD startTime = timeGetTime();
+
+	// Get current time
+	DWORD currentTime = timeGetTime();
+
+	// Calculate time elapsed
+	float timeElapsed = (currentTime - startTime) * 0.001f;
+
+	// Accumulate total time elapsed
+	totalTime += timeElapsed;
+
+	// Build up the translation matrix
+	matrix->_11 = 1.0f;
+	matrix->_12 = 0.0f;
+	matrix->_21 = 0.0f;
+	matrix->_22 = 1.0f;
+	matrix->_31 = totalTime;
+	matrix->_32 = totalTime;
+}
+
 VOID DrawRectangle(HWND hwnd)
 {
 	CreateD2DResource(hwnd) ;
 
 	g_pRenderTarget->BeginDraw() ;
 
-	// Clear background color to White
+	// Clear background color to white
 	g_pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
+
+	D2D1_MATRIX_3X2_F matrix;// = D2D1::Matrix3x2F::Translation(100, 100);
+	CalculateTranslationMatrix(&matrix);
+	g_pRenderTarget->SetTransform(&matrix);
 
 	// Draw Rectangle
 	g_pRenderTarget->DrawRectangle(
-		D2D1::RectF(100.f, 100.f, 500.f, 500.f),
+		D2D1::RectF(10.f, 10.f, 50.f, 50.f),
 		g_pBlackBrush
 		);
 
@@ -138,17 +167,17 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
     }   
     
 	HWND hwnd = CreateWindowEx(NULL,  
-		"Direct2D",					// window class name
-		"Draw Rectangle",			// window caption
-		WS_OVERLAPPEDWINDOW, 		// window style
-		CW_USEDEFAULT,				// initial x position
-		CW_USEDEFAULT,				// initial y position
-		600,						// initial x size
-		600,						// initial y size
-		NULL,						// parent window handle
-		NULL,						// window menu handle
-		hInstance,					// program instance handle
-		NULL) ;						// creation parameters
+		"Direct2D",						// window class name
+		"Render target translation",	// window caption
+		WS_OVERLAPPEDWINDOW, 			// window style
+		CW_USEDEFAULT,					// initial x position
+		CW_USEDEFAULT,					// initial y position
+		600,							// initial x size
+		600,							// initial y size
+		NULL,							// parent window handle
+		NULL,							// window menu handle
+		hInstance,						// program instance handle
+		NULL) ;							// creation parameters
 
         ShowWindow (hwnd, iCmdShow) ;
 		UpdateWindow (hwnd) ;

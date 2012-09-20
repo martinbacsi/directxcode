@@ -1,3 +1,11 @@
+/*
+Description:  This demo show you how to translate a geometry in Direct2D, we create a translation
+			  matrix based on the total time elapsed from the program start and use CreateTransformedGeometry
+			  to create a transformed geometry with the matrix, then draw this geometry
+Date:		  2012-09-19
+Author:		  zdd(vckzdd@gmail.com)
+*/
+
 #include <windows.h>
 #include <D2D1.h> 
 
@@ -9,39 +17,21 @@ ID2D1SolidColorBrush*		g_pBlackBrush			= NULL;	// A black brush, reflect the lin
 ID2D1RectangleGeometry*		g_pRectangleGeometry	= NULL;	// rectangle geometry
 ID2D1TransformedGeometry*	g_pTransformedGeometry	= NULL;	// transformed geometry
 
-float g_totalTime = 0.0f;
-
-RECT rc ;		// Render area
-HWND g_Hwnd ;	// Window handle
-
 VOID CreateD2DResource(HWND hWnd)
 {
-	// This function was called in the DrawRectangle function which in turn called to response the
-	// WM_PAINT Message, to avoid creating resource every time, we test the pointer to g_pRenderTarget
-	// If the resource already create, skip the function
 	if (!g_pRenderTarget)
 	{
 		HRESULT hr ;
 
-#if defined(DEBUG) || defined(_DEBUG) // for debug build
-		D2D1_FACTORY_OPTIONS options ;
-		options.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION ;
-		hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, options, &g_pD2DFactory) ;
-		if (FAILED(hr))
-		{
-			MessageBox(hWnd, "Create D2D factory failed!", "Error", 0) ;
-			return ;
-		}
-
-#else	// for release build
 		hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &g_pD2DFactory) ;
 		if (FAILED(hr))
 		{
 			MessageBox(hWnd, "Create D2D factory failed!", "Error", 0) ;
 			return ;
 		}
-#endif
+
 		// Obtain the size of the drawing area
+		RECT rc ;
 		GetClientRect(hWnd, &rc) ;
 
 		// Create a Direct2D render target
@@ -83,29 +73,38 @@ VOID CreateD2DResource(HWND hWnd)
 	}
 }
 
-// Calculate the transform matrix
-VOID CalculateTransform(D2D1_MATRIX_3X2_F* matrix)
+VOID CalculateTranslationMatrix(D2D1_MATRIX_3X2_F* matrix)
 {
-	;
-}
+	static float totalTime = 0.0f;
 
-VOID DrawRectangle()
-{
-	// Calculate last time
-	static float lastTime = (float)timeGetTime();
+	// Get start time
+	static DWORD startTime = timeGetTime();
 
-	// Calculate current time
-	float currTime  = (float)timeGetTime();
+	// Get current time
+	DWORD currentTime = timeGetTime();
 
 	// Calculate time elapsed
-	float timeDelta = (currTime - lastTime) * 0.001f;
+	float timeElapsed = (currentTime - startTime) * 0.001f;
 
-	g_totalTime += timeDelta;
+	// Accumulate total time elapsed
+	totalTime += timeElapsed;
 
-	CreateD2DResource(g_Hwnd) ;
+	// Build up the translation matrix
+	matrix->_11 = 1.0f;
+	matrix->_12 = 0.0f;
+	matrix->_21 = 0.0f;
+	matrix->_22 = 1.0f;
+	matrix->_31 = totalTime;
+	matrix->_32 = totalTime;
+}
+
+VOID DrawRectangle(HWND hwnd)
+{
+	CreateD2DResource(hwnd) ;
 
 	// Create a translation matrix based on the time elapsed
-	D2D1_MATRIX_3X2_F matrix = D2D1::Matrix3x2F::Translation(g_totalTime, g_totalTime);
+	D2D1_MATRIX_3X2_F matrix ; 
+	CalculateTranslationMatrix( &matrix );
 
 	// Create a transformed geometry
 	HRESULT hr = g_pD2DFactory->CreateTransformedGeometry(
@@ -154,7 +153,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
 	case   WM_PAINT:
 		{
-			DrawRectangle() ;
+			DrawRectangle(hwnd) ;
 			return 0 ;
 		}
 
@@ -204,9 +203,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
 		return 0 ;  
     }   
     
-	g_Hwnd = CreateWindowEx(NULL,  
+	HWND hwnd = CreateWindowEx(NULL,  
 		"Direct2D",					// window class name
-		"Draw Rectangle",			// window caption
+		"Geometry Translation",		// window caption
 		WS_OVERLAPPEDWINDOW, 		// window style
 		CW_USEDEFAULT,				// initial x position
 		CW_USEDEFAULT,				// initial y position
@@ -217,8 +216,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
 		hInstance,					// program instance handle
 		NULL) ;						// creation parameters
 
-        ShowWindow (g_Hwnd, iCmdShow) ;
-		UpdateWindow (g_Hwnd) ;
+        ShowWindow (hwnd, iCmdShow) ;
+		UpdateWindow (hwnd) ;
 
 		MSG    msg ;  
 		ZeroMemory(&msg, sizeof(msg)) ;

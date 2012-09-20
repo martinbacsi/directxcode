@@ -1,24 +1,19 @@
 #include <windows.h>
-#include <D2D1.h> // header for Direct2D
+#include <D2D1.h>
 
 #define SAFE_RELEASE(P) if(P){P->Release() ; P = NULL ;}
 
-ID2D1Factory* pD2DFactory = NULL ;				// Direct2D factory
-ID2D1HwndRenderTarget* pRenderTarget = NULL;	// Render target
-ID2D1SolidColorBrush* pBlackBrush = NULL ;		// A black brush, reflect the line color
-ID2D1SolidColorBrush* pRedBrush = NULL ;
-
-RECT rc ;		// Render area
-HWND g_Hwnd ;	// Window handle
+ID2D1Factory*			pD2DFactory = NULL ;	// Direct2D factory
+ID2D1HwndRenderTarget*	pRenderTarget = NULL;	// Render target
+ID2D1SolidColorBrush*	pBlackBrush = NULL ;	// A black brush, reflect the line color
 
 VOID CreateD2DResource(HWND hWnd)
 {
-	// This function was called in the DrawRectangle function which in turn called to response the
-	// WM_PAINT Message, to avoid creating resource every time, we test the pointer to pRenderTarget
-	// If the resource already create, skip the function
 	if (!pRenderTarget)
 	{
-		HRESULT hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pD2DFactory) ;
+		HRESULT hr ;
+
+		hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &pD2DFactory) ;
 		if (FAILED(hr))
 		{
 			MessageBox(hWnd, "Create D2D factory failed!", "Error", 0) ;
@@ -26,6 +21,7 @@ VOID CreateD2DResource(HWND hWnd)
 		}
 
 		// Obtain the size of the drawing area
+		RECT rc ;
 		GetClientRect(hWnd, &rc) ;
 
 		// Create a Direct2D render target
@@ -43,68 +39,84 @@ VOID CreateD2DResource(HWND hWnd)
 			return ;
 		}
 
-		// Create a black brush
+		// Create a brush
 		hr = pRenderTarget->CreateSolidColorBrush(
 			D2D1::ColorF(D2D1::ColorF::Black),
 			&pBlackBrush
 			) ;
 		if (FAILED(hr))
 		{
-			MessageBox(hWnd, "Create black brush failed!", "Error", 0) ;
-			return ;
-		}
-
-		// Create a red brush
-		hr = pRenderTarget->CreateSolidColorBrush(
-			D2D1::ColorF(D2D1::ColorF::Red),
-			&pRedBrush
-			) ;
-		if (FAILED(hr))
-		{
-			MessageBox(hWnd, "Create red brush failed!", "Error", 0) ;
+			MessageBox(hWnd, "Create brush failed!", "Error", 0) ;
 			return ;
 		}
 	}
 }
 
-VOID DrawRectangle()
+// Draw a rectangle
+void DrawTriangle(D2D1_POINT_2F p0, D2D1_POINT_2F p1, D2D1_POINT_2F p2, 
+				  ID2D1HwndRenderTarget* pRenderTarget, 
+				  ID2D1SolidColorBrush* pBlackBrush,
+				  FLOAT strokeWidth = 1.0f,
+				  ID2D1StrokeStyle *strokeStyle = NULL)
 {
-	CreateD2DResource(g_Hwnd) ;
+	pRenderTarget->DrawLine(p0, p1, pBlackBrush);
+	pRenderTarget->DrawLine(p1, p2, pBlackBrush) ;
+	pRenderTarget->DrawLine(p2, p0, pBlackBrush) ;
+}
+
+// Draw a circle
+void DrawCircle(D2D1_POINT_2F center, FLOAT radius,
+				ID2D1HwndRenderTarget* pRenderTarget, 
+				ID2D1SolidColorBrush* pBlackBrush,
+				FLOAT strokeWidth = 1.0f,
+				ID2D1StrokeStyle *strokeStyle = NULL)
+{
+	D2D1_ELLIPSE ellipse = D2D1::Ellipse(center, radius, radius) ;
+	pRenderTarget->DrawEllipse(ellipse, pBlackBrush) ;
+}
+
+VOID DrawRectangle(HWND hwnd)
+{
+	CreateD2DResource(hwnd) ;
 
 	pRenderTarget->BeginDraw() ;
 
 	// Clear background color to dark cyan
-	pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::DarkCyan));
+	pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
 
 	// Draw Rectangle
-	D2D1_RECT_F rectangle = D2D1::RectF(200.f, 200.f, 400.f, 400.f) ;
 	pRenderTarget->DrawRectangle(
-		rectangle,
+		D2D1::RectF(100.f, 100.f, 500.f, 500.f),
 		pBlackBrush
 		);
 
-	//// Translate
-	//pRenderTarget->SetTransform(
-	//	D2D1::Matrix3x2F::Translation(100.f, 100.f)
-	//	) ;
+	//// Draw Rounded Rectangle
+	//D2D1_ROUNDED_RECT roundedRect = D2D1::RoundedRect(
+	//	D2D1::RectF(100.f, 100.f, 500.f, 500.f),
+	//	50.0f,
+	//	50.0f) ;
+	//pRenderTarget->DrawRoundedRectangle(roundedRect, pBlackBrush, 1.0f) ;
 
-	//// Rotate
-	//pRenderTarget->SetTransform(
-	//	D2D1::Matrix3x2F::Rotation(45.f, D2D1::Point2F(300.f, 300.f))
+	//// Draw Ellipse
+	//D2D1_ELLIPSE ellipse = D2D1::Ellipse(D2D1::Point2F(100.0f, 100.0f), 100.0f, 50.0f) ;
+	//pRenderTarget->DrawEllipse(ellipse, pBlackBrush) ;
+
+	//// Draw line
+	//pRenderTarget->DrawLine(
+	//	D2D1::Point2F(100.f, 100.f), 
+	//	D2D1::Point2F(500.f, 500.f), 
+	//	pBlackBrush);
+
+	//// Draw triangle
+	//DrawTriangle(D2D1::Point2F(300.f, 10.f), D2D1::Point2F(100.f, 210.f), D2D1::Point2F(500.f, 210.f),
+	//	pRenderTarget,
+	//	pBlackBrush
 	//	);
 
-	//// Scale
-	//pRenderTarget->SetTransform(
-	//	D2D1::Matrix3x2F::Scale(2.f, 2.f, D2D1::Point2F(300.f, 300.f))
-	//	) ;
-
-	// Skew
-	pRenderTarget->SetTransform(
-		D2D1::Matrix3x2F::Skew(30.f, 0.f, D2D1::Point2F(200.f, 200.f))
-		) ;
-
-	// Fill the rectangle
-	pRenderTarget->FillRectangle(rectangle, pRedBrush) ;
+	//// Draw circle
+	//DrawCircle(D2D1::Point2F(300.f, 300.f), 100.0f,
+	//	pRenderTarget,
+	//	pBlackBrush) ;
 
 	HRESULT hr = pRenderTarget->EndDraw() ;
 	if (FAILED(hr))
@@ -119,17 +131,15 @@ VOID Cleanup()
 {
 	SAFE_RELEASE(pRenderTarget) ;
 	SAFE_RELEASE(pBlackBrush) ;
-	SAFE_RELEASE(pRedBrush) ;
 	SAFE_RELEASE(pD2DFactory) ;
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)   
 {
-	switch (message)    
-	{
+    switch (message)    
+    {
 	case   WM_PAINT:
-		DrawRectangle() ;
-		ValidateRect(g_Hwnd, NULL) ;
+		DrawRectangle(hwnd) ;
 		return 0 ;
 
 	case WM_KEYDOWN: 
@@ -149,15 +159,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		Cleanup(); 
 		PostQuitMessage( 0 ); 
 		return 0; 
-	}
+    }
 
 	return DefWindowProc (hwnd, message, wParam, lParam) ;
 }
 
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow )
 {
-
-	WNDCLASSEX winClass ;
+        
+    WNDCLASSEX winClass ;
 
 	winClass.lpszClassName = "Direct2D";
 	winClass.cbSize        = sizeof(WNDCLASSEX);
@@ -171,14 +181,14 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
 	winClass.lpszMenuName  = NULL;
 	winClass.cbClsExtra    = 0;
 	winClass.cbWndExtra    = 0;
-
+	
 	if (!RegisterClassEx (&winClass))   
 	{
 		MessageBox ( NULL, TEXT( "This program requires Windows NT!" ), "error", MB_ICONERROR) ;
 		return 0 ;  
-	}   
-
-	g_Hwnd = CreateWindowEx(NULL,  
+    }   
+    
+	HWND hwnd = CreateWindowEx(NULL,  
 		"Direct2D",					// window class name
 		"Draw Rectangle",			// window caption
 		WS_OVERLAPPEDWINDOW, 		// window style
@@ -191,17 +201,17 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
 		hInstance,					// program instance handle
 		NULL) ;						// creation parameters
 
-	ShowWindow (g_Hwnd, iCmdShow) ;
-	UpdateWindow (g_Hwnd) ;
+        ShowWindow (hwnd, iCmdShow) ;
+		UpdateWindow (hwnd) ;
 
-	MSG    msg ;  
-	ZeroMemory(&msg, sizeof(msg)) ;
+		MSG    msg ;  
+		ZeroMemory(&msg, sizeof(msg)) ;
 
-	while (GetMessage (&msg, NULL, 0, 0))  
-	{
-		TranslateMessage (&msg) ;
-		DispatchMessage (&msg) ;
-	}
+		while (GetMessage (&msg, NULL, 0, 0))  
+		{
+			TranslateMessage (&msg) ;
+			DispatchMessage (&msg) ;
+		}
 
-	return msg.wParam ;
+		return msg.wParam ;
 }
