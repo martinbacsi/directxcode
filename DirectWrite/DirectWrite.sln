@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HelloWorld", "HelloWorld\HelloWorld.vcxproj", "{C82678E0-665D-43D4-9908-0268D011BEAE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Text_Outline", "Text_Outline\Text_Outline.vcxproj", "{AD3D3C9A-1BFE-45DB-B8AD-3CEC032FBDBB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C82678E0-665D-43D4-9908-0268D011BEAE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C82678E0-665D-43D4-9908-0268D011BEAE}.Debug|Win32.Build.0 = Debug|Win32
+		{C82678E0-665D-43D4-9908-0268D011BEAE}.Release|Win32.ActiveCfg = Release|Win32
+		{C82678E0-665D-43D4-9908-0268D011BEAE}.Release|Win32.Build.0 = Release|Win32
+		{AD3D3C9A-1BFE-45DB-B8AD-3CEC032FBDBB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AD3D3C9A-1BFE-45DB-B8AD-3CEC032FBDBB}.Debug|Win32.Build.0 = Debug|Win32
+		{AD3D3C9A-1BFE-45DB-B8AD-3CEC032FBDBB}.Release|Win32.ActiveCfg = Release|Win32
+		{AD3D3C9A-1BFE-45DB-B8AD-3CEC032FBDBB}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
