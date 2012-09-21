@@ -269,10 +269,6 @@ void DrawBitmap()
 	CalculateTranslationMatrix(&matrix);
 	g_pBitmapBrush->SetTransform(&matrix);
 
-	//D2D1_RECT_F rect = D2D1::RectF(10, 10, 100, 100);
-
-	//pRenderTarget->DrawBitmap(pBitmap);
-
 	pRenderTarget->FillRectangle(&paintRect, g_pBitmapBrush);
 	pRenderTarget->DrawRectangle(paintRect, pBlackBrush, 1, NULL);
 
