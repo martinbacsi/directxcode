@@ -20,6 +20,9 @@ ID2D1HwndRenderTarget*	g_pRenderTarget		= NULL;
 ID2D1SolidColorBrush*	g_pBlackBrush		= NULL;
 IDWriteFactory*			g_pDWriteFactory	= NULL;
 IDWriteFontFace*		g_pFontFace			= NULL;
+IDWriteFontFile*		g_pFontFile			= NULL;
+ID2D1PathGeometry*		g_pPathGeometry		= NULL;
+ID2D1GeometrySink*		g_pGeometrySink		= NULL;
 IDWriteTextFormat*		g_pTextFormat		= NULL;
 
 /*
@@ -66,6 +69,35 @@ VOID CreateDeviceIndependentResources()
 		MessageBox(NULL, L"Create IDWriteTextFormat failed!", L"Error", 0);
 		return;
 	}
+
+	// Create font file reference
+	const WCHAR* filePath = L"C:/Windows/Fonts/ariblk.TTF";
+	hr = g_pDWriteFactory->CreateFontFileReference(
+		filePath,
+		NULL,
+		&g_pFontFile
+		);
+	if(FAILED(hr))
+	{
+		MessageBox(NULL, L"Create font file reference failed!", L"Error", 0);
+		return;
+	}
+
+	// Create font face
+	IDWriteFontFile* fontFileArray[] = { g_pFontFile };
+	g_pDWriteFactory->CreateFontFace(
+		DWRITE_FONT_FACE_TYPE_TRUETYPE,
+		1,
+		fontFileArray,
+		0,
+		DWRITE_FONT_SIMULATIONS_NONE,
+		&g_pFontFace
+		);
+	if(FAILED(hr))
+	{
+		MessageBox(NULL, L"Create font file face failed!", L"Error", 0);
+		return;
+	}
 }
 
 /*
@@ -104,26 +136,123 @@ VOID CreateDeviceResources(HWND Hwnd)
 	}
 }
 
-VOID InitializeFontResource()
-{
-	// Create font file reference
-
-}
-
 // Cleanup the device dependent resources
 VOID DiscardDeviceResources()
 {
+	SAFE_RELEASE(g_pTextFormat);
+	SAFE_RELEASE(g_pGeometrySink);
+	SAFE_RELEASE(g_pPathGeometry);
+	SAFE_RELEASE(g_pFontFile);
+	SAFE_RELEASE(g_pFontFace);
+	SAFE_RELEASE(g_pDWriteFactory);
 	SAFE_RELEASE(g_pRenderTarget);
 	SAFE_RELEASE(g_pBlackBrush);
+	SAFE_RELEASE(g_pD2DFactory);
+}
+
+VOID CalculateTranslationMatrix(D2D1_MATRIX_3X2_F* matrix)
+{
+	static float totalTime = 0.0f;
+
+	// Get start time
+	static DWORD startTime = timeGetTime();
+
+	// Get current time
+	DWORD currentTime = timeGetTime();
+
+	// Calculate time elapsed
+	float timeElapsed = (currentTime - startTime) * 0.001f;
+
+	// Accumulate total time elapsed
+	totalTime += timeElapsed;
+
+	// Build up the translation matrix
+	matrix->_11 = 1.0f;
+	matrix->_12 = 0.0f;
+	matrix->_21 = 0.0f;
+	matrix->_22 = 1.0f;
+	matrix->_31 = totalTime;
+	matrix->_32 = totalTime;
 }
 
 VOID DrawText(HWND hwnd)
 {
-	const wchar_t* wszText = L"Hello, World";		// String to render
+	const wchar_t* wszText = L"Hello, world!";		// String to render
 	UINT32 cTextLength = (UINT32)wcslen(wszText);	// Get text length
 
+	UINT32* pCodePoints		= new UINT32[cTextLength];
+	ZeroMemory(pCodePoints, sizeof(UINT32) * cTextLength);
+
+	UINT16*	pGlyphIndices	= new UINT16[cTextLength];
+	ZeroMemory(pGlyphIndices, sizeof(UINT16) * cTextLength);
+
+	for(int i = 0; i < cTextLength; ++i)
+	{
+		pCodePoints[i] = wszText[i];
+	}
+
+	// Get glyph indices
+	HRESULT hr =g_pFontFace->GetGlyphIndicesW(
+		pCodePoints,
+		cTextLength,
+		pGlyphIndices
+		);
+	if(FAILED(hr))
+	{
+		MessageBox(NULL, L"Get glyph indices failed!", L"Error", 0);
+		return;
+	}
+
+	// Create path geometry
+	hr = g_pD2DFactory->CreatePathGeometry(&g_pPathGeometry);
+	if(FAILED(hr))
+	{
+		MessageBox(NULL, L"Create path geometry failed!", L"Error", 0);
+		return;
+	}
+
+	// Open sink
+	hr = g_pPathGeometry->Open(&g_pGeometrySink);
+	if(FAILED(hr))
+	{
+		MessageBox(NULL, L"Open geometry sink failed!", L"Error", 0);
+		return;
+	}
+
+	// Get glyph run outline
+	hr = g_pFontFace->GetGlyphRunOutline(
+		200,
+		pGlyphIndices,
+		NULL,
+		NULL,
+		cTextLength,
+		FALSE,
+		FALSE,
+		g_pGeometrySink
+		);
+	if(FAILED(hr))
+	{
+		MessageBox(NULL, L"Get glyph run outline failed!", L"Error", 0);
+		return;
+	}
+
+	// Close sink
+	g_pGeometrySink->Close();
+
+	if(pCodePoints)
+	{
+		delete [] pCodePoints;
+		pCodePoints = NULL;
+	}
+
+	if(pGlyphIndices)
+	{
+		delete [] pGlyphIndices;
+		pGlyphIndices = NULL;
+	}
+
 	// Center the text
-	HRESULT hr = g_pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
+	hr = g_pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
 	if(FAILED(hr))
 	{
 		MessageBox(NULL, L"Center text failed!", L"Error", 0);
@@ -138,24 +267,7 @@ VOID DrawText(HWND hwnd)
 		return;
 	}
 
-	// Create text layout rect
-	RECT rc;
-	GetClientRect(hwnd, &rc);
-	D2D1_RECT_F textLayoutRect = D2D1::RectF(
-		static_cast<FLOAT>(rc.left),
-		static_cast<FLOAT>(rc.top),
-		static_cast<FLOAT>(rc.right - rc.left),
-		static_cast<FLOAT>(rc.bottom - rc.top)
-		);
-
-	// Draw text
-	g_pRenderTarget->DrawText(
-		wszText,		// Text to render
-		cTextLength,	// Text length
-		g_pTextFormat,	// Text format
-		textLayoutRect,	// The region of the window where the text will be rendered
-		g_pBlackBrush	// The brush used to draw the text
-		);
+	g_pRenderTarget->DrawGeometry(g_pPathGeometry, g_pBlackBrush, 3.0f);
 }
 
 VOID Render(HWND hwnd)
@@ -165,6 +277,7 @@ VOID Render(HWND hwnd)
 
 	g_pRenderTarget->BeginDraw();
 	g_pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
+	g_pRenderTarget->SetTransform(D2D1::Matrix3x2F::Translation(100.0f, 300.0f));
 
 	DrawText(hwnd);
 
@@ -187,7 +300,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 	case   WM_PAINT:
 		Render(hwnd);
-		ValidateRect(hwnd, NULL) ;
+		//ValidateRect(hwnd, NULL) ;
 		return 0 ;
 
 	case WM_SIZE:
