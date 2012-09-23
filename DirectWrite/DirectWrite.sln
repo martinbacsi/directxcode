@@ -7,6 +7,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Text_Outline", "Text_Outlin
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Text_Translation", "Text_Translation\Text_Translation.vcxproj", "{7E61B4D9-15B0-40FD-AD20-B728DAB10672}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Random_Transform", "RandomTransform\RandomTransform.vcxproj", "{F5CF801D-9ED9-43D3-BCAA-C8D0BB67AF42}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LetterHunter", "LetterHunter\LetterHunter.vcxproj", "{95632C6D-E8AB-4F74-876A-6F9C09B41128}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -25,6 +29,14 @@ Global
 		{7E61B4D9-15B0-40FD-AD20-B728DAB10672}.Debug|Win32.Build.0 = Debug|Win32
 		{7E61B4D9-15B0-40FD-AD20-B728DAB10672}.Release|Win32.ActiveCfg = Release|Win32
 		{7E61B4D9-15B0-40FD-AD20-B728DAB10672}.Release|Win32.Build.0 = Release|Win32
+		{F5CF801D-9ED9-43D3-BCAA-C8D0BB67AF42}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F5CF801D-9ED9-43D3-BCAA-C8D0BB67AF42}.Debug|Win32.Build.0 = Debug|Win32
+		{F5CF801D-9ED9-43D3-BCAA-C8D0BB67AF42}.Release|Win32.ActiveCfg = Release|Win32
+		{F5CF801D-9ED9-43D3-BCAA-C8D0BB67AF42}.Release|Win32.Build.0 = Release|Win32
+		{95632C6D-E8AB-4F74-876A-6F9C09B41128}.Debug|Win32.ActiveCfg = Debug|Win32
+		{95632C6D-E8AB-4F74-876A-6F9C09B41128}.Debug|Win32.Build.0 = Debug|Win32
+		{95632C6D-E8AB-4F74-876A-6F9C09B41128}.Release|Win32.ActiveCfg = Release|Win32
+		{95632C6D-E8AB-4F74-876A-6F9C09B41128}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
