@@ -21,6 +21,9 @@ public:
 	~Text(void);
 
 public:
+	bool			getLiveState() const;			// Get text state, live or die
+	void			setLiveState(bool liveFlag);	// Set the live state, live or die
+
 	bool			getVisible() const;
 	void			setVisible(bool visibleFlag);
 
@@ -37,23 +40,31 @@ public:
 	void			setOutlineWidth(float width);
 
 	int				getSize() const;
-	void			setSize(int size);
 
 	D2D1_POINT_2F	getPosition() const;
 	void			setPosition(D2D1_POINT_2F pos);
+	void			setPosition(float x, float y);
+
+	D2D1_POINT_2F	getVelocity() const;
+	void			setVelocity(D2D1_POINT_2F velocity);
+	void			setVelocity(float x, float y);
 
 	D2D1_MATRIX_3X2_F	getTransformMatrix() const;
 	void				setTransformMatrix(D2D1_MATRIX_3X2_F& matrix);
 
 	void			setTransform(D2D1_MATRIX_3X2_F matrix);
+	void			update();		// Update the text
 	void			render();
 	void			onDestroy();
 
 private:
+	bool			isLive;			// Is text alive?
 	bool			isVisible;		// Is text visible?
 	wchar_t*		text;			// string of the Text
 	int				fontSize;		// font size
 	float			outlineWidth;	// outline width of the font
+	float			liveTime;		// Time since the text was generated
+	D2D_POINT_2F	velocity;		// moving velocity
 
 	D2D1_COLOR_F		outlineColor;	// text color
 	D2D1_COLOR_F		fillColor;		// Color to fill the font

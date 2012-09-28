@@ -19,8 +19,9 @@ Text::Text(
 	text(fontText),
 	outlineWidth(width),
 	isVisible(true), 
+	isLive(true),
+	liveTime(0.0f),
 	pFontFile(NULL), 
-
 	matrix(D2D1::Matrix3x2F::Identity()),
 	pPathGeometry(NULL),
 	pTransformedGeometry(NULL)
@@ -29,6 +30,7 @@ Text::Text(
 	fontSize = fontSize;
 	this->fillColor = fillColor;
 	this->outlineColor = outlineColor;
+	velocity = D2D1::Point2F(0, 0);
 
 	// Create font file reference
 	const WCHAR* filePath = L"C:/Windows/Fonts/ariblk.TTF";
@@ -164,6 +166,16 @@ Text::~Text(void)
 	SAFE_RELEASE(pD2DFactory);
 }
 
+bool Text::getLiveState() const
+{
+	return isLive;
+}
+
+void Text::setLiveState(bool liveFlag)
+{
+	isLive = liveFlag;
+}
+
 bool Text::getVisible() const
 {
 	return isVisible;
@@ -221,9 +233,41 @@ int Text::getSize() const
 	return fontSize;
 }
 
-void Text::setSize(int size)
+D2D1_POINT_2F Text::getPosition() const
 {
-	fontSize = size;
+	return position;
+}
+
+void Text::setPosition(D2D1_POINT_2F pos)
+{
+	position = pos;
+
+	matrix._31 = position.x;
+	matrix._32 = position.y;
+
+	setTransform(matrix);
+}
+
+void Text::setPosition(float x, float y)
+{
+	position.x = x;
+	position.y = y;
+}
+
+D2D1_POINT_2F Text::getVelocity() const
+{
+	return velocity;
+}
+
+void Text::setVelocity(D2D1_POINT_2F velocity)
+{
+	this->velocity = velocity;
+}
+
+void Text::setVelocity(float x, float y)
+{
+	velocity.x = x;
+	velocity.y = y;
 }
 
 D2D1_MATRIX_3X2_F Text::getTransformMatrix() const
@@ -238,11 +282,31 @@ void Text::setTransformMatrix(D2D1_MATRIX_3X2_F& matrix)
 
 void Text::setTransform(D2D1_MATRIX_3X2_F matrix)
 {
+	this->matrix = matrix;
+
 	pD2DFactory->CreateTransformedGeometry(
 		pPathGeometry,
 		matrix,
 		&pTransformedGeometry
 		);
+}
+
+void Text::update()
+{
+	// Accumulate total time
+	liveTime += 4;
+
+	// Calculate curent position
+	float currentX = position.x + velocity.x * liveTime;
+	float currentY = position.y + velocity.y * liveTime;
+
+	// Build up the translation matrix
+	matrix._11 = 1.0f;		matrix._12 = 0.0f;
+	matrix._21 = 0.0f;		matrix._22 = 1.0f;
+	matrix._31 = currentX;	matrix._32 = currentY;
+
+	// move the text
+	setTransform(matrix);
 }
 
 void Text::render()
