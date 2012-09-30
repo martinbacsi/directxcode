@@ -60,7 +60,7 @@ VOID CreateDeviceIndependentResources()
 		DWRITE_FONT_WEIGHT_REGULAR,	// Weight
 		DWRITE_FONT_STYLE_NORMAL,	// Style
 		DWRITE_FONT_STRETCH_NORMAL,	// Stretch
-		200.0f,						// Size	
+		100.0f,						// Size	
 		L"en-us",					// Local
 		&g_pTextFormat				// Pointer to recieve the created object
 		);
@@ -177,7 +177,7 @@ VOID CalculateTranslationMatrix(D2D1_MATRIX_3X2_F* matrix)
 
 VOID DrawText(HWND hwnd)
 {
-	const wchar_t* wszText = L"Hello, world!";		// String to render
+	const wchar_t* wszText = L"Hello";		// String to render
 	UINT32 cTextLength = (UINT32)wcslen(wszText);	// Get text length
 
 	UINT32* pCodePoints		= new UINT32[cTextLength];
