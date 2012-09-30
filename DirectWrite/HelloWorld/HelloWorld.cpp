@@ -50,7 +50,7 @@ VOID CreateDeviceIndependentResources()
 		DWRITE_FONT_WEIGHT_REGULAR,	// Weight
 		DWRITE_FONT_STYLE_NORMAL,	// Style
 		DWRITE_FONT_STRETCH_NORMAL,	// Stretch
-		200.0f,						// Size	
+		50.0f,						// Size	
 		L"en-us",					// Local
 		&g_pTextFormat				// Pointer to recieve the created object
 		);
@@ -106,9 +106,10 @@ VOID DiscardDeviceResources()
 
 VOID DrawText(HWND hwnd)
 {
-	const wchar_t* wszText = L"Hello, World";		// String to render
+	const wchar_t* wszText = L"Hello, World \n This is a sample of DirectWrite\n This is the last line\n";		// String to render
 	UINT32 cTextLength = (UINT32)wcslen(wszText);	// Get text length
 
+	g_pTextFormat->SetWordWrapping(DWRITE_WORD_WRAPPING_WRAP);
 	// Center the text
 	HRESULT hr = g_pTextFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER);
 	if(FAILED(hr))
@@ -125,6 +126,14 @@ VOID DrawText(HWND hwnd)
 		return;
 	}
 
+	// Set line spacing
+	hr = g_pTextFormat->SetLineSpacing(DWRITE_LINE_SPACING_METHOD_DEFAULT, 50, 80);
+	if(FAILED(hr))
+	{
+		MessageBox(NULL, L"Set line spacing failed!", L"Error", 0);
+		return;
+	}
+	
 	// Create text layout rect
 	RECT rc;
 	GetClientRect(hwnd, &rc);
@@ -232,12 +241,12 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
 
 	HWND hwnd = CreateWindowEx(NULL,  
 		L"DirectWrite Hello, World",	// window class name
-		L"Draw Text",					// window caption
+		L"DirectWrite Hello, World",					// window caption
 		WS_OVERLAPPEDWINDOW, 			// window style
 		CW_USEDEFAULT,					// initial x position
 		CW_USEDEFAULT,					// initial y position
-		600,							// initial x size
-		600,							// initial y size
+		500,							// initial x size
+		500,							// initial y size
 		NULL,							// parent window handle
 		NULL,							// window menu handle
 		hInstance,						// program instance handle
