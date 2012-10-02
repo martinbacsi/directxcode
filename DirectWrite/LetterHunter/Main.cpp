@@ -38,6 +38,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 				SendMessage( hwnd, WM_CLOSE, 0, 0 ); 
 				break ; 
 			default: 
+				g_pletterHunter->handleKeyboardMessage();
 				break ; 
 			} 
 		} 
@@ -86,7 +87,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
 
 	HWND hwnd = CreateWindowEx(NULL,  
 		L"DirectWrite Hello, World",	// window class name
-		L"Draw Text",					// window caption
+		L"Letter Hunter",				// window caption
 		WS_OVERLAPPEDWINDOW, 			// window style
 		CW_USEDEFAULT,					// initial x position
 		CW_USEDEFAULT,					// initial y position
@@ -108,7 +109,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
 
 	while (GetMessage (&msg, NULL, 0, 0))  
 	{
-		g_pletterHunter->handleKeyboardMessage();
 		TranslateMessage (&msg) ;
 		DispatchMessage (&msg) ;
 	}
