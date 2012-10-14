@@ -105,18 +105,6 @@ VOID CreateD2DResource(HWND hWnd)
 			return ;
 		}
 
-		//// Load bitmap from resource
-		//hr = LoadResourceBitmap(
-		//	pRenderTarget,
-		//	pWICFactory,
-		//	"SampleImage",
-		//	"Image",
-		//	0,
-		//	0, 
-		//	&pBitmap
-		//	) ;
-
-		// Load bitmap from file
 		hr = LoadBitmapFromFile(
 			pRenderTarget,
 			pWICFactory,
