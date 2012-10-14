@@ -83,7 +83,6 @@ void Balls::Update(float timeDelta, int numParticletoEmit, D3DXVECTOR3* EmitPosi
 			
 			citor->age += timeDelta ;
 			citor->position.x = citor->velocity.x * citor->age * 10.0f;
-			//citor->position.z = citor->velocity.z * citor->age * 10.0f;
 			citor->position.y = citor->velocity.y * citor->age * 10.0f + citor->gravity.y * citor->age * citor->age * 10.0f ;
 
 			if (citor->age > citor->lifeTime)
