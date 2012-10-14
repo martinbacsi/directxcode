@@ -53,7 +53,10 @@ private:
 	void	setWindowHeight(int height);
 
 	void	initializeText();
-	void	resetTextObject(TextObject* textObject);
+	void	resetTextObject(TextObject* textObject);	// This function does not work yet
+
+	// Add new text object to text buffer
+	void    addNewTextObject();
 };
 
 #endif //end __LETTERHUNTER_H__

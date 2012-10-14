@@ -80,6 +80,7 @@
     <ClCompile Include="DInput.cpp" />
     <ClCompile Include="Letter.cpp" />
     <ClCompile Include="LetterHunter.cpp" />
+    <ClCompile Include="MagicProps.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="TextObject.cpp" />
   </ItemGroup>
@@ -88,6 +89,7 @@
     <ClInclude Include="DInput.h" />
     <ClInclude Include="Letter.h" />
     <ClInclude Include="LetterHunter.h" />
+    <ClInclude Include="MagicProps.h" />
     <ClInclude Include="TextObject.h" />
     <ClInclude Include="Utilities.h" />
   </ItemGroup>

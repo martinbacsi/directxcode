@@ -1,4 +1,5 @@
 #include "TextObject.h"
+#include "Utilities.h"
 
 TextObject::TextObject(void)
 {
@@ -12,23 +13,44 @@ TextObject::TextObject(
 	D2D1_COLOR_F	fillColor,
 	D2D1_COLOR_F	outlineColor,
 	float			outlineWidth,
-	int				size
+	int				fontSize
 	)
 	:
-	text_(text),
-	activeIndex(0),
+	d2dFactory_(d2dFactory),
+	rendertarget_(rendertarget),
+	dwriteFactory_(dwriteFactory),
+	text_(NULL),
+	fontSize_(fontSize),
+	activeIndex_(0),
 	isLive_(true),
     letterBuffer_(NULL)
 {
-	// Initialize each letter in the text to a Letter object
-	length_ = wcslen(text_);
-	letterBuffer_ = new Letter*[length_];
+	createText(text, d2dFactory_, rendertarget_, dwriteFactory_);
+}
 
+void TextObject::createText(
+	wchar_t* textString, 
+	ID2D1Factory* d2dFactory, 
+	ID2D1HwndRenderTarget*	rendertarget, 
+	IDWriteFactory*			dwriteFactory
+	)
+{
+	
+	// Initialize each letter in the text to a Letter object
+	length_ = wcslen(textString);
+
+	text_ = new wchar_t[length_];
+	for(int i = 0; i < length_; ++i)
+	{
+		text_[i] = textString[i];
+	}
+
+	letterBuffer_ = new Letter*[length_];
 	
 	// top left coordinates of current letter
 	float currentX = 0; 
 	float currentY = 0;
-	letterSpace_ = size / 10.0f; // space between adjacent letters.
+	letterSpace_ = fontSize_ / 10.0f; // space between adjacent letters.
 
 	for(int i = 0; i < length_; ++i)
 	{
@@ -36,11 +58,7 @@ TextObject::TextObject(
 			d2dFactory,
 			rendertarget,
 			dwriteFactory,
-			text_[i], // here is a string instead
-			fillColor,
-			outlineColor,
-			outlineWidth,
-			size
+			textString[i]		// here is a string instead
 			);
 		
 		D2D1_MATRIX_3X2_F matrix = D2D1::Matrix3x2F::Translation(currentX, currentY);
@@ -58,6 +76,21 @@ TextObject::TextObject(
 
 TextObject::~TextObject(void)
 {
+	SAFE_DELETE(text_);
+}
+
+void TextObject::reset(wchar_t* text, float x, float y, float velocityX, float velocityY)
+{
+	activeIndex_	= 0;
+	isLive_			= true;
+	SAFE_DELETE_ARRAY(letterBuffer_);
+	SAFE_DELETE(text_);
+
+	createText(text, d2dFactory_, rendertarget_, dwriteFactory_);
+
+	setPosition(x, y);
+
+	setVelocity(velocityX, velocityY);
 }
 
 void TextObject::update()
@@ -183,12 +216,12 @@ void TextObject::setTransfrom(D2D1_MATRIX_3X2_F& matrix)
 
 void TextObject::setActiveIndex(int index)
 {
-	activeIndex = index;
+	activeIndex_ = index;
 }
 
 int TextObject::getActiveIndex() const
 {
-	return activeIndex;
+	return activeIndex_;
 }
 
 wchar_t* TextObject::getText() const

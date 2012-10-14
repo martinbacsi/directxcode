@@ -10,6 +10,8 @@ font style, color, size and so on
 #include <d2d1.h>
 #include <dwrite.h>
 
+#include "MagicProps.h"
+
 class Letter
 {
 public:
@@ -18,11 +20,11 @@ public:
 		ID2D1Factory*			d2dFactory, 
 		ID2D1HwndRenderTarget*	rendertarget, 
 		IDWriteFactory*			dwriteFactory,
-		wchar_t					letter,
-		D2D1_COLOR_F			fillColor,
-		D2D1_COLOR_F			outlineColor,
-		float					outlineWidth,
-		int						fontSize
+		wchar_t					letter, 
+		D2D1_COLOR_F			fillColor		= D2D1::ColorF(D2D1::ColorF::Black),
+		D2D1_COLOR_F			outlineColor	= D2D1::ColorF(D2D1::ColorF::White),
+		float					outlineWidth	= 2.0f,
+		int						fontSize		= 200
 		);
 	~Letter(void);
 
@@ -71,12 +73,14 @@ public:
 
 	// Update the letter, this is alwarys moving the letter 
 	void			update();		// Update the text
+	void			update(MAGIC_TYPE magic_type);
 
 	// Draw letter
 	void			render();
 
 	// What to do when a letter was hitted, the letter may disappear or draw an effect
 	void			onHit();
+	void			scaling(float timeDelta);
 
 private:
 

@@ -364,6 +364,22 @@ void Letter::update()
 	translate(newX, newY);
 }
 
+void Letter::update(MAGIC_TYPE magic_type)
+{
+	// Accumulate total time
+	liveTime_ += 0.1;
+
+	// Get previous position_
+	D2D1_POINT_2F currentPos = getPosition();
+
+	// Calculate new position_ based on previous postion and velocity_
+	float newX = currentPos.x + velocity_.x * liveTime_;
+	float newY = currentPos.y + velocity_.y * liveTime_;
+
+	// Translate to current position_
+	translate(newX, newY);
+}
+
 void Letter::render()
 {
 	// Draw outline

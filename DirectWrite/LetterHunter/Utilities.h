@@ -19,7 +19,6 @@ static float randomFloat(float min, float max)
 // Generate random integer between start and end(inclusive)
 static int RandomInt(int start, int end)
 {
-	srand((unsigned int)time(0));
 	int k = rand() % (end - start + 1) + start;
 
 	return k;
@@ -45,6 +44,20 @@ static char RandomUpperCaseLetter()
 	char letter = 'A' + offset;
 
 	return letter;
+}
+
+// Generate a random string,
+// @strBuffer, the buffer to hold the string
+// @strLength, the length of the string
+static void randomString(wchar_t* strBuffer, int strLength)
+{
+	for(int i = 0; i < strLength; ++i)
+	{
+		int offset = RandomInt(0, 25);
+		strBuffer[i] = 'A' + offset;
+	}
+
+	strBuffer[strLength] = '\0';
 }
 
 // Generate a random RGB color
