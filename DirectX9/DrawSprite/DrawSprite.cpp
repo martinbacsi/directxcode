@@ -52,7 +52,7 @@ HRESULT InitD3D( HWND hWnd )
 	D3DXCreateSprite(g_pd3dDevice, &g_pSprite);
 
 	// Create Texture
-	HRESULT hr = D3DXCreateTextureFromFile(g_pd3dDevice, "../Media/flower.bmp", &g_pTexture) ;
+	HRESULT hr = D3DXCreateTextureFromFile(g_pd3dDevice, "../Common/Media/autumn.JPG", &g_pTexture) ;
 	if (FAILED(hr))
 	{
 		MessageBoxA(NULL, "Create Texture failed!", "Error", 0) ;
