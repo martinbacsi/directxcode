@@ -82,6 +82,8 @@
     <ClCompile Include="LetterHunter.cpp" />
     <ClCompile Include="MagicProps.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Sound.cpp" />
+    <ClCompile Include="SoundManager.cpp" />
     <ClCompile Include="TextObject.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -90,6 +92,8 @@
     <ClInclude Include="Letter.h" />
     <ClInclude Include="LetterHunter.h" />
     <ClInclude Include="MagicProps.h" />
+    <ClInclude Include="Sound.h" />
+    <ClInclude Include="SoundManager.h" />
     <ClInclude Include="TextObject.h" />
     <ClInclude Include="Utilities.h" />
   </ItemGroup>

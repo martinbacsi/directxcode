@@ -6,6 +6,7 @@
 #include "D2D.h"
 #include "TextObject.h"
 #include "DInput.h"
+#include "SoundManager.h"
 
 using namespace std;
 
@@ -37,6 +38,7 @@ private:
 
 	D2D*	d2d_;
 	DInput*	dinput_;
+	SoundManager* soundManager_;
 
 	// Level of the game, this decides the moving speed of the letter, we compute the letter position as below
 	// [ newPosition = velocity * time * gameLevel ], when level raise up, the moving speed also becames fast.

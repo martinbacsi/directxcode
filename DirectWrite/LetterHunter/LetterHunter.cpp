@@ -11,6 +11,7 @@ LetterHunter::LetterHunter(HWND hwnd, int maxTextCount)
 	maxTextCount_(100),
 	d2d_(NULL),
 	dinput_(NULL),
+	soundManager_(NULL),
 	textBuffer_(NULL)
 {
 	// Initialize Direct2D
@@ -20,6 +21,7 @@ LetterHunter::LetterHunter(HWND hwnd, int maxTextCount)
 
 	// Initialize Direct Input
 	dinput_ = new DInput();
+	soundManager_ = new SoundManager();
 }
 
 void LetterHunter::release()
@@ -127,6 +129,9 @@ void LetterHunter::handleKeyboardMessage()
 			// If the active letter match the hit letter, update the textObject
 			if(currentLetter == hitLetter)
 			{
+				// Play hit sound
+				soundManager_->playSound(SOUND_HIT);
+
 				// Change the color of the hit letter
 				textBuffer_[i]->setFillColorRange(activeIndex, 1, D2D1::ColorF(D2D1::ColorF::White));
 				textBuffer_[i]->setOutlineColorRange(activeIndex, 1, D2D1::ColorF(D2D1::ColorF::Black));
