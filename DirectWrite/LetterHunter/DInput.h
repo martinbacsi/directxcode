@@ -27,7 +27,7 @@ public:
 
 private:
 	bool Init() ;					// Initialize Direct Input
-	bool keyDown(int key) const;	// Is a keyboard key pressed?
+	BOOL keyDown(int key) const;	// Is a keyboard key pressed?
 	bool InitKeyboard() ;			// Initialize keyboard
 	bool InitMouse() ;				// Initialize mouse
 	void Release() ;

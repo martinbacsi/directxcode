@@ -34,7 +34,7 @@ private:
 	// Text related
 	vector<TextObject*> textBuffer_;
 	int maxTextCount_;
-	static const int TEXTCOUNT = 3;
+	static const int TEXTCOUNT = 10;
 
 	D2D*	d2d_;
 	DInput*	dinput_;
@@ -59,6 +59,8 @@ private:
 
 	// Add new text object to text buffer
 	void    addNewTextObject();
+
+	void    setTextSpeedFactor(float speedFactor);
 };
 
 #endif //end __LETTERHUNTER_H__

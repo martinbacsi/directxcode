@@ -111,7 +111,7 @@ void LetterHunter::handleKeyboardMessage()
 	// 0-9 was magic words
 	if(hitLetter == '0')	// pause
 	{
-		Sleep(2000);
+		setTextSpeedFactor(0);
 	}
 
 	// Loop all the textObject to see if any of them match the hit letter
@@ -176,31 +176,25 @@ void LetterHunter::setWindowHeight(int height)
 
 void LetterHunter::initializeText()
 {
-	wchar_t* textBuffer[TEXTCOUNT] = {
-		L"ABC",
-		L"B",
-		L"C",
-		/*L"D",
-		L"G",
-		L"F",
-		L"G",
-		L"H",
-		L"I",
-		L"J"*/
-	};
-
 	ID2D1Factory*			D2DFactory		= d2d_->getD2DFactory();
 	ID2D1HwndRenderTarget*	renderTarget	= d2d_->getD2DHwndRenderTarget();
 	IDWriteFactory*			DWriteFactory	= d2d_->getDWriteFactory();
 
 	for(int i = 0; i < TEXTCOUNT; ++i)
 	{
+		// Geneate a random string
+		const int strLength = 1;
+		wchar_t* strBuffer = new wchar_t[strLength + 1];
+		randomString(strBuffer, strLength);
+
 		TextObject* textObj = new TextObject(
 			D2DFactory,
 			renderTarget,
 			DWriteFactory,
-			textBuffer[i]
+			strBuffer
 			);
+
+		SAFE_DELETE(strBuffer);
 
 		// Generate 10 random numbers between 1 and 100
 		float a[10] = {0};
@@ -212,21 +206,35 @@ void LetterHunter::initializeText()
 		// Set text velocity
 		textObj->setVelocity(0, a[i]);
 
+		D2D1_COLOR_F fillColor = randomColor();
+		textObj->setFillColor(fillColor);
+
 		textBuffer_.push_back(textObj);
 	}
 }
 
 void LetterHunter::resetTextObject(TextObject* textObject)
 {
-	float posX = RandomInt(100, 1000);
+	// Set text position
+	float posX = randomFloat(0, 1900);
+
+	// Set text velocity
 	float velocityX = 0;
 	float velocityY = randomFloat(0.1f, 0.5f);
 
-	// textObject->release();
-	const int strLength = 3;
-	wchar_t* strBuffer = new wchar_t[strLength];
+	// Create text string
+	const int strLength = 1;
+	wchar_t* strBuffer = new wchar_t[strLength + 1]; // one more space for '\0'
 	randomString(strBuffer, strLength);
-	textObject->reset(strBuffer, posX, 0, velocityX, velocityY);
+
+	// Create text color
+	D2D1_COLOR_F fillColor = randomColor();
+	textObject->setFillColor(fillColor);
+
+	// Reset text object
+	textObject->reset(strBuffer, posX, 0, velocityX, velocityY, fillColor);
+
+	SAFE_DELETE(strBuffer);
 }
 
 void LetterHunter::addNewTextObject()
@@ -235,4 +243,12 @@ void LetterHunter::addNewTextObject()
 	resetTextObject(&textObj);
 
 	textBuffer_.push_back(&textObj);
+}
+
+void LetterHunter::setTextSpeedFactor(float speedFactor)
+{
+	for(unsigned int i = 0; i < textBuffer_.size(); ++i)
+	{
+		textBuffer_[i]->setLetterSpeedFactor(speedFactor);
+	}
 }

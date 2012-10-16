@@ -25,6 +25,7 @@ Letter::Letter(
 	isVisible_(true), 
 	isLive_(true),
 	liveTime_(0.0f),
+	speedFactor_(1.0f),
 	pFontFile(NULL), 
 	matrix_(D2D1::Matrix3x2F::Identity()),
 	boundaryBrush_(NULL),
@@ -243,6 +244,16 @@ void Letter::setOutlineColor(D2D1_COLOR_F color)
 	pOutlineBrush->SetColor(outlineColor_);
 }
 
+float Letter::getSpeedFactor() const
+{
+	return speedFactor_;
+}
+
+void Letter::setSpeedFactor(float speedFactor)
+{
+	speedFactor_ = speedFactor;
+}
+
 void Letter::setBoundaryColor(D2D1_COLOR_F& color)
 {
 	boundaryBrush_->SetColor(color);
@@ -357,24 +368,8 @@ void Letter::update()
 	D2D1_POINT_2F currentPos = getPosition();
 
 	// Calculate new position_ based on previous postion and velocity_
-	float newX = currentPos.x + velocity_.x * liveTime_;
-	float newY = currentPos.y + velocity_.y * liveTime_;
-
-	// Translate to current position_
-	translate(newX, newY);
-}
-
-void Letter::update(MAGIC_TYPE magic_type)
-{
-	// Accumulate total time
-	liveTime_ += 0.1;
-
-	// Get previous position_
-	D2D1_POINT_2F currentPos = getPosition();
-
-	// Calculate new position_ based on previous postion and velocity_
-	float newX = currentPos.x + velocity_.x * liveTime_;
-	float newY = currentPos.y + velocity_.y * liveTime_;
+	float newX = currentPos.x + velocity_.x * liveTime_ * speedFactor_;
+	float newY = currentPos.y + velocity_.y * liveTime_ * speedFactor_;
 
 	// Translate to current position_
 	translate(newX, newY);

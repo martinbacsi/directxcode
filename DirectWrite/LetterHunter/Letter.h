@@ -44,6 +44,9 @@ public:
 	D2D1_COLOR_F	getOutlineColor() const;
 	void			setOutlineColor(D2D1_COLOR_F color);
 
+	float			getSpeedFactor() const;
+	void			setSpeedFactor(float speedFactor);
+
 	float			getoutlineWidth() const;
 	void			setOutlineWidth(float width);
 
@@ -73,7 +76,6 @@ public:
 
 	// Update the letter, this is alwarys moving the letter 
 	void			update();		// Update the text
-	void			update(MAGIC_TYPE magic_type);
 
 	// Draw letter
 	void			render();
@@ -108,6 +110,7 @@ private:
 	int					fontSize_;		// font size
 	float				outlineWidth_;	// outline width of the letter
 	float				liveTime_;		// Time since the letter was generated
+	float				speedFactor_;	// This is the factor to control letter speed, defaul 1
 
 	// Since D2D_VECTOR_2F has no constructor and not easy-use, so we use D2D1_POINT_2F instead, though D2D_VECTOR_2F
 	// is more perspective to express velocity, but it's just a C-style structure and hard to use, hope MS can update 

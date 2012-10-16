@@ -39,11 +39,13 @@ void TextObject::createText(
 	// Initialize each letter in the text to a Letter object
 	length_ = wcslen(textString);
 
-	text_ = new wchar_t[length_];
+	text_ = new wchar_t[length_ + 1]; // Add one more space for '\0'
 	for(int i = 0; i < length_; ++i)
 	{
 		text_[i] = textString[i];
 	}
+
+	text_[length_] = '\0';
 
 	letterBuffer_ = new Letter*[length_];
 	
@@ -77,9 +79,10 @@ void TextObject::createText(
 TextObject::~TextObject(void)
 {
 	SAFE_DELETE(text_);
+	//SAFE_DELETE_ARRAY(letterBuffer_);
 }
 
-void TextObject::reset(wchar_t* text, float x, float y, float velocityX, float velocityY)
+void TextObject::reset(wchar_t* text, float x, float y, float velocityX, float velocityY, D2D1_COLOR_F& fillColor)
 {
 	activeIndex_	= 0;
 	isLive_			= true;
@@ -91,6 +94,8 @@ void TextObject::reset(wchar_t* text, float x, float y, float velocityX, float v
 	setPosition(x, y);
 
 	setVelocity(velocityX, velocityY);
+
+	setFillColor(fillColor);
 }
 
 void TextObject::update()
@@ -232,4 +237,12 @@ wchar_t* TextObject::getText() const
 int TextObject::getTextLength() const
 {
 	return length_;
+}
+
+void TextObject::setLetterSpeedFactor(float speedFactor)
+{
+	for(int i = 0; i < length_; ++i)
+	{
+		letterBuffer_[i]->setSpeedFactor(speedFactor);
+	}
 }

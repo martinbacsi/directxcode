@@ -23,7 +23,7 @@ public:
 	void render();
 
 	// Reset a text object
-	void reset(wchar_t* text, float x, float y, float velocityX, float velocityY);
+	void reset(wchar_t* text, float x, float y, float velocityX, float velocityY, D2D1_COLOR_F& fillColor);
 
 	//Set text fill in color for a given range
 	void setFillColorRange(int startIndex, int length, D2D1_COLOR_F& color);
@@ -75,6 +75,8 @@ public:
 	// Get the text of the text Object
 	wchar_t* getText() const;
 	int		 getTextLength() const;
+
+	void setLetterSpeedFactor(float speedFactor);
 
 private:
 	// Create text string

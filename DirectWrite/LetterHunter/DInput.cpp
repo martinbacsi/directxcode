@@ -103,7 +103,7 @@ bool DInput::InitKeyboard()
 
 bool DInput::InitMouse()
 {
-	DIDEVCAPS MouseCapabilities; //device capabilities
+	//DIDEVCAPS MouseCapabilities; //device capabilities
 
 	// Create mouse device
 	HRESULT hr = m_pDIObject->CreateDevice(GUID_SysMouse, &m_pDIMouseDevice, NULL) ;
@@ -162,7 +162,7 @@ void DInput::update()
 }
 
 // Determine whether a key was pressed
-bool DInput::keyDown(int key) const
+BOOL DInput::keyDown(int key) const
 {
 	return (m_KeyBuffer[key] & 0x80);
 }
