@@ -3,9 +3,9 @@
 #include <D3DX11.h>
 #include <D3DX10math.h>
 
-ID3D11Device*			g_pd3dDevice = NULL;
+ID3D11Device*			g_pd3dDevice		= NULL;
 ID3D11DeviceContext*	g_pImmediateContext = NULL;
-IDXGISwapChain*			g_pSwapChain = NULL;
+IDXGISwapChain*			g_pSwapChain		= NULL;
 ID3D11RenderTargetView* g_pRenderTargetView = NULL;
 
 bool					g_bActive			= true ; // Is window active?

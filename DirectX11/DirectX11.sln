@@ -3,6 +3,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Teapot", "Teapot\Teapot.vcxproj", "{6A50A411-549A-421F-9E11-158F14720791}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Texture", "Texture", "{68D0CD4E-7958-4750-902F-D1353A15BA28}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Big_Image", "Big_Image\Big_Image.vcxproj", "{3001BB26-B7E5-4E6A-859C-5F539E305DED}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Basic", "Basic", "{1C151407-3735-4D46-80DC-6B5A04222453}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Vertex_Buffer", "Vertex_Buffer\Vertex_Buffer.vcxproj", "{495646D8-3C72-48FF-9197-E25F1B063D36}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Index_Buffer", "Index_Buffer\Index_Buffer.vcxproj", "{8A76C61C-9184-452D-B912-6A919E9751EC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -13,8 +23,25 @@ Global
 		{6A50A411-549A-421F-9E11-158F14720791}.Debug|Win32.Build.0 = Debug|Win32
 		{6A50A411-549A-421F-9E11-158F14720791}.Release|Win32.ActiveCfg = Release|Win32
 		{6A50A411-549A-421F-9E11-158F14720791}.Release|Win32.Build.0 = Release|Win32
+		{3001BB26-B7E5-4E6A-859C-5F539E305DED}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3001BB26-B7E5-4E6A-859C-5F539E305DED}.Debug|Win32.Build.0 = Debug|Win32
+		{3001BB26-B7E5-4E6A-859C-5F539E305DED}.Release|Win32.ActiveCfg = Release|Win32
+		{3001BB26-B7E5-4E6A-859C-5F539E305DED}.Release|Win32.Build.0 = Release|Win32
+		{495646D8-3C72-48FF-9197-E25F1B063D36}.Debug|Win32.ActiveCfg = Debug|Win32
+		{495646D8-3C72-48FF-9197-E25F1B063D36}.Debug|Win32.Build.0 = Debug|Win32
+		{495646D8-3C72-48FF-9197-E25F1B063D36}.Release|Win32.ActiveCfg = Release|Win32
+		{495646D8-3C72-48FF-9197-E25F1B063D36}.Release|Win32.Build.0 = Release|Win32
+		{8A76C61C-9184-452D-B912-6A919E9751EC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8A76C61C-9184-452D-B912-6A919E9751EC}.Debug|Win32.Build.0 = Debug|Win32
+		{8A76C61C-9184-452D-B912-6A919E9751EC}.Release|Win32.ActiveCfg = Release|Win32
+		{8A76C61C-9184-452D-B912-6A919E9751EC}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{3001BB26-B7E5-4E6A-859C-5F539E305DED} = {68D0CD4E-7958-4750-902F-D1353A15BA28}
+		{495646D8-3C72-48FF-9197-E25F1B063D36} = {1C151407-3735-4D46-80DC-6B5A04222453}
+		{8A76C61C-9184-452D-B912-6A919E9751EC} = {1C151407-3735-4D46-80DC-6B5A04222453}
 	EndGlobalSection
 EndGlobal
