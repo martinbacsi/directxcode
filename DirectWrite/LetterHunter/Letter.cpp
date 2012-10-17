@@ -14,7 +14,7 @@ Letter::Letter(
 		D2D1_COLOR_F fillColor_,
 		D2D1_COLOR_F outlineColor_,
 		float width,
-		int fontSize_
+		float fontSize_
 		)
 		:
 	pD2DFactory(d2dFactory),
@@ -94,7 +94,7 @@ Letter::Letter(
 	}
 
 	// Crreate boundary_ background brush
-	hr = pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Gray), &boundaryBackgroundBrush_);
+	hr = pRenderTarget->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::DeepSkyBlue), &boundaryBackgroundBrush_);
 	if(FAILED(hr))
 	{
 		MessageBox(NULL, L"Create boundary_ background brush failed!", L"Error", 0);
@@ -112,7 +112,7 @@ Letter::Letter(
 	UINT16*	pGlyphIndices	= new UINT16[textLength];
 	ZeroMemory(pGlyphIndices, sizeof(UINT16) * textLength);
 
-	for(int i = 0; i < textLength; ++i)
+	for(unsigned int i = 0; i < textLength; ++i)
 	{
 		pCodePoints[i] = textString[i];
 	}
@@ -350,19 +350,50 @@ void Letter::translate(float x, float y)
 void Letter::drawBoundary() const
 {
 	D2D1_RECT_F rect = computeBoundary();
-	pRenderTarget->DrawRectangle(&rect, pOutlineBrush);
+	pRenderTarget->DrawRectangle(&rect, boundaryBrush_);
 }
 
 void Letter::drawBoundaryBackground() const
 {
+	// Get boundary rectangle
 	D2D1_RECT_F rect = computeBoundary();
-	pRenderTarget->FillRectangle(&rect, boundaryBackgroundBrush_);
+
+	// Calculate boundary width and height
+	float boundWidth = rect.right - rect.left;
+	float boundHeight = rect.bottom - rect.top;
+	
+	if(boundWidth >= boundHeight)
+	{
+		// Extend boundHeight, so it equal to boundWidth
+		rect.top -= (boundWidth - boundHeight) / 2;
+		rect.bottom += (boundWidth - boundHeight) / 2;
+	}
+	else // boundWidth < boundHeight
+	{
+		// Extend boundWidth, so it equals to boundHeight
+		rect.left -= (boundHeight - boundWidth) / 2;
+		rect.right += (boundHeight - boundWidth) / 2;
+	}
+
+	// Extend rect by 10 at each side
+	rect.left	-= (rect.right - rect.left) * 0.1f;
+	rect.right	+= (rect.right - rect.left) * 0.1f;
+	rect.top	-= (rect.bottom - rect.top) * 0.1f;
+	rect.bottom += (rect.bottom - rect.top) * 0.1f;
+
+	D2D1_ROUNDED_RECT roundRect = D2D1::RoundedRect(
+		rect,
+		(rect.right - rect.left) * 0.2f,
+		(rect.top - rect.bottom) * 0.2f
+		);
+
+	pRenderTarget->FillRoundedRectangle(&roundRect, boundaryBackgroundBrush_);
 }
 
 void Letter::update()
 {
 	// Accumulate total time
-	liveTime_ += 0.1;
+	liveTime_ += 0.1f;
 
 	// Get previous position_
 	D2D1_POINT_2F currentPos = getPosition();
@@ -379,6 +410,10 @@ void Letter::render()
 {
 	// Draw outline
 	pRenderTarget->DrawGeometry(pTransformedGeometry, pOutlineBrush, outlineWidth_);
+
+	// Draw background boundary
+	drawBoundaryBackground();
+	//drawBoundary();
 
 	// Fill text geometry
 	pRenderTarget->FillGeometry(pTransformedGeometry, pFillBrush);

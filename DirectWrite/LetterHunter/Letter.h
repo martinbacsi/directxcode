@@ -24,7 +24,7 @@ public:
 		D2D1_COLOR_F			fillColor		= D2D1::ColorF(D2D1::ColorF::Black),
 		D2D1_COLOR_F			outlineColor	= D2D1::ColorF(D2D1::ColorF::White),
 		float					outlineWidth	= 2.0f,
-		int						fontSize		= 200
+		float					fontSize		= 200
 		);
 	~Letter(void);
 
