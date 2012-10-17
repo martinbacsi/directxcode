@@ -378,8 +378,8 @@ void Letter::drawBoundaryBackground() const
 	// Extend rect by 10 at each side
 	rect.left	-= (rect.right - rect.left) * 0.1f;
 	rect.right	+= (rect.right - rect.left) * 0.1f;
-	rect.top	-= (rect.bottom - rect.top) * 0.1f;
-	rect.bottom += (rect.bottom - rect.top) * 0.1f;
+	rect.top	-= -(rect.bottom - rect.top) * 0.1f;
+	rect.bottom += -(rect.bottom - rect.top) * 0.2f;
 
 	D2D1_ROUNDED_RECT roundRect = D2D1::RoundedRect(
 		rect,
