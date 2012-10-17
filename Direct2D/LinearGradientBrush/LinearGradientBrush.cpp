@@ -9,7 +9,8 @@ ID2D1SolidColorBrush* pBlackBrush = NULL ;		// Black brush for rectangle outline
 ID2D1LinearGradientBrush* pLinearGradientBrush = NULL ;		// A linear gradient brush
 
 // Rectangle to draw
-D2D1_RECT_F g_Rectangle = D2D1::RectF(100, 100, 500, 500);
+D2D1_ROUNDED_RECT roundRect = D2D1::RoundedRect(D2D1::RectF(0, 0, 200, 200), 20, 20);
+
 
 RECT rc ;		// Render area
 HWND g_Hwnd ;	// Window handle
@@ -81,8 +82,8 @@ VOID CreateD2DResource(HWND hWnd)
 		// Create a linear gradient brush to fill in the rectangle
 		hr = pRenderTarget->CreateLinearGradientBrush(
 			D2D1::LinearGradientBrushProperties(
-			D2D1::Point2F(g_Rectangle.left, g_Rectangle.top),
-			D2D1::Point2F(g_Rectangle.right, g_Rectangle.bottom)),
+			D2D1::Point2F(roundRect.rect.left, roundRect.rect.top),
+			D2D1::Point2F(roundRect.rect.right, roundRect.rect.bottom)),
 			pGradientStops,
 			&pLinearGradientBrush
 			) ;
@@ -105,14 +106,14 @@ VOID DrawRectangle()
 	pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
 
 	// Draw Rectangle
-	pRenderTarget->DrawRectangle(
-		&g_Rectangle,
+	pRenderTarget->DrawRoundedRectangle(
+		&roundRect,
 		pBlackBrush
 		);
 
 	// Fill rectangle
-	pRenderTarget->FillRectangle(
-		&g_Rectangle,
+	pRenderTarget->FillRoundedRectangle(
+		&roundRect,
 		pLinearGradientBrush
 		) ;
 

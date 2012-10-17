@@ -187,7 +187,6 @@ HRESULT LoadBitmapFromFile(
 	return hr;
 }
 
-
 VOID CreateD2DResource(HWND hWnd)
 {
 	// This function was called in the DrawRectangle function which in turn called to response the

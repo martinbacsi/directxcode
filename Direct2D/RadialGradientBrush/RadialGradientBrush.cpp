@@ -59,9 +59,9 @@ VOID CreateD2DResource(HWND hWnd)
 
 		// Define gradient stops
 		D2D1_GRADIENT_STOP gradientStops[2] ;
-		gradientStops[0].color = D2D1::ColorF(D2D1::ColorF::Yellow, 1) ;
+		gradientStops[0].color = D2D1::ColorF(D2D1::ColorF::Yellow) ;
 		gradientStops[0].position = 0.f ;
-		gradientStops[1].color = D2D1::ColorF(D2D1::ColorF::ForestGreen, 1) ;
+		gradientStops[1].color = D2D1::ColorF(D2D1::ColorF::ForestGreen) ;
 		gradientStops[1].position = 1.f ;
 
 		// Create gradient stops collection
