@@ -65,7 +65,6 @@ HRESULT FindChunk(HANDLE hFile, DWORD fourcc, DWORD& dwChunkSize, DWORD& dwChunk
     }
 
     return S_OK;
-    
 }
 
 void ReadChunkData(HANDLE hFile, void * buffer, DWORD buffersize, DWORD bufferoffset)
