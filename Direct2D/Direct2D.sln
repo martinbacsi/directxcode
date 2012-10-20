@@ -53,6 +53,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Nevigate_Effect", "Nevigate
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RoundRectangleWithGradientBrush", "RoundRectangleWithGradientBrush\RoundRectangleWithGradientBrush.vcxproj", "{AA602723-B2CE-44CF-8F26-E3BAA1387BFC}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Interoperability", "Interoperability", "{DC773221-6CCC-4816-B8B7-07FF545599B1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Interoperate_with_D3D", "Interoperate_with_D3D\Interoperate_with_D3D.vcxproj", "{440CEA80-5113-4CF7-97D2-98B021354383}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -127,6 +131,10 @@ Global
 		{AA602723-B2CE-44CF-8F26-E3BAA1387BFC}.Debug|Win32.Build.0 = Debug|Win32
 		{AA602723-B2CE-44CF-8F26-E3BAA1387BFC}.Release|Win32.ActiveCfg = Release|Win32
 		{AA602723-B2CE-44CF-8F26-E3BAA1387BFC}.Release|Win32.Build.0 = Release|Win32
+		{440CEA80-5113-4CF7-97D2-98B021354383}.Debug|Win32.ActiveCfg = Debug|Win32
+		{440CEA80-5113-4CF7-97D2-98B021354383}.Debug|Win32.Build.0 = Debug|Win32
+		{440CEA80-5113-4CF7-97D2-98B021354383}.Release|Win32.ActiveCfg = Release|Win32
+		{440CEA80-5113-4CF7-97D2-98B021354383}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -151,5 +159,6 @@ Global
 		{F1034E0D-2BA5-4486-95BC-6BADA06D6658} = {ECCBD638-4328-4274-BD2A-BC7E71350219}
 		{3B4E16C0-25E7-4173-A000-9964298F9032} = {6C02B868-C3B9-4AB9-85F3-AF42B4FD6DA0}
 		{0BE9E688-AA55-45C0-80A4-EC34DE38938A} = {CBCDBABA-F20C-466A-9E52-A6D0401B0F5D}
+		{440CEA80-5113-4CF7-97D2-98B021354383} = {DC773221-6CCC-4816-B8B7-07FF545599B1}
 	EndGlobalSection
 EndGlobal
