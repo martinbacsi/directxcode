@@ -41,7 +41,7 @@ Letter::Letter(
 	velocity_ = D2D1::Point2F(0, 0);
 
 	// Create font file reference
-	const WCHAR* filePath = L"C:/Windows/Fonts/ariblk.TTF";
+	const WCHAR* filePath = L"C:/Windows/Fonts/SCHLBKB.TTF";
 	HRESULT hr = pDWriteFactory->CreateFontFileReference(
 		filePath,
 		NULL,
