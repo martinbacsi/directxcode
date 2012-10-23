@@ -1,5 +1,5 @@
 /*
-This Demo show how you draw a screen quad
+This Demo show you how to draw a logo picture at the top left of the rendering window
 1. Define 4 vertex, make sure the order is 1, 2, 4, 3
 2. Draw DrawPrimitive with D3DPT_TRIANGLESTRIP, note D3DPT_TRIANGLESTRIP flag will automatically flip the
 backface culling in even numbered triangles, so you should be careful about the order when define the vertex
@@ -23,6 +23,9 @@ culling order is CW, so both of the triangles are displayed!
 2. set texture and sample state
 3. Create vertex and map texture coordinates
 4. Draw quad
+
+NOTE: We use thte LT format of vertex, that's the lit and transform vertex format, which does not 
+use the D3D engine for lighting and transforming, thus the vertex coordinates was in screen space.
 */
 
 
