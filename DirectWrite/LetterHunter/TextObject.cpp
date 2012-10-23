@@ -25,14 +25,15 @@ TextObject::TextObject(
 	isLive_(true),
     letterBuffer_(NULL)
 {
-	createText(text, d2dFactory_, rendertarget_, dwriteFactory_);
+	createText(text, d2dFactory_, rendertarget_, dwriteFactory_, 100);
 }
 
 void TextObject::createText(
 	wchar_t* textString, 
 	ID2D1Factory* d2dFactory, 
 	ID2D1HwndRenderTarget*	rendertarget, 
-	IDWriteFactory*			dwriteFactory
+	IDWriteFactory*			dwriteFactory,
+	float fontSize
 	)
 {
 	
@@ -60,7 +61,8 @@ void TextObject::createText(
 			d2dFactory,
 			rendertarget,
 			dwriteFactory,
-			textString[i]		// here is a string instead
+			textString[i],		// here is a string instead
+			fontSize
 			);
 		
 		D2D1_MATRIX_3X2_F matrix = D2D1::Matrix3x2F::Translation(currentX, currentY);
@@ -245,4 +247,65 @@ void TextObject::setLetterSpeedFactor(float speedFactor)
 	{
 		letterBuffer_[i]->setSpeedFactor(speedFactor);
 	}
+}
+
+Letter* TextObject::getFirstActiveLetter() const
+{
+	return getLetter(activeIndex_);
+}
+
+void TextObject::onHit()
+{
+	// Change the color of the hit letter
+	setFillColorRange(activeIndex_, 1, D2D1::ColorF(D2D1::ColorF::White));
+	setOutlineColorRange(activeIndex_, 1, D2D1::ColorF(D2D1::ColorF::Black));
+
+	// Update active index of text
+	setActiveIndex(activeIndex_ + 1);
+
+	// If all the letters in the text was hit, we treat the text as dead
+	if(activeIndex_ == getTextLength())
+	{
+		setLiveState(false);
+	}
+}
+
+void TextObject::getBoundaryRect(D2D1_RECT_F& rect)
+{
+	// Get the boundary rect for each letter in the text object
+	// then compute the min top, max bottom, min left and max right value to build a new rect
+	D2D1_RECT_F tempRect;
+	for(int i = 0; i < length_; ++i)
+	{
+		letterBuffer_[i]->getBound(&tempRect);
+
+		rect.top	= min(rect.top, tempRect.top);
+		rect.bottom = max(rect.bottom, tempRect.bottom);
+		rect.left	= min(rect.left, tempRect.left);
+		rect.right	= max(rect.right, tempRect.right);
+	}
+}
+
+bool TextObject::outofWindow(RECT& windowRect)
+{
+	D2D1_RECT_F rect = {10000, 10000, -10000, -10000};
+	getBoundaryRect(rect);
+
+	// Check whether letter was out of window
+	if( rect.bottom < windowRect.top 
+		|| rect.top > windowRect.bottom
+		|| rect.right < windowRect.left
+		|| rect.left > windowRect.right )
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+Letter* TextObject::getLetter(int index) const
+{
+	return letterBuffer_[index];
 }

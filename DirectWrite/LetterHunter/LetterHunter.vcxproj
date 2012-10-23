@@ -73,25 +73,30 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>dwmapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Bullet.cpp" />
     <ClCompile Include="D2D.cpp" />
     <ClCompile Include="DInput.cpp" />
     <ClCompile Include="Letter.cpp" />
     <ClCompile Include="LetterHunter.cpp" />
     <ClCompile Include="MagicProps.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Shooter.cpp" />
     <ClCompile Include="Sound.cpp" />
     <ClCompile Include="SoundManager.cpp" />
     <ClCompile Include="TextObject.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Bullet.h" />
     <ClInclude Include="D2D.h" />
     <ClInclude Include="DInput.h" />
     <ClInclude Include="Letter.h" />
     <ClInclude Include="LetterHunter.h" />
     <ClInclude Include="MagicProps.h" />
+    <ClInclude Include="Shooter.h" />
     <ClInclude Include="Sound.h" />
     <ClInclude Include="SoundManager.h" />
     <ClInclude Include="TextObject.h" />

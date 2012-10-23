@@ -11,10 +11,10 @@ Letter::Letter(
 		ID2D1HwndRenderTarget* rendertarget, 
 		IDWriteFactory*	dwriteFactory,
 		wchar_t letter, 
-		D2D1_COLOR_F fillColor_,
-		D2D1_COLOR_F outlineColor_,
+		float fontSize_,
 		float width,
-		float fontSize_
+		D2D1_COLOR_F fillColor_,
+		D2D1_COLOR_F outlineColor_
 		)
 		:
 	pD2DFactory(d2dFactory),
@@ -31,7 +31,7 @@ Letter::Letter(
 	boundaryBrush_(NULL),
 	boundaryBackgroundBrush_(NULL),
 	pPathGeometry(NULL),
-	pTransformedGeometry(NULL)
+	pTransformedGeometry_(NULL)
 {
 	letter_ = letter;
 	fontSize_ = fontSize_;
@@ -180,7 +180,7 @@ Letter::Letter(
 
 Letter::~Letter(void)
 {
-	SAFE_RELEASE(pTransformedGeometry);
+	SAFE_RELEASE(pTransformedGeometry_);
 	SAFE_RELEASE(pGeometrySink);
 	SAFE_RELEASE(pPathGeometry);
 	SAFE_RELEASE(pFontFile);
@@ -264,7 +264,7 @@ void Letter::setBoundaryBackgroundColor(D2D1_COLOR_F& color)
 	boundaryBackgroundBrush_->SetColor(color);
 }
 
-float	Letter::getoutlineWidth() const
+float Letter::getoutlineWidth() const
 {
 	return outlineWidth_;
 }
@@ -281,7 +281,7 @@ int Letter::getSize() const
 
 void Letter::getBound(D2D1_RECT_F* rect) const
 {
-	pPathGeometry->GetBounds(D2D1::Matrix3x2F::Identity(), rect);
+	pTransformedGeometry_->GetBounds(D2D1::Matrix3x2F::Identity(), rect);
 }
 
 D2D1_POINT_2F Letter::getPosition() const
@@ -324,7 +324,7 @@ void Letter::setVelocity(float x, float y)
 D2D1_RECT_F	Letter::computeBoundary() const
 {
 	D2D1_RECT_F rect;
-	pTransformedGeometry->GetBounds(D2D1::Matrix3x2F::Identity(), &rect);
+	pTransformedGeometry_->GetBounds(D2D1::Matrix3x2F::Identity(), &rect);
 	return rect;
 }
 
@@ -337,7 +337,7 @@ void Letter::setTransform(D2D1_MATRIX_3X2_F& matrix)
 	pD2DFactory->CreateTransformedGeometry(
 		pPathGeometry,
 		matrix_,
-		&pTransformedGeometry
+		&pTransformedGeometry_
 	);
 }
 
@@ -390,6 +390,11 @@ void Letter::drawBoundaryBackground() const
 	pRenderTarget->FillRoundedRectangle(&roundRect, boundaryBackgroundBrush_);
 }
 
+ID2D1TransformedGeometry* Letter::getTransformedGeometry() const
+{
+	return pTransformedGeometry_;
+}
+
 void Letter::update()
 {
 	// Accumulate total time
@@ -409,12 +414,11 @@ void Letter::update()
 void Letter::render()
 {
 	// Draw outline
-	pRenderTarget->DrawGeometry(pTransformedGeometry, pOutlineBrush, outlineWidth_);
+	pRenderTarget->DrawGeometry(pTransformedGeometry_, pOutlineBrush, outlineWidth_);
 
 	// Draw background boundary
-	drawBoundaryBackground();
-	//drawBoundary();
+	// drawBoundaryBackground();
 
 	// Fill text geometry
-	pRenderTarget->FillGeometry(pTransformedGeometry, pFillBrush);
+	pRenderTarget->FillGeometry(pTransformedGeometry_, pFillBrush);
 }

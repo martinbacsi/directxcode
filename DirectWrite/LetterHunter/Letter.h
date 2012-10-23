@@ -21,10 +21,10 @@ public:
 		ID2D1HwndRenderTarget*	rendertarget, 
 		IDWriteFactory*			dwriteFactory,
 		wchar_t					letter, 
-		D2D1_COLOR_F			fillColor		= D2D1::ColorF(D2D1::ColorF::Black),
-		D2D1_COLOR_F			outlineColor	= D2D1::ColorF(D2D1::ColorF::White),
+		float					fontSize		= 200,
 		float					outlineWidth	= 2.0f,
-		float					fontSize		= 200
+		D2D1_COLOR_F			fillColor		= D2D1::ColorF(D2D1::ColorF::Black),
+		D2D1_COLOR_F			outlineColor	= D2D1::ColorF(D2D1::ColorF::White)
 		);
 	~Letter(void);
 
@@ -68,6 +68,8 @@ public:
 	void			drawBoundaryBackground() const;
 	void			setBoundaryBackgroundColor(D2D1_COLOR_F& color);
 
+	ID2D1TransformedGeometry* getTransformedGeometry() const;
+
 	// Translate letter to position (x, y)
 	void			translate(float x, float y);
 
@@ -102,7 +104,7 @@ private:
 	IDWriteFontFile*			pFontFile;
 	ID2D1PathGeometry*			pPathGeometry;
 	ID2D1GeometrySink*			pGeometrySink;
-	ID2D1TransformedGeometry*	pTransformedGeometry;
+	ID2D1TransformedGeometry*	pTransformedGeometry_;
 
 	wchar_t				letter_;		// the letter value of the object
 	bool				isLive_;		// Is letter alive?

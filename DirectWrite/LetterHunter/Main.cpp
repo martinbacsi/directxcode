@@ -9,6 +9,7 @@ Key steps:
 */
 
 #include <Windows.h>
+#include <MMSystem.h>
 #include "LetterHunter.h"
 #include "Utilities.h"
 
@@ -19,8 +20,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch (message)    
 	{
 	case   WM_PAINT:
-		g_pletterHunter->render();
-		return 0 ;
+		{
+			static DWORD lastTime = timeGetTime();
+			DWORD currentTime = timeGetTime();
+			float timeDelta = (currentTime - lastTime) * 0.001f;
+
+			g_pletterHunter->render(timeDelta);
+
+			lastTime = currentTime;
+
+			return 0 ;
+		}
 
 	case WM_SIZE:
 		{

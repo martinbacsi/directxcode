@@ -15,7 +15,7 @@ public:
 		D2D1_COLOR_F	fillColor		= D2D1::ColorF(D2D1::ColorF::Black),
 		D2D1_COLOR_F	outlineColor	= D2D1::ColorF(D2D1::ColorF::White),
 		float			outlineWidth	= 2.0f,
-		int				fontSize		= 200
+		int				fontSize		= 100
 		);
 	~TextObject(void);
 
@@ -76,6 +76,14 @@ public:
 	wchar_t* getText() const;
 	int		 getTextLength() const;
 
+	// Get the first hitable letter in the text.
+	Letter* getFirstActiveLetter() const;
+	
+	// Handler when text was hit
+	void	onHit();
+	void	getBoundaryRect(D2D1_RECT_F& rect);
+	bool	outofWindow(RECT&	windowRect);
+
 	void setLetterSpeedFactor(float speedFactor);
 
 private:
@@ -84,8 +92,12 @@ private:
 		wchar_t* textString, 
 		ID2D1Factory*			d2dFactory, 
 		ID2D1HwndRenderTarget*	rendertarget, 
-		IDWriteFactory*			dwriteFactory
+		IDWriteFactory*			dwriteFactory,
+		float					fontSize = 100.0f
 		);	
+
+	// Get the letter object by index, each letter in the text was represent by a letter obejct.
+	Letter* getLetter(int index) const;
 
 private:
 	ID2D1Factory*			d2dFactory_;
