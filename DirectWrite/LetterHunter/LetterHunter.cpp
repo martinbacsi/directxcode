@@ -376,8 +376,9 @@ void LetterHunter::hitAll()
 	for(unsigned int i = 0; i < textBuffer_.size(); ++i)
 	{
 		textBuffer_[i]->setLiveState(false);
-		soundManager_->onHit();
 	}
+
+	soundManager_->onHitAll();
 }
 
 void LetterHunter::setBulletObject(BaseLetter* letterObject)
