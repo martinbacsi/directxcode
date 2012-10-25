@@ -98,7 +98,7 @@ void LetterHunter::update(float timeDelta)
 	{
 		if (textBuffer_[i]->isLive())
 		{
-			textBuffer_[i]->update();
+			textBuffer_[i]->update(timeDelta);
 
 			// If text object was out of window, set it to dead.
 			RECT windowRect = {0, 0, windowWidth, windowHeight};
@@ -241,14 +241,20 @@ void LetterHunter::initializeText()
 
 		// Generate 10 random numbers between 1 and 100
 		float a[10] = {0};
-		a[i] = randomFloat(0.1f, 0.5f);
+		float velocityY = randomFloat(10.0f, 100.0f);
+		D2D_VECTOR_2F velocity = {0, velocityY};
 
 		// Set text position
-		float positionX = randomFloat(0, 1700);
-		textObj->setPosition(positionX, 0.0f);
+		float windowWidth = (float)getwindowWidth();
+		D2D1_RECT_F textBoundRect = textObj->getBoundaryRect();
+		float maxRight = windowWidth - (textBoundRect.right -textBoundRect.left);
+
+		float positionX = randomFloat(0, maxRight);
+		D2D1_POINT_2F position = {positionX, 0};
+		textObj->setPosition(position);
 
 		// Set text velocity
-		textObj->setVelocity(0, a[i]);
+		textObj->setVelocity(velocity);
 
 		D2D1_COLOR_F fillColor = randomColor();
 		textObj->setFillColor(fillColor);
@@ -272,11 +278,18 @@ void LetterHunter::initializeBullet()
 void LetterHunter::resetTextObject(TextObject* textObject)
 {
 	// Set text position
-	float posX = randomFloat(0, 1700);
+	float windowWidth = (float)getwindowWidth();
+	D2D1_RECT_F textBoundRect = textObject->getBoundaryRect();
+	float maxRight = windowWidth - (textBoundRect.right -textBoundRect.left);
+
+	float positionX = randomFloat(0, maxRight);
+	D2D1_POINT_2F position = {positionX, 0};
 
 	// Set text velocity
 	float velocityX = 0;
 	float velocityY = randomFloat(0.1f, 0.5f);
+
+	D2D_VECTOR_2F velocity = textObject->getVelocity();
 
 	// Create text string
 	const int strLength = 3;
@@ -288,7 +301,7 @@ void LetterHunter::resetTextObject(TextObject* textObject)
 	textObject->setFillColor(fillColor);
 
 	// Reset text object
-	textObject->reset(strBuffer, posX, 0, velocityX, velocityY, fillColor);
+	textObject->reset(strBuffer, position, velocity, fillColor);
 
 	SAFE_DELETE(strBuffer);
 }
@@ -353,11 +366,9 @@ void LetterHunter::shootCheck(wchar_t key)
 void LetterHunter::hitDetect(Bullet* bullet, TextObject* textObject)
 {
 	// We trate the letter as hit when the bullet pass over the letter, that is the bullet.top < letter.bottom
-	D2D1_RECT_F bulletRect;
-	bullet->getBoundRect(&bulletRect);
+	D2D1_RECT_F bulletRect = bullet->getBoundRect();
 
-	D2D1_RECT_F textObejctRect;
-	textObject->getBoundaryRect(textObejctRect);
+	D2D1_RECT_F textObejctRect = textObject->getBoundaryRect();
 
 	if(bulletRect.top < textObejctRect.bottom)
 	{

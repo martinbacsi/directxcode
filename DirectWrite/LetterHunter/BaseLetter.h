@@ -15,8 +15,8 @@ public:
 		wchar_t					letter, 
 		float					fontSize		= 200,
 		float					outlineWidth	= 2.0f,
-		D2D1_COLOR_F			fillColor		= D2D1::ColorF(D2D1::ColorF::Black),
-		D2D1_COLOR_F			outlineColor	= D2D1::ColorF(D2D1::ColorF::White)
+		D2D1_COLOR_F&			fillColor		= D2D1::ColorF(D2D1::ColorF::Black),
+		D2D1_COLOR_F&			outlineColor	= D2D1::ColorF(D2D1::ColorF::White)
 		);
 	~BaseLetter(void);
 
@@ -29,10 +29,10 @@ public:
 	void			setLetter(wchar_t letter);
 
 	D2D1_COLOR_F	getFillColor() const;
-	void			setFillColor(D2D1_COLOR_F color);
+	void			setFillColor(D2D1_COLOR_F& color);
 
 	D2D1_COLOR_F	getOutlineColor() const;
-	void			setOutlineColor(D2D1_COLOR_F color);
+	void			setOutlineColor(D2D1_COLOR_F& color);
 
 	float			getSpeedFactor() const;
 	void			setSpeedFactor(float speedFactor);
@@ -41,11 +41,11 @@ public:
 	void			setOutlineWidth(float width);
 
 	D2D1_POINT_2F	getPosition() const;
-	void			setPosition(D2D1_POINT_2F pos);
+	void			setPosition(D2D1_POINT_2F& pos);
 	void			setPosition(float x, float y);
 
-	D2D1_POINT_2F	getVelocity() const;
-	void			setVelocity(D2D1_POINT_2F velocity);
+	D2D_VECTOR_2F	getVelocity() const;
+	void			setVelocity(D2D_VECTOR_2F& velocity);
 	void			setVelocity(float x, float y);
 
 	void			drawBoundary() const;
@@ -65,7 +65,7 @@ public:
 	void			setTransform(D2D1_MATRIX_3X2_F& matrix);
 
 	// Update the letter, this is alwarys moving the letter 
-	void			update();		// Update the text
+	void			update(float timeDelta);		// Update the text
 
 	// Draw letter
 	void			render();
@@ -102,7 +102,7 @@ private:
 	// Since D2D_VECTOR_2F has no constructor and not easy-use, so we use D2D1_POINT_2F instead, though D2D_VECTOR_2F
 	// is more perspective to express velocity, but it's just a C-style structure and hard to use, hope MS can update 
 	// it in the next release. it seems there is no D2D1_VECTOR_2F in d2dbasetypes.h, but I do see it on MSDN, why?
-	D2D1_POINT_2F		velocity_;		// moving velocity
+	D2D_VECTOR_2F		velocity_;		// moving velocity
 	D2D1_COLOR_F		outlineColor_;	// font color
 	D2D1_COLOR_F		fillColor_;		// Color to fill the letter
 	D2D1_RECT_F			boundary_;		// Boundary rectange of the letter

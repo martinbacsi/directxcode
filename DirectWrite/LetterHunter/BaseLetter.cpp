@@ -13,8 +13,8 @@ BaseLetter::BaseLetter(
 		wchar_t letter, 
 		float fontSize_,
 		float width,
-		D2D1_COLOR_F fillColor_,
-		D2D1_COLOR_F outlineColor_
+		D2D1_COLOR_F& fillColor_,
+		D2D1_COLOR_F& outlineColor_
 		)
 		:
 	pD2DFactory(d2dFactory),
@@ -37,7 +37,8 @@ BaseLetter::BaseLetter(
 	this->fillColor_ = fillColor_;
 	this->outlineColor_ = outlineColor_;
 
-	velocity_ = D2D1::Point2F(0, 0);
+	velocity_.x = 0;
+	velocity_.y = 0;
 
 	// Create font file reference
 	const WCHAR* filePath = L"C:/Windows/Fonts/SCHLBKB.TTF";
@@ -221,7 +222,7 @@ D2D1_COLOR_F BaseLetter::getFillColor() const
 	return fillColor_;
 }
 
-void BaseLetter::setFillColor(D2D1_COLOR_F color)
+void BaseLetter::setFillColor(D2D1_COLOR_F& color)
 {
 	fillColor_ = color;
 	pFillBrush->SetColor(fillColor_);
@@ -232,7 +233,7 @@ D2D1_COLOR_F BaseLetter::getOutlineColor() const
 	return outlineColor_;
 }
 
-void BaseLetter::setOutlineColor(D2D1_COLOR_F color)
+void BaseLetter::setOutlineColor(D2D1_COLOR_F& color)
 {
 	outlineColor_ = color;
 	pOutlineBrush->SetColor(outlineColor_);
@@ -279,7 +280,7 @@ D2D1_POINT_2F BaseLetter::getPosition() const
 	return pos;
 }
 
-void BaseLetter::setPosition(D2D1_POINT_2F pos)
+void BaseLetter::setPosition(D2D1_POINT_2F& pos)
 {
 	translate(pos.x, pos.y);
 }
@@ -289,12 +290,12 @@ void BaseLetter::setPosition(float x, float y)
 	translate(x, y);
 }
 
-D2D1_POINT_2F BaseLetter::getVelocity() const
+D2D_VECTOR_2F BaseLetter::getVelocity() const
 {
 	return velocity_;
 }
 
-void BaseLetter::setVelocity(D2D1_POINT_2F velocity)
+void BaseLetter::setVelocity(D2D_VECTOR_2F& velocity)
 {
 	velocity_ = velocity;
 }
@@ -379,17 +380,14 @@ ID2D1TransformedGeometry* BaseLetter::getTransformedGeometry() const
 	return pTransformedGeometry_;
 }
 
-void BaseLetter::update()
+void BaseLetter::update(float timeDelta)
 {
-	// Accumulate total time
-	liveTime_ = 2.0f;
-
 	// Get previous position_
 	D2D1_POINT_2F currentPos = getPosition();
 
 	// Calculate new position_ based on previous postion and velocity_
-	float newX = currentPos.x + velocity_.x * liveTime_ * speedFactor_;
-	float newY = currentPos.y + velocity_.y * liveTime_ * speedFactor_;
+	float newX = currentPos.x + velocity_.x * timeDelta;
+	float newY = currentPos.y + velocity_.y * timeDelta;
 
 	// Translate to current position_
 	translate(newX, newY);

@@ -19,11 +19,11 @@ public:
 		);
 	~TextObject(void);
 
-	void update();
+	void update(float timeDelta);
 	void render();
 
 	// Reset a text object
-	void reset(wchar_t* text, float x, float y, float velocityX, float velocityY, D2D1_COLOR_F& fillColor);
+	void reset(wchar_t* text, D2D1_POINT_2F& position, D2D_VECTOR_2F& velocity, D2D1_COLOR_F& fillColor);
 
 	//Set text fill in color for a given range
 	void setFillColorRange(int startIndex, int length, D2D1_COLOR_F& color);
@@ -56,14 +56,15 @@ public:
 	void setVisibleState(int startIndex, int length, bool state);
 
 	// Set the velocity of the text for a given range
-	void setVelocityRange(int startIndex, int length, float x, float y);
+	void setVelocityRange(int startIndex, int length, D2D_VECTOR_2F& velocity);
 
 	// Set the velocity of the entire text
-	void setVelocity(float x, float y);
+	void setVelocity(D2D_VECTOR_2F& velocity);
+	D2D_VECTOR_2F getVelocity() const;
 
 	// Set the position of the entire text
-	void setPostionRange(int startIndex, int length, float x, float y);
-	void setPosition(float x, float y);
+	void setPostionRange(int startIndex, int length, D2D1_POINT_2F& position);
+	void setPosition(D2D1_POINT_2F& position);
 	void setTransfrom(D2D1_MATRIX_3X2_F& matrix);
 
 	// Set the active index of the text
@@ -80,9 +81,9 @@ public:
 	BaseLetter* getFirstActiveLetterObject() const;
 	
 	// Handler when text was hit
-	void	onHit();
-	void	getBoundaryRect(D2D1_RECT_F& rect);
-	bool	outofWindow(RECT&	windowRect);
+	void		onHit();
+	D2D1_RECT_F	getBoundaryRect() const;
+	bool		outofWindow(RECT&	windowRect);
 
 	void setLetterSpeedFactor(float speedFactor);
 
@@ -106,7 +107,7 @@ private:
 
 	wchar_t*	text_;			// text of the text object
 	int			length_;		// length of the text
-	int			fontSize_;		// Font size
+	float		fontSize_;		// Font size
 	float		letterSpace_;	// The space between two adjacent letters
 
 	// The active index specify which letter is currently hitable in the text, when

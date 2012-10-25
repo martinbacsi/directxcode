@@ -42,12 +42,12 @@ Bullet::Bullet(ID2D1Factory* pD2DFactory, ID2D1HwndRenderTarget* pRenderTarget)
 	pRenderTarget_->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Green), &pFillBrush_);
 }
 
-void Bullet::setVelocity(D2D_VECTOR_2F velocity)
+void Bullet::setVelocity(D2D_VECTOR_2F& velocity)
 {
 	velocity_ = velocity;
 }
 
-void Bullet::setPostion(D2D_POINT_2F pos)
+void Bullet::setPostion(D2D_POINT_2F& pos)
 {
 	matrix_._31 = pos.x;
 	matrix_._32 = pos.y;
@@ -84,16 +84,17 @@ ID2D1TransformedGeometry* Bullet::getTransformedGeometry() const
 	return pTransformedGeometry_;
 }
 
-void Bullet::getBoundRect(D2D1_RECT_F* rect) const
+D2D1_RECT_F Bullet::getBoundRect() const
 {
-	pTransformedGeometry_->GetBounds(D2D1::Matrix3x2F::Identity(), rect);
+	D2D1_RECT_F rect;
+	pTransformedGeometry_->GetBounds(D2D1::Matrix3x2F::Identity(), &rect);
+	return rect;
 }
 
 bool Bullet::outofWindow(RECT& windowRect)
 {
 	// Get boundary rectangle of current letter
-	D2D1_RECT_F rect;
-	getBoundRect(&rect);
+	D2D1_RECT_F rect = getBoundRect();
 
 	// Check whether letter was out of window
 	if( rect.bottom < windowRect.top 

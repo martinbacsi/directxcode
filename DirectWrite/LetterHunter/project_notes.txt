@@ -20,3 +20,9 @@ current problems
 
 Learn
 1. Direct input will still recieve input even window was lost focus.
+
+C++
+1. if parameter is a class type, use reference as parameter instead of object for performance better.
+2. getXXX() function should always be const.
+3. always define a default constructor for object array or vector to initialized successfully.
+4. use reference instead of pointers whenever you can.

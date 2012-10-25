@@ -83,7 +83,7 @@ TextObject::~TextObject(void)
 	SAFE_DELETE_ARRAY(letterBuffer_);
 }
 
-void TextObject::reset(wchar_t* text, float x, float y, float velocityX, float velocityY, D2D1_COLOR_F& fillColor)
+void TextObject::reset(wchar_t* text, D2D1_POINT_2F& position, D2D_VECTOR_2F& velocity, D2D1_COLOR_F& fillColor)
 {
 	activeIndex_	= 0;
 	isLive_			= true;
@@ -92,18 +92,18 @@ void TextObject::reset(wchar_t* text, float x, float y, float velocityX, float v
 
 	createText(text, d2dFactory_, rendertarget_, dwriteFactory_, fontSize_);
 
-	setPosition(x, y);
+	setPosition(position);
 
-	setVelocity(velocityX, velocityY);
+	setVelocity(velocity);
 
 	setFillColor(fillColor);
 }
 
-void TextObject::update()
+void TextObject::update(float timeDelta)
 {
 	for(int i = 0; i < length_; ++i)
 	{
-		letterBuffer_[i]->update();
+		letterBuffer_[i]->update(timeDelta);
 	}
 }
 
@@ -164,23 +164,29 @@ bool TextObject::isLive() const
 	return isLive_;
 }
 
-void TextObject::setVelocityRange(int startIndex, int length, float x, float y)
+void TextObject::setVelocityRange(int startIndex, int length, D2D_VECTOR_2F& velocity)
 {
 	for(int i = startIndex; i < startIndex + length_; ++i)
 	{
-		letterBuffer_[i]->setVelocity(x, y);
+		letterBuffer_[i]->setVelocity(velocity);
 	}
 }
 
-void TextObject::setVelocity(float x, float y)
+void TextObject::setVelocity(D2D_VECTOR_2F& velocity)
 {
-	setVelocityRange(0, length_, x, y);
+	setVelocityRange(0, length_, velocity);
 }
 
-void TextObject::setPostionRange(int startIndex, int length, float x, float y)
+
+D2D_VECTOR_2F TextObject::getVelocity() const
 {
-	float currentX = x;
-	float currentY = y;
+	return letterBuffer_[0]->getVelocity();
+}
+
+void TextObject::setPostionRange(int startIndex, int length, D2D1_POINT_2F& position)
+{
+	float currentX = position.x;
+	float currentY = position.y;
 
 	for(int i = startIndex; i < length; ++i)
 	{
@@ -196,9 +202,9 @@ void TextObject::setPostionRange(int startIndex, int length, float x, float y)
 	}
 }
 
-void TextObject::setPosition(float x, float y)
+void TextObject::setPosition(D2D1_POINT_2F& position)
 {
-	setPostionRange(0, length_, x, y);
+	setPostionRange(0, length_, position);
 }
 
 void TextObject::setTransfrom(D2D1_MATRIX_3X2_F& matrix)
@@ -258,8 +264,10 @@ void TextObject::onHit()
 	}
 }
 
-void TextObject::getBoundaryRect(D2D1_RECT_F& rect)
+D2D1_RECT_F TextObject::getBoundaryRect() const
 {
+	D2D1_RECT_F rect; // result rectangle
+
 	// Get the boundary rect for each letter in the text object
 	// then compute the min top, max bottom, min left and max right value to build a new rect
 	for(int i = 0; i < length_; ++i)
@@ -271,12 +279,13 @@ void TextObject::getBoundaryRect(D2D1_RECT_F& rect)
 		rect.left	= min(rect.left, tempRect.left);
 		rect.right	= max(rect.right, tempRect.right);
 	}
+
+	return rect;
 }
 
 bool TextObject::outofWindow(RECT& windowRect)
 {
-	D2D1_RECT_F rect = {10000, 10000, -10000, -10000};
-	getBoundaryRect(rect);
+	D2D1_RECT_F rect = getBoundaryRect();
 
 	// Check whether letter was out of window
 	if( rect.bottom < windowRect.top 

@@ -11,8 +11,8 @@ public:
 
 	~Bullet(void);
 
-	void setVelocity(D2D_VECTOR_2F velocity);
-	void setPostion(D2D_POINT_2F pos);
+	void setVelocity(D2D_VECTOR_2F& velocity);
+	void setPostion(D2D_POINT_2F& pos);
 	D2D_POINT_2F getPosition() const;
 	void setLiveState(bool liveState);
 	bool isLive() const;
@@ -20,7 +20,7 @@ public:
 	wchar_t getTargetLetter() const;
 	ID2D1TransformedGeometry* getTransformedGeometry() const;
 
-	void getBoundRect(D2D1_RECT_F* rect) const;
+	D2D1_RECT_F getBoundRect() const;
 
 	// Determine whether the bullet was out of current window, if true, the 
 	// bullet was set to dead.
