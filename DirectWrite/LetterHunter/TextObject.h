@@ -12,10 +12,10 @@ public:
 		ID2D1HwndRenderTarget*	rendertarget, 
 		IDWriteFactory*			dwriteFactory,
 		wchar_t*		text, 
+		float			fontSize		= 100,
 		D2D1_COLOR_F	fillColor		= D2D1::ColorF(D2D1::ColorF::Black),
 		D2D1_COLOR_F	outlineColor	= D2D1::ColorF(D2D1::ColorF::White),
-		float			outlineWidth	= 2.0f,
-		int				fontSize		= 100
+		float			outlineWidth	= 2.0f
 		);
 	~TextObject(void);
 

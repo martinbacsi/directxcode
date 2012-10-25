@@ -13,6 +13,14 @@
 // Generate a random float nuber between min and max
 static float randomFloat(float min, float max)
 {
+	// Make sure srand only run once.
+	static bool hasRun = false;
+	if(!hasRun)
+	{
+		srand((unsigned int)time(0));
+		hasRun = true;
+	}
+
 	float random = ((float)rand()) / (float)RAND_MAX;
 	float range = max - min;
 	return (random * range) + min;
@@ -21,6 +29,13 @@ static float randomFloat(float min, float max)
 // Generate random integer between start and end(inclusive)
 static int randomInt(int start, int end)
 {
+	static bool hasRun = false;
+	if(!hasRun)
+	{
+		srand((unsigned int)time(0));
+		hasRun = true;
+	}
+
 	int k = rand() % (end - start + 1) + start;
 
 	return k;
@@ -29,8 +44,6 @@ static int randomInt(int start, int end)
 // Generate random lower case letter('a' - 'z')
 static char randomLowerCaseLetterObject()
 {
-	srand((unsigned int)time(0));
-
 	int offset = randomInt(0, 25);
 	char letter = 'a' + offset;
 
@@ -40,8 +53,6 @@ static char randomLowerCaseLetterObject()
 // Generate random upper case letter('A' - 'Z')
 static char randomUpperCaseLetterObject()
 {
-	srand((unsigned int)time(0));
-
 	int offset = randomInt(0, 25);
 	char letter = 'A' + offset;
 

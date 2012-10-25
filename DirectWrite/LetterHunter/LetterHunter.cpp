@@ -233,7 +233,8 @@ void LetterHunter::initializeText()
 			D2DFactory,
 			renderTarget,
 			DWriteFactory,
-			strBuffer
+			strBuffer,
+			200
 			);
 
 		SAFE_DELETE(strBuffer);

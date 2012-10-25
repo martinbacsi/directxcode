@@ -10,10 +10,10 @@ TextObject::TextObject(
 	ID2D1HwndRenderTarget*	rendertarget, 
 	IDWriteFactory*			dwriteFactory,
 	wchar_t*		text, 
+	float			fontSize,
 	D2D1_COLOR_F	fillColor,
 	D2D1_COLOR_F	outlineColor,
-	float			outlineWidth,
-	int				fontSize
+	float			outlineWidth
 	)
 	:
 	d2dFactory_(d2dFactory),
@@ -25,7 +25,7 @@ TextObject::TextObject(
 	isLive_(true),
     letterBuffer_(NULL)
 {
-	createText(text, d2dFactory_, rendertarget_, dwriteFactory_, 100);
+	createText(text, d2dFactory_, rendertarget_, dwriteFactory_, fontSize);
 }
 
 void TextObject::createText(
@@ -90,7 +90,7 @@ void TextObject::reset(wchar_t* text, float x, float y, float velocityX, float v
 	SAFE_DELETE_ARRAY(letterBuffer_);
 	SAFE_DELETE(text_);
 
-	createText(text, d2dFactory_, rendertarget_, dwriteFactory_);
+	createText(text, d2dFactory_, rendertarget_, dwriteFactory_, fontSize_);
 
 	setPosition(x, y);
 
