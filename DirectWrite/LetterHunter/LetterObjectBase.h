@@ -1,22 +1,14 @@
-/*
-This class represent a letter object in a text string, tale "ABC" for example, "ABC" is an text object, and 
-'A', 'B' and 'C' are all letter object, in this class, we have interfaces control the letter properties, such as
-font style, color, size and so on 
-*/
-
-#ifndef __LETTER_H__
-#define __LETTER_H__
+#ifndef __LETTER_OBJECT_BASE_H__
+#define __LETTER_OBJECT_BASE_H__
 
 #include <d2d1.h>
 #include <dwrite.h>
 
-#include "MagicProps.h"
-
-class Letter
+class LetterObjectBase
 {
 public:
-	Letter();
-	Letter(
+	LetterObjectBase();
+	LetterObjectBase(
 		ID2D1Factory*			d2dFactory, 
 		ID2D1HwndRenderTarget*	rendertarget, 
 		IDWriteFactory*			dwriteFactory,
@@ -26,10 +18,10 @@ public:
 		D2D1_COLOR_F			fillColor		= D2D1::ColorF(D2D1::ColorF::Black),
 		D2D1_COLOR_F			outlineColor	= D2D1::ColorF(D2D1::ColorF::White)
 		);
-	~Letter(void);
+	~LetterObjectBase(void);
 
 public:
-	bool			getLiveState() const;			// Get text state, live or die
+	bool			isLive() const;			// Get text state, live or die
 	void			setLiveState(bool liveFlag);	// Set the live state, live or die
 
 	bool			getVisible() const;
@@ -124,5 +116,5 @@ private:
 	D2D1_MATRIX_3X2_F	matrix_;			// transform matrix
 };
 
-#endif // end __TEXT_H__
+#endif // end __LETTER_OBJECT_BASE_H__
 

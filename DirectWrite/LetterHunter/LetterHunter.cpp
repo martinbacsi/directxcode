@@ -62,10 +62,41 @@ void LetterHunter::initialize()
 
 void LetterHunter::update(float timeDelta)
 {
+	dinput_->update();
+
+	// Get the key pressed
+	char hitLetterObject = '-';
+	static bool keyUp = false;
+	if(dinput_->getKey() != '-')
+	{
+		if(!keyUp)
+		{
+			keyUp = true;
+			hitLetterObject = dinput_->getKey();
+		}
+	}
+	else
+	{
+		keyUp = false;
+	}
+
+	// 0-9 was magic words
+	if(hitLetterObject == '9')	// pause
+	{
+		setTextSpeedFactor(0);
+	}
+
+	if(hitLetterObject == ' ')
+	{
+		hitAll();
+	}
+
+	shootCheck(hitLetterObject);
+
 	// Update text obejcts
 	for(unsigned int i = 0; i < textBuffer_.size(); ++i)
 	{
-		if (textBuffer_[i]->getLiveState() == true)
+		if (textBuffer_[i]->isLive())
 		{
 			textBuffer_[i]->update();
 
@@ -91,7 +122,7 @@ void LetterHunter::update(float timeDelta)
 	// Update bullet objects
 	for(unsigned int i = 0; i < bulletBuffer_.size(); ++i)
 	{
-		if(bulletBuffer_[i]->getLiveState() == true)
+		if(bulletBuffer_[i]->isLive())
 		{
 			// Update bullet, position, live state and so on
 			bulletBuffer_[i]->update(timeDelta);
@@ -131,7 +162,7 @@ void LetterHunter::render(float timeDelta)
 	// render text objects
 	for(unsigned int i = 0; i < textBuffer_.size(); ++i)
 	{
-		if(textBuffer_[i]->getLiveState() == true)
+		if(textBuffer_[i]->isLive())
 		{
 			textBuffer_[i]->render();
 		}
@@ -140,7 +171,7 @@ void LetterHunter::render(float timeDelta)
 	// render bullet objects
 	for(unsigned int i = 0; i < bulletBuffer_.size(); ++i)
 	{
-		if(bulletBuffer_[i]->getLiveState() == true)
+		if(bulletBuffer_[i]->isLive())
 		{
 			bulletBuffer_[i]->render();
 		}
@@ -149,30 +180,20 @@ void LetterHunter::render(float timeDelta)
 	rendertarget->EndDraw();
 }
 
-void LetterHunter::handleKeyboardMessage()
-{
-	dinput_->update();
-
-	// Get the key pressed
-	char hitLetter = dinput_->getKey();
-
-	// 0-9 was magic words
-	if(hitLetter == '0')	// pause
-	{
-		setTextSpeedFactor(0);
-	}
-
-	if(hitLetter == ' ')
-	{
-		hitAll();
-	}
-
-	shootCheck(hitLetter);
-}
-
 void LetterHunter::resize(int width, int height)
 {
+	// resize d2d render target
 	d2d_->onResize(width, height);
+
+	// Update window size
+	setWindowWidth(width); 
+	setWindowHeight(height);
+}
+
+void LetterHunter::run(float timeDelta)
+{
+	update(timeDelta);
+	render(timeDelta);
 }
 
 int LetterHunter::getwindowWidth() const
@@ -222,7 +243,8 @@ void LetterHunter::initializeText()
 		a[i] = randomFloat(0.1f, 0.5f);
 
 		// Set text position
-		textObj->setPosition(i * 200.0f, 0.0f);
+		float positionX = randomFloat(0, 1700);
+		textObj->setPosition(positionX, 0.0f);
 
 		// Set text velocity
 		textObj->setVelocity(0, a[i]);
@@ -267,7 +289,7 @@ void LetterHunter::resetTextObject(TextObject* textObject)
 	// Reset text object
 	textObject->reset(strBuffer, posX, 0, velocityX, velocityY, fillColor);
 
-	SAFE_DELETE(strBuffer);
+	//SAFE_DELETE(strBuffer);
 }
 
 TextObject* LetterHunter::findTarget(wchar_t hitKey)
@@ -277,9 +299,9 @@ TextObject* LetterHunter::findTarget(wchar_t hitKey)
 
 	for (unsigned int i = 0; i < textBuffer_.size(); ++i)
 	{
-		if (textBuffer_[i]->getLiveState() == true)
+		if (textBuffer_[i]->isLive())
 		{
-			Letter* letterObject = textBuffer_[i]->getFirstActiveLetter();
+			LetterObject* letterObject = textBuffer_[i]->getFirstActiveLetterObject();
 			if (letterObject->getLetter() == hitKey)
 			{
 				D2D1_RECT_F rect;
@@ -300,7 +322,7 @@ void LetterHunter::shootCheck(wchar_t key)
 {
 	if (currentTextObject_)
 	{
-		Letter* letterOjbect = currentTextObject_->getFirstActiveLetter();
+		LetterObject* letterOjbect = currentTextObject_->getFirstActiveLetterObject();
 		if (key == letterOjbect->getLetter())
 		{
 			// Set the bullet object based on the letter object.
@@ -321,7 +343,7 @@ void LetterHunter::shootCheck(wchar_t key)
 		if(targetTextObject)
 		{
 			currentTextObject_ = targetTextObject;
-			Letter* letterObject = targetTextObject->getFirstActiveLetter();
+			LetterObject* letterObject = targetTextObject->getFirstActiveLetterObject();
 			setBulletObject(letterObject);
 			soundManager_->onShoot();
 		}
@@ -340,7 +362,7 @@ void LetterHunter::hitDetect(Bullet* bullet, TextObject* textObject)
 	if(bulletRect.top < textObejctRect.bottom)
 	{
 		textObject->onHit();
-		if(textObject->getLiveState() == false)
+		if(!textObject->isLive())
 		{
 			currentTextObject_ = NULL;
 		}
@@ -359,12 +381,12 @@ void LetterHunter::hitAll()
 	}
 }
 
-void LetterHunter::setBulletObject(Letter* letterObject)
+void LetterHunter::setBulletObject(LetterObject* letterObject)
 {
 	// find a invalid bullet
 	for(unsigned int i = 0; i < bulletBuffer_.size(); ++i)
 	{
-		if(bulletBuffer_[i]->getLiveState() == false)
+		if(!bulletBuffer_[i]->isLive())
 		{
 			// reset state to true
 			bulletBuffer_[i]->setLiveState(true);

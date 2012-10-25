@@ -27,7 +27,7 @@ static int randomInt(int start, int end)
 }
 
 // Generate random lower case letter('a' - 'z')
-static char randomLowerCaseLetter()
+static char randomLowerCaseLetterObject()
 {
 	srand((unsigned int)time(0));
 
@@ -38,7 +38,7 @@ static char randomLowerCaseLetter()
 }
 
 // Generate random upper case letter('A' - 'Z')
-static char randomUpperCaseLetter()
+static char randomUpperCaseLetterObject()
 {
 	srand((unsigned int)time(0));
 

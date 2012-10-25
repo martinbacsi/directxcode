@@ -22,8 +22,8 @@ public:
 	void release();
 	void update(float timeDelta);
 	void render(float timeDelta);
-	void handleKeyboardMessage();
 	void resize(int width, int height);
+	void run(float timeDelta);
 	void pause();
 	void quit();
 
@@ -66,7 +66,7 @@ private:
 
 	void	initializeText();
 	void	initializeBullet();
-	void	setBulletObject(Letter* letter);
+	void	setBulletObject(LetterObject* letter);
 	void	resetTextObject(TextObject* textObject);	// This function does not work yet
 	
 	// If we have multiple text objects match current key hit, we use the one

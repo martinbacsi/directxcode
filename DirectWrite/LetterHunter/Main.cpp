@@ -25,7 +25,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			DWORD currentTime = timeGetTime();
 			float timeDelta = (currentTime - lastTime) * 0.001f;
 
-			g_pletterHunter->render(timeDelta);
+			g_pletterHunter->run(timeDelta);
 
 			lastTime = currentTime;
 
@@ -46,9 +46,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{ 
 			case VK_ESCAPE: 
 				SendMessage( hwnd, WM_CLOSE, 0, 0 ); 
-				break ; 
-			default: 
-				g_pletterHunter->handleKeyboardMessage();
 				break ; 
 			} 
 		} 
@@ -97,7 +94,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
 
 	HWND hwnd = CreateWindowEx(NULL,  
 		L"DirectWrite Hello, World",	// window class name
-		L"Letter Hunter",				// window caption
+		L"LetterObject Hunter",				// window caption
 		WS_OVERLAPPEDWINDOW, 			// window style
 		CW_USEDEFAULT,					// initial x position
 		CW_USEDEFAULT,					// initial y position

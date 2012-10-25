@@ -1,7 +1,7 @@
 #ifndef __TEXT_OBJECT_H__
 #define __TEXT_OBJECT_H__
 
-#include "Letter.h"
+#include "LetterObject.h"
 
 class TextObject
 {
@@ -50,7 +50,7 @@ public:
 	void setLiveState(bool state);
 
 	// Get the active index in the text
-	bool getLiveState() const;
+	bool isLive() const;
 
 	// Set visible state of the text for a given range
 	void setVisibleState(int startIndex, int length, bool state);
@@ -77,7 +77,7 @@ public:
 	int		 getTextLength() const;
 
 	// Get the first hitable letter in the text.
-	Letter* getFirstActiveLetter() const;
+	LetterObject* getFirstActiveLetterObject() const;
 	
 	// Handler when text was hit
 	void	onHit();
@@ -97,7 +97,7 @@ private:
 		);	
 
 	// Get the letter object by index, each letter in the text was represent by a letter obejct.
-	Letter* getLetter(int index) const;
+	LetterObject* getLetter(int index) const;
 
 private:
 	ID2D1Factory*			d2dFactory_;
@@ -114,7 +114,7 @@ private:
 	int			activeIndex_;	
 	bool		isLive_;		// Is text live?
 
-	Letter** letterBuffer_;	// Buffer to hold the letter objects
+	LetterObject** letterBuffer_;	// Buffer to hold the letter objects
 };
 
 #endif // end __TEXT_OBJECT_H__ 

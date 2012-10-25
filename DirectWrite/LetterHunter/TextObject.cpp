@@ -37,7 +37,7 @@ void TextObject::createText(
 	)
 {
 	
-	// Initialize each letter in the text to a Letter object
+	// Initialize each letter in the text to a LetterObject object
 	length_ = wcslen(textString);
 
 	text_ = new wchar_t[length_ + 1]; // Add one more space for '\0'
@@ -48,7 +48,7 @@ void TextObject::createText(
 
 	text_[length_] = '\0';
 
-	letterBuffer_ = new Letter*[length_];
+	letterBuffer_ = new LetterObject*[length_];
 	
 	// top left coordinates of current letter
 	float currentX = 0; 
@@ -57,7 +57,7 @@ void TextObject::createText(
 
 	for(int i = 0; i < length_; ++i)
 	{
-		letterBuffer_[i] = new Letter(
+		letterBuffer_[i] = new LetterObject(
 			d2dFactory,
 			rendertarget,
 			dwriteFactory,
@@ -168,7 +168,7 @@ void TextObject::setLiveState(bool state)
 	isLive_ = state;
 }
 
-bool TextObject::getLiveState() const
+bool TextObject::isLive() const
 {
 	return isLive_;
 }
@@ -249,7 +249,7 @@ void TextObject::setLetterSpeedFactor(float speedFactor)
 	}
 }
 
-Letter* TextObject::getFirstActiveLetter() const
+LetterObject* TextObject::getFirstActiveLetterObject() const
 {
 	return getLetter(activeIndex_);
 }
@@ -305,7 +305,7 @@ bool TextObject::outofWindow(RECT& windowRect)
 	}
 }
 
-Letter* TextObject::getLetter(int index) const
+LetterObject* TextObject::getLetter(int index) const
 {
 	return letterBuffer_[index];
 }

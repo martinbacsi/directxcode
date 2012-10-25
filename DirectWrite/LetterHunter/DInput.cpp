@@ -4,6 +4,7 @@
 DInput::DInput(void)
 {
 	m_pDIObject = NULL ;
+	ZeroMemory(m_KeyBuffer, sizeof(m_KeyBuffer));
 	Init() ;
 }
 
@@ -179,7 +180,7 @@ const char DInput::getKey() const
 		0x39															// Space
 	};
 
-	const char letters[numKeys + 1] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "; // The last one is Space
+	const char letters[numKeys + 1] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ "; // The last one is space
 
 	for(int i = 0; i < numKeys; ++i)
 	{

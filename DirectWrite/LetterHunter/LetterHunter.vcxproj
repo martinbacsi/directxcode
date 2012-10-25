@@ -93,7 +93,7 @@
     <ClInclude Include="Bullet.h" />
     <ClInclude Include="D2D.h" />
     <ClInclude Include="DInput.h" />
-    <ClInclude Include="Letter.h" />
+    <ClInclude Include="LetterObject.h" />
     <ClInclude Include="LetterHunter.h" />
     <ClInclude Include="MagicProps.h" />
     <ClInclude Include="Shooter.h" />

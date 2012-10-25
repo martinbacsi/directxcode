@@ -1,0 +1,18 @@
+1. font size should depend on window size to suite for different screen size.
+2. make the letters configurable, thus user can define their own text to play.
+3. letter dismiss rule:
+	1) if there are many same letter on screen, dismiss the lowest one first
+	2) if 
+
+
+
+Magic letters:
+1. mother letter, when hit, generate new letters
+2. hard letter, need mutiple hit to kill
+3. ice letter, hit to freeze the screen
+4. speed letter, hit will speed up all letters on screen.
+5. pause letter, pause the screen for 3 seconds
+6. bomb letter, kill all letters on sceen, super!
+
+current problems
+1. sound.cpp line 173 will failed if user press the keyboard all the time without release the key. WHY?
