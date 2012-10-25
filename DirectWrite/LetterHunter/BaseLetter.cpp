@@ -1,12 +1,12 @@
-#include "LetterObjectBase.h"
+#include "BaseLetter.h"
 
 #define SAFE_RELEASE(P) if(P){P->Release() ; P = NULL ;}
 
-LetterObjectBase::LetterObjectBase()
+BaseLetter::BaseLetter()
 {
 }
 
-LetterObjectBase::LetterObjectBase(
+BaseLetter::BaseLetter(
 		ID2D1Factory* d2dFactory, 
 		ID2D1HwndRenderTarget* rendertarget, 
 		IDWriteFactory*	dwriteFactory,
@@ -22,7 +22,6 @@ LetterObjectBase::LetterObjectBase(
 	pDWriteFactory(dwriteFactory),
 	letter_(letter),
 	outlineWidth_(width),
-	isVisible_(true), 
 	isLive_(true),
 	liveTime_(0.0f),
 	speedFactor_(1.0f),
@@ -178,7 +177,7 @@ LetterObjectBase::LetterObjectBase(
 	}
 }
 
-LetterObjectBase::~LetterObjectBase(void)
+BaseLetter::~BaseLetter(void)
 {
 	SAFE_RELEASE(pTransformedGeometry_);
 	SAFE_RELEASE(pGeometrySink);
@@ -192,99 +191,84 @@ LetterObjectBase::~LetterObjectBase(void)
 	SAFE_RELEASE(pD2DFactory);
 }
 
-bool LetterObjectBase::isLive() const
+bool BaseLetter::isLive() const
 {
 	return isLive_;
 }
 
-void LetterObjectBase::setLiveState(bool liveFlag)
+void BaseLetter::die()
 {
-	isLive_ = liveFlag;
+	isLive_ = false;
 }
 
-bool LetterObjectBase::getVisible() const
+void BaseLetter::live()
 {
-	return isVisible_;
+	isLive_ = true;
 }
 
-void LetterObjectBase::setVisible(bool visibleFlag)
-{
-	isVisible_ = visibleFlag;
-}
-
-wchar_t LetterObjectBase::getLetter() const
+wchar_t BaseLetter::getLetter() const
 {
 	return letter_;
 }
 
-void LetterObjectBase::setLetter(wchar_t letter)
+void BaseLetter::setLetter(wchar_t letter)
 {
 	letter_ = letter;
 }
 
-D2D1_COLOR_F LetterObjectBase::getFillColor() const
+D2D1_COLOR_F BaseLetter::getFillColor() const
 {
 	return fillColor_;
 }
 
-void LetterObjectBase::setFillColor(D2D1_COLOR_F color)
+void BaseLetter::setFillColor(D2D1_COLOR_F color)
 {
 	fillColor_ = color;
 	pFillBrush->SetColor(fillColor_);
 }
 
-D2D1_COLOR_F LetterObjectBase::getOutlineColor() const
+D2D1_COLOR_F BaseLetter::getOutlineColor() const
 {
 	return outlineColor_;
 }
 
-void LetterObjectBase::setOutlineColor(D2D1_COLOR_F color)
+void BaseLetter::setOutlineColor(D2D1_COLOR_F color)
 {
 	outlineColor_ = color;
 	pOutlineBrush->SetColor(outlineColor_);
 }
 
-float LetterObjectBase::getSpeedFactor() const
+float BaseLetter::getSpeedFactor() const
 {
 	return speedFactor_;
 }
 
-void LetterObjectBase::setSpeedFactor(float speedFactor)
+void BaseLetter::setSpeedFactor(float speedFactor)
 {
 	speedFactor_ = speedFactor;
 }
 
-void LetterObjectBase::setBoundaryColor(D2D1_COLOR_F& color)
+void BaseLetter::setBoundaryColor(D2D1_COLOR_F& color)
 {
 	boundaryBrush_->SetColor(color);
 }
 
-void LetterObjectBase::setBoundaryBackgroundColor(D2D1_COLOR_F& color)
+void BaseLetter::setBoundaryBackgroundColor(D2D1_COLOR_F& color)
 {
 	boundaryBackgroundBrush_->SetColor(color);
 }
 
-float LetterObjectBase::getoutlineWidth() const
+float BaseLetter::getoutlineWidth() const
 {
 	return outlineWidth_;
 }
 
-void LetterObjectBase::setOutlineWidth(float width)
+void BaseLetter::setOutlineWidth(float width)
 {
 	outlineWidth_ = width;
 }
 
-int LetterObjectBase::getSize() const
-{
-	return fontSize_;
-}
-
-void LetterObjectBase::getBound(D2D1_RECT_F* rect) const
-{
-	pTransformedGeometry_->GetBounds(D2D1::Matrix3x2F::Identity(), rect);
-}
-
-D2D1_POINT_2F LetterObjectBase::getPosition() const
+D2D1_POINT_2F BaseLetter::getPosition() const
 {
 	D2D1_POINT_2F pos;
 
@@ -295,40 +279,40 @@ D2D1_POINT_2F LetterObjectBase::getPosition() const
 	return pos;
 }
 
-void LetterObjectBase::setPosition(D2D1_POINT_2F pos)
+void BaseLetter::setPosition(D2D1_POINT_2F pos)
 {
 	translate(pos.x, pos.y);
 }
 
-void LetterObjectBase::setPosition(float x, float y)
+void BaseLetter::setPosition(float x, float y)
 {
 	translate(x, y);
 }
 
-D2D1_POINT_2F LetterObjectBase::getVelocity() const
+D2D1_POINT_2F BaseLetter::getVelocity() const
 {
 	return velocity_;
 }
 
-void LetterObjectBase::setVelocity(D2D1_POINT_2F velocity)
+void BaseLetter::setVelocity(D2D1_POINT_2F velocity)
 {
 	velocity_ = velocity;
 }
 
-void LetterObjectBase::setVelocity(float x, float y)
+void BaseLetter::setVelocity(float x, float y)
 {
 	velocity_.x = x;
 	velocity_.y = y;
 }
 
-D2D1_RECT_F	LetterObjectBase::computeBoundary() const
+D2D1_RECT_F	BaseLetter::getBoundRect() const
 {
 	D2D1_RECT_F rect;
 	pTransformedGeometry_->GetBounds(D2D1::Matrix3x2F::Identity(), &rect);
 	return rect;
 }
 
-void LetterObjectBase::setTransform(D2D1_MATRIX_3X2_F& matrix)
+void BaseLetter::setTransform(D2D1_MATRIX_3X2_F& matrix)
 {
 	// Update transform matrix.
 	matrix_ = matrix;
@@ -341,22 +325,22 @@ void LetterObjectBase::setTransform(D2D1_MATRIX_3X2_F& matrix)
 	);
 }
 
-void LetterObjectBase::translate(float x, float y)
+void BaseLetter::translate(float x, float y)
 {
 	matrix_ = D2D1::Matrix3x2F::Translation(x, y);
 	setTransform(matrix_);
 }
 
-void LetterObjectBase::drawBoundary() const
+void BaseLetter::drawBoundary() const
 {
-	D2D1_RECT_F rect = computeBoundary();
+	D2D1_RECT_F rect = getBoundRect();
 	pRenderTarget->DrawRectangle(&rect, boundaryBrush_);
 }
 
-void LetterObjectBase::drawBoundaryBackground() const
+void BaseLetter::drawBoundaryBackground() const
 {
 	// Get boundary rectangle
-	D2D1_RECT_F rect = computeBoundary();
+	D2D1_RECT_F rect = getBoundRect();
 
 	// Calculate boundary width and height
 	float boundWidth = rect.right - rect.left;
@@ -390,12 +374,12 @@ void LetterObjectBase::drawBoundaryBackground() const
 	pRenderTarget->FillRoundedRectangle(&roundRect, boundaryBackgroundBrush_);
 }
 
-ID2D1TransformedGeometry* LetterObjectBase::getTransformedGeometry() const
+ID2D1TransformedGeometry* BaseLetter::getTransformedGeometry() const
 {
 	return pTransformedGeometry_;
 }
 
-void LetterObjectBase::update()
+void BaseLetter::update()
 {
 	// Accumulate total time
 	liveTime_ = 2.0f;
@@ -411,7 +395,7 @@ void LetterObjectBase::update()
 	translate(newX, newY);
 }
 
-void LetterObjectBase::render()
+void BaseLetter::render()
 {
 	// Draw outline
 	pRenderTarget->DrawGeometry(pTransformedGeometry_, pOutlineBrush, outlineWidth_);

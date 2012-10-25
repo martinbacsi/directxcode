@@ -225,7 +225,7 @@ void LetterHunter::initializeText()
 	for(int i = 0; i < TEXTCOUNT; ++i)
 	{
 		// Geneate a random string
-		const int strLength = 1;
+		const int strLength = 3;
 		wchar_t* strBuffer = new wchar_t[strLength + 1];
 		randomString(strBuffer, strLength);
 
@@ -278,7 +278,7 @@ void LetterHunter::resetTextObject(TextObject* textObject)
 	float velocityY = randomFloat(0.1f, 0.5f);
 
 	// Create text string
-	const int strLength = 1;
+	const int strLength = 3;
 	wchar_t* strBuffer = new wchar_t[strLength + 1]; // one more space for '\0'
 	randomString(strBuffer, strLength);
 
@@ -289,7 +289,7 @@ void LetterHunter::resetTextObject(TextObject* textObject)
 	// Reset text object
 	textObject->reset(strBuffer, posX, 0, velocityX, velocityY, fillColor);
 
-	//SAFE_DELETE(strBuffer);
+	SAFE_DELETE(strBuffer);
 }
 
 TextObject* LetterHunter::findTarget(wchar_t hitKey)
@@ -301,11 +301,10 @@ TextObject* LetterHunter::findTarget(wchar_t hitKey)
 	{
 		if (textBuffer_[i]->isLive())
 		{
-			LetterObject* letterObject = textBuffer_[i]->getFirstActiveLetterObject();
-			if (letterObject->getLetter() == hitKey)
+			BaseLetter* letterOjbect = textBuffer_[i]->getFirstActiveLetterObject();
+			if (letterOjbect->getLetter() == hitKey)
 			{
-				D2D1_RECT_F rect;
-				letterObject->getBound(&rect);
+				D2D1_RECT_F rect = letterOjbect->getBoundRect();
 				if(rect.bottom > maxBottomofTextObject)
 				{
 					maxBottomofTextObject = rect.bottom;
@@ -322,7 +321,7 @@ void LetterHunter::shootCheck(wchar_t key)
 {
 	if (currentTextObject_)
 	{
-		LetterObject* letterOjbect = currentTextObject_->getFirstActiveLetterObject();
+		BaseLetter* letterOjbect = currentTextObject_->getFirstActiveLetterObject();
 		if (key == letterOjbect->getLetter())
 		{
 			// Set the bullet object based on the letter object.
@@ -343,8 +342,8 @@ void LetterHunter::shootCheck(wchar_t key)
 		if(targetTextObject)
 		{
 			currentTextObject_ = targetTextObject;
-			LetterObject* letterObject = targetTextObject->getFirstActiveLetterObject();
-			setBulletObject(letterObject);
+			BaseLetter* letterOjbect = targetTextObject->getFirstActiveLetterObject();
+			setBulletObject(letterOjbect);
 			soundManager_->onShoot();
 		}
 	}
@@ -381,7 +380,7 @@ void LetterHunter::hitAll()
 	}
 }
 
-void LetterHunter::setBulletObject(LetterObject* letterObject)
+void LetterHunter::setBulletObject(BaseLetter* letterObject)
 {
 	// find a invalid bullet
 	for(unsigned int i = 0; i < bulletBuffer_.size(); ++i)

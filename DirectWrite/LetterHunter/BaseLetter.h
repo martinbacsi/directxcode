@@ -1,14 +1,14 @@
-#ifndef __LETTER_OBJECT_BASE_H__
-#define __LETTER_OBJECT_BASE_H__
+#ifndef __BASE_LETTER_H__
+#define __BASE_LETTER_H__
 
 #include <d2d1.h>
 #include <dwrite.h>
 
-class LetterObjectBase
+class BaseLetter
 {
 public:
-	LetterObjectBase();
-	LetterObjectBase(
+	BaseLetter();
+	BaseLetter(
 		ID2D1Factory*			d2dFactory, 
 		ID2D1HwndRenderTarget*	rendertarget, 
 		IDWriteFactory*			dwriteFactory,
@@ -18,14 +18,12 @@ public:
 		D2D1_COLOR_F			fillColor		= D2D1::ColorF(D2D1::ColorF::Black),
 		D2D1_COLOR_F			outlineColor	= D2D1::ColorF(D2D1::ColorF::White)
 		);
-	~LetterObjectBase(void);
+	~BaseLetter(void);
 
 public:
-	bool			isLive() const;			// Get text state, live or die
-	void			setLiveState(bool liveFlag);	// Set the live state, live or die
-
-	bool			getVisible() const;
-	void			setVisible(bool visibleFlag);
+	bool			isLive() const;					// Get text state, live or die
+	void			die();							// Set object as dead
+	void			live();							// Set object to live
 
 	wchar_t			getLetter() const;
 	void			setLetter(wchar_t letter);
@@ -42,9 +40,6 @@ public:
 	float			getoutlineWidth() const;
 	void			setOutlineWidth(float width);
 
-	int				getSize() const;
-	void			getBound(D2D1_RECT_F* rect) const;
-
 	D2D1_POINT_2F	getPosition() const;
 	void			setPosition(D2D1_POINT_2F pos);
 	void			setPosition(float x, float y);
@@ -54,10 +49,11 @@ public:
 	void			setVelocity(float x, float y);
 
 	void			drawBoundary() const;
+	void			drawBoundaryBackground() const;
+
 	void			setBoundaryColor(D2D1_COLOR_F& color);
 
 	// Draw background of letter, if called, must call before filling in the letter color.
-	void			drawBoundaryBackground() const;
 	void			setBoundaryBackgroundColor(D2D1_COLOR_F& color);
 
 	ID2D1TransformedGeometry* getTransformedGeometry() const;
@@ -78,11 +74,9 @@ public:
 	void			onHit();
 	void			scaling(float timeDelta);
 
-private:
-
 	// Calculate the boundary rectangle of the letter, this was computed dynamically, since the letter was moving
 	// all the time
-	D2D1_RECT_F		computeBoundary() const;
+	D2D1_RECT_F		getBoundRect() const;
 
 private:
 	ID2D1Factory*				pD2DFactory;
@@ -100,7 +94,6 @@ private:
 
 	wchar_t				letter_;		// the letter value of the object
 	bool				isLive_;		// Is letter alive?
-	bool				isVisible_;		// Is letter visible?
 	int					fontSize_;		// font size
 	float				outlineWidth_;	// outline width of the letter
 	float				liveTime_;		// Time since the letter was generated

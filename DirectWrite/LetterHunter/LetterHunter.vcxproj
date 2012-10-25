@@ -78,10 +78,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Bullet.cpp" />
+    <ClCompile Include="OrdinayLetter.cpp" />
     <ClCompile Include="D2D.cpp" />
     <ClCompile Include="DInput.cpp" />
-    <ClCompile Include="Letter.cpp" />
     <ClCompile Include="LetterHunter.cpp" />
+    <ClCompile Include="BaseLetter.cpp" />
     <ClCompile Include="MagicProps.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Shooter.cpp" />
@@ -91,10 +92,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bullet.h" />
+    <ClInclude Include="OrdinaryLetter.h" />
     <ClInclude Include="D2D.h" />
     <ClInclude Include="DInput.h" />
-    <ClInclude Include="LetterObject.h" />
     <ClInclude Include="LetterHunter.h" />
+    <ClInclude Include="BaseLetter.h" />
     <ClInclude Include="MagicProps.h" />
     <ClInclude Include="Shooter.h" />
     <ClInclude Include="Sound.h" />

@@ -48,7 +48,7 @@ void TextObject::createText(
 
 	text_[length_] = '\0';
 
-	letterBuffer_ = new LetterObject*[length_];
+	letterBuffer_ = new BaseLetter*[length_];
 	
 	// top left coordinates of current letter
 	float currentX = 0; 
@@ -57,7 +57,7 @@ void TextObject::createText(
 
 	for(int i = 0; i < length_; ++i)
 	{
-		letterBuffer_[i] = new LetterObject(
+		letterBuffer_[i] = new BaseLetter(
 			d2dFactory,
 			rendertarget,
 			dwriteFactory,
@@ -69,8 +69,7 @@ void TextObject::createText(
 		letterBuffer_[i]->translate(currentX, currentY);
 
 		// Get the boundary of the current letter
-		D2D1_RECT_F rect;
-		letterBuffer_[i]->getBound(&rect);
+		D2D1_RECT_F rect = letterBuffer_[i]->getBoundRect();
 
 		// Move the next letter horizontally, so that they were not overlapped.
 		currentX += (rect.right - rect.left) + letterSpace_;
@@ -81,7 +80,7 @@ void TextObject::createText(
 TextObject::~TextObject(void)
 {
 	SAFE_DELETE(text_);
-	//SAFE_DELETE_ARRAY(letterBuffer_);
+	SAFE_DELETE_ARRAY(letterBuffer_);
 }
 
 void TextObject::reset(wchar_t* text, float x, float y, float velocityX, float velocityY, D2D1_COLOR_F& fillColor)
@@ -155,14 +154,6 @@ void TextObject::setOutlineWidth(float width)
 	setOutlineWidthRange(0, length_, width);
 }
 
-void TextObject::setLiveStateRange(int startIndex, int length, bool state)
-{
-	for(int i = startIndex; i < startIndex + length; ++i)
-	{
-		letterBuffer_[i]->setLiveState(state);
-	}
-}
-
 void TextObject::setLiveState(bool state)
 {
 	isLive_ = state;
@@ -191,16 +182,13 @@ void TextObject::setPostionRange(int startIndex, int length, float x, float y)
 	float currentX = x;
 	float currentY = y;
 
-	// the boundary rectangle of current letter in text
-	D2D1_RECT_F rect;
-
 	for(int i = startIndex; i < length; ++i)
 	{
 		// Set the position for current letter
 		letterBuffer_[i]->setPosition(currentX, currentY);
 
 		// Get the boundary of current letter
-		letterBuffer_[i]->getBound(&rect);
+		D2D1_RECT_F rect = letterBuffer_[i]->getBoundRect();
 
 		// Calculate the position for next letter, since letters in a string are horizantaly aligned, so 
 		// each letter has the same y-coordinate, but has an increament of the x-coordinate.
@@ -249,7 +237,7 @@ void TextObject::setLetterSpeedFactor(float speedFactor)
 	}
 }
 
-LetterObject* TextObject::getFirstActiveLetterObject() const
+BaseLetter* TextObject::getFirstActiveLetterObject() const
 {
 	return getLetter(activeIndex_);
 }
@@ -274,10 +262,9 @@ void TextObject::getBoundaryRect(D2D1_RECT_F& rect)
 {
 	// Get the boundary rect for each letter in the text object
 	// then compute the min top, max bottom, min left and max right value to build a new rect
-	D2D1_RECT_F tempRect;
 	for(int i = 0; i < length_; ++i)
 	{
-		letterBuffer_[i]->getBound(&tempRect);
+		D2D1_RECT_F tempRect= letterBuffer_[i]->getBoundRect();
 
 		rect.top	= min(rect.top, tempRect.top);
 		rect.bottom = max(rect.bottom, tempRect.bottom);
@@ -305,7 +292,7 @@ bool TextObject::outofWindow(RECT& windowRect)
 	}
 }
 
-LetterObject* TextObject::getLetter(int index) const
+BaseLetter* TextObject::getLetter(int index) const
 {
 	return letterBuffer_[index];
 }

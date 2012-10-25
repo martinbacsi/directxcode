@@ -16,3 +16,7 @@ Magic letters:
 
 current problems
 1. sound.cpp line 173 will failed if user press the keyboard all the time without release the key. WHY?
+
+
+Learn
+1. Direct input will still recieve input even window was lost focus.

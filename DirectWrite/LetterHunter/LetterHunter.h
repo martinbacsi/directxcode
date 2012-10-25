@@ -66,7 +66,7 @@ private:
 
 	void	initializeText();
 	void	initializeBullet();
-	void	setBulletObject(LetterObject* letter);
+	void	setBulletObject(BaseLetter* letter);
 	void	resetTextObject(TextObject* textObject);	// This function does not work yet
 	
 	// If we have multiple text objects match current key hit, we use the one
