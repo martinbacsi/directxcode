@@ -23,6 +23,15 @@ LetterHunter::LetterHunter(HWND hwnd, int maxTextCount)
 	// Initialize Direct Input
 	dinput_ = new DInput();
 	soundManager_ = new SoundManager();
+
+	RECT rect;
+	GetWindowRect(hwnd_, &rect);
+
+	int width  = rect.right - rect.left;
+	int height = rect.bottom - rect.top;
+
+	setWindowWidth(width);
+	setWindowHeight(height);
 }
 
 void LetterHunter::release()
@@ -43,18 +52,6 @@ LetterHunter::~LetterHunter(void)
 
 void LetterHunter::initialize()
 {
-	// Get screen resolution
-	const HWND hDesktop = GetDesktopWindow();
-
-	RECT desktopRect;
-	GetWindowRect(hDesktop, &desktopRect);
-
-	int width  = desktopRect.right;
-	int height = desktopRect.bottom;
-
-	setWindowWidth(width);
-	setWindowHeight(height);
-
 	// Initizlie text objects
 	initializeText();
 	initializeBullet();
@@ -225,7 +222,7 @@ void LetterHunter::initializeText()
 	for(int i = 0; i < TEXTCOUNT; ++i)
 	{
 		// Geneate a random string
-		const int strLength = 3;
+		const int strLength = 1;
 		wchar_t* strBuffer = new wchar_t[strLength + 1];
 		randomString(strBuffer, strLength);
 
@@ -234,14 +231,14 @@ void LetterHunter::initializeText()
 			renderTarget,
 			DWriteFactory,
 			strBuffer,
-			200
+			100
 			);
 
 		SAFE_DELETE(strBuffer);
 
 		// Generate 10 random numbers between 1 and 100
 		float a[10] = {0};
-		float velocityY = randomFloat(10.0f, 100.0f);
+		float velocityY = randomFloat(10.0f, 50.0f);
 		D2D_VECTOR_2F velocity = {0, velocityY};
 
 		// Set text position

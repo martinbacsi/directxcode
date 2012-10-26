@@ -13,6 +13,9 @@ Key steps:
 #include "LetterHunter.h"
 #include "Utilities.h"
 
+int windowWidth	 = 1000;
+int windowHeight = 1000;
+
 LetterHunter* g_pletterHunter = NULL;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)   
@@ -82,15 +85,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
 		MessageBox ( NULL, TEXT( "This program requires Windows NT!" ), L"error", MB_ICONERROR) ;
 		return 0 ;  
 	}   
-
-	// Get screen resolution
-	const HWND hDesktop = GetDesktopWindow();
-
-	RECT desktopRect;
-	GetWindowRect(hDesktop, &desktopRect);
-
-	int windowWidth	 = desktopRect.right;
-	int windowHeight = desktopRect.bottom;
 
 	HWND hwnd = CreateWindowEx(NULL,  
 		L"DirectWrite Hello, World",	// window class name

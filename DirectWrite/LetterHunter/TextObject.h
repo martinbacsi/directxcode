@@ -15,6 +15,8 @@ public:
 		float			fontSize		= 100,
 		D2D1_COLOR_F	fillColor		= D2D1::ColorF(D2D1::ColorF::Black),
 		D2D1_COLOR_F	outlineColor	= D2D1::ColorF(D2D1::ColorF::White),
+		D2D1_COLOR_F	boundaryFillColor_ = D2D1::ColorF(0x007ACC),
+		D2D1_COLOR_F    boundaryOutlineColor_ = D2D1::ColorF(0x732794),
 		float			outlineWidth	= 2.0f
 		);
 	~TextObject(void);
@@ -36,6 +38,12 @@ public:
 
 	// SEt text outline color
 	void setOutlineColor(D2D1_COLOR_F&	color);
+
+	void setBoundaryOutlineColor(D2D1_COLOR_F& color);
+	D2D1_COLOR_F getBoundaryOutlineColor() const;
+
+	void setBoundaryFillColor(D2D1_COLOR_F& color);
+	D2D1_COLOR_F getBoundaryFillColor() const;
 
 	// Set text outline width for the given range
 	void setOutlineWidthRange(int startIndex, int length, float width);
@@ -83,6 +91,8 @@ public:
 	// Handler when text was hit
 	void		onHit();
 	D2D1_RECT_F	getBoundaryRect() const;
+
+	void		drawBoundary() const;
 	bool		outofWindow(RECT&	windowRect);
 
 	void setLetterSpeedFactor(float speedFactor);
@@ -104,6 +114,12 @@ private:
 	ID2D1Factory*			d2dFactory_;
 	ID2D1HwndRenderTarget*	rendertarget_;
 	IDWriteFactory*			dwriteFactory_;
+
+	ID2D1SolidColorBrush*   boundaryOutlineBrush_;
+	D2D1_COLOR_F			boundaryOutlineColor_;
+
+	ID2D1SolidColorBrush*   boundaryFillBrush_;
+	D2D1_COLOR_F			boundaryFillColor_;
 
 	wchar_t*	text_;			// text of the text object
 	int			length_;		// length of the text
