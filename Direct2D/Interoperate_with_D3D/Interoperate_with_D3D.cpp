@@ -4,9 +4,10 @@ This demo show you how Direct2D intoperate with D3D, this is also a demostration
 
 #include <windows.h>
 #include <d3d11.h>
-#include <d3dx11.h>
+//#include <d3dx11.h>
 #include <d3dcompiler.h>
-#include <xnamath.h>
+//#include <xnamath.h>
+#include <DirectXMath.h>
 #include <d2d1.h>
 
 // D3D stuffs
@@ -28,7 +29,7 @@ IDXGISurface*			g_pBackBuffer   = NULL; //
 bool					g_bActive			= true ; // Is window active?
 #define SAFE_RELEASE(P) if(P){ P->Release(); P = NULL;}
 
-VOID CompileShaderFromFile(CHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);
+VOID CompileShaderFromFile(WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);
 VOID InitVertexBuffer();
 VOID InitVertexShader();
 VOID InitPixelShader();
@@ -42,7 +43,7 @@ VOID CreateD2DResource()
 		hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &g_pD2DFactory) ;
 		if (FAILED(hr))
 		{
-			MessageBox(NULL, "Create D2D factory failed!", "Error", 0) ;
+			MessageBox(NULL, L"Create D2D factory failed!", L"Error", 0) ;
 			return ;
 		}
 
@@ -53,7 +54,7 @@ VOID CreateD2DResource()
 			);
 		if(FAILED(hr))
 		{
-			MessageBox(NULL, "Get back buffer form swap chain failed!", "Error", 0);
+			MessageBox(NULL, L"Get back buffer form swap chain failed!", L"Error", 0);
 		}
 
 		// Create the DXGI surface render target
@@ -76,7 +77,7 @@ VOID CreateD2DResource()
 			);
 		if(FAILED(hr))
 		{
-			MessageBox(NULL, "Create Direct2D render target failed", "Error", 0);
+			MessageBox(NULL, L"Create Direct2D render target failed", L"Error", 0);
 		}
 
 		// Create a brush
@@ -86,7 +87,7 @@ VOID CreateD2DResource()
 			) ;
 		if (FAILED(hr))
 		{
-			MessageBox(NULL, "Create brush failed!", "Error", 0) ;
+			MessageBox(NULL, L"Create brush failed!", L"Error", 0) ;
 			return ;
 		}
 	}
@@ -115,7 +116,7 @@ HRESULT InitD3D( HWND hWnd )
 	sd.OutputWindow = hWnd;								// output window handle
 	sd.SampleDesc.Count = 1;							// WHAT'S THIS?
 	sd.SampleDesc.Quality = 0;							// WHAT'S THIS?
-	sd.Windowed = TRUE;								// window mode
+	sd.Windowed = FALSE;								// window mode
 
 	// Create device and swap chain
 	D3D_FEATURE_LEVEL FeatureLevelsRequested = D3D_FEATURE_LEVEL_11_0;	// Use d3d11
@@ -173,15 +174,15 @@ VOID InitVertexBuffer()
 	// The vertex format
 	struct SimpleVertex
 	{
-		XMFLOAT3 Pos;	// Position
+		DirectX::XMFLOAT3 Pos;	// Position
 	};
 
 	// Create the vertex buffer
 	SimpleVertex vertices[] = 
 	{
-		XMFLOAT3( 0.0f, 0.5f, 0.5f ),
-        XMFLOAT3( 0.5f, -0.5f, 0.5f ),
-        XMFLOAT3( -0.5f, -0.5f, 0.5f ),
+		DirectX::XMFLOAT3( 0.0f, 0.5f, 0.5f ),
+        DirectX::XMFLOAT3( 0.5f, -0.5f, 0.5f ),
+        DirectX::XMFLOAT3( -0.5f, -0.5f, 0.5f ),
 	};
 
 	// Vertex Buffer
@@ -199,7 +200,7 @@ VOID InitVertexBuffer()
 	HRESULT	hr = g_pd3dDevice->CreateBuffer(&bd, &initData, &g_pVertexBuffer);
 	if(FAILED(hr))
 	{
-		MessageBox(NULL, "Create vertex buffer failed", "Error", 0);
+		MessageBox(NULL, L"Create vertex buffer failed", L"Error", 0);
 	}
 
 	// Set vertex buffer
@@ -215,14 +216,14 @@ VOID InitVertexShader()
 {
 	// Compile the vertex shader from file
 	ID3DBlob*	pVSBlob = NULL;
-	CompileShaderFromFile("triangle_shader.fx", "VS", "vs_4_0", &pVSBlob);
+	CompileShaderFromFile(L"triangle_shader.fx", "VS", "vs_4_0", &pVSBlob);
 
 	// Create vertex shader
 	HRESULT hr = g_pd3dDevice->CreateVertexShader(pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize(), NULL, &g_pVertexShader);
 	if(FAILED(hr))
 	{
 		pVSBlob->Release();
-		MessageBox(NULL, "Create vertex shader failed", "Error", 0);
+		MessageBox(NULL, L"Create vertex shader failed", L"Error", 0);
 	}
 
 	// Define the input layout
@@ -245,29 +246,29 @@ VOID InitPixelShader()
 {
 	// Compile the pixel shader
 	ID3DBlob*	pPSBlob = NULL;
-	CompileShaderFromFile("triangle_shader.fx", "PS", "ps_4_0", &pPSBlob);
+	CompileShaderFromFile(L"triangle_shader.fx", "PS", "ps_4_0", &pPSBlob);
 
 	// Create the pixel shader
 	HRESULT hr = g_pd3dDevice->CreatePixelShader(pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), NULL, &g_pPixelShader);
 	pPSBlob->Release();
 	if(FAILED(hr))
 	{
-		MessageBox(NULL, "Create pixel shader failed", "Error", 0);
+		MessageBox(NULL, L"Create pixel shader failed", L"Error", 0);
 	}
 }
 
-VOID CompileShaderFromFile(CHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut)
+VOID CompileShaderFromFile(WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut)
 {
 	HRESULT hr = S_OK;
 	DWORD dwShaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;
 	ID3DBlob*	pErrorBlob;
-	hr = D3DX11CompileFromFile(szFileName, NULL, NULL, szEntryPoint, szShaderModel,
-		dwShaderFlags, 0, NULL, ppBlobOut, &pErrorBlob, NULL);
+
+	hr = D3DCompileFromFile(szFileName, NULL, NULL, szEntryPoint, szShaderModel, dwShaderFlags, 0, ppBlobOut, &pErrorBlob);
 	if(FAILED(hr))
 	{
 		if(pErrorBlob != NULL)
 		{
-			OutputDebugString((char*)pErrorBlob->GetBufferPointer());
+			OutputDebugString((WCHAR*)pErrorBlob->GetBufferPointer());
 			pErrorBlob->Release();
 		}
 	}
@@ -379,7 +380,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 {
 	WNDCLASSEX winClass ;
 
-	winClass.lpszClassName = "Triangle";
+	winClass.lpszClassName = L"Triangle";
 	winClass.cbSize        = sizeof(WNDCLASSEX);
 	winClass.style         = CS_HREDRAW | CS_VREDRAW;
 	winClass.lpfnWndProc   = MsgProc;
@@ -396,7 +397,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 
 	HWND hWnd = CreateWindowEx(NULL,  
 		winClass.lpszClassName,		// window class name
-		"Triangle",					// window caption
+		L"Triangle",					// window caption
 		WS_OVERLAPPEDWINDOW, 		// window style
 		0,							// initial x position
 		0,							// initial y position
