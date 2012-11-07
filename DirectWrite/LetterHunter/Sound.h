@@ -4,7 +4,7 @@
 #include <Windows.h>
 
 // Use the one in DirectX SDK folder for Win7, use the one in Windows SDK folder for Win8
-#include "C:\Program Files\Microsoft DirectX SDK (June 2010)\Include\XAudio2.h"
+#include "XAudio2.h"
 #include "Utilities.h"
 
 // Little-Endian for Windows, XBOX use big-endian

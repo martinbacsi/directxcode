@@ -1,9 +1,9 @@
 #ifndef __DINPUT_H__
 #define __DINPUT_H__
 
-#include <d3dx9.h>
+//#include <d3dx9.h>
 #include <dinput.h>
-#include <DxErr.h>
+//#include <DxErr.h>
 
 // This Macro wraps the Trace function to show error box
 #define ERRORBOX(msg) 

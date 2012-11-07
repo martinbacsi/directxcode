@@ -27,6 +27,8 @@ public:
 	void pause();
 	void quit();
 
+	void drawBackgroundImage(wchar_t* imageFile);
+
 private:
 	HWND hwnd_;
 	int windowWidth;

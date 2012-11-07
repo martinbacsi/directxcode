@@ -45,20 +45,20 @@ bool DInput::Init()
 
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR_MSGBOX(DXGetErrorString(hr), hr) ;
+		MessageBox(NULL, L"Create directinput 8 failed", L"Error", 0);
 		return false ;
 	}
 
 	// Initialize keyboard
 	else if (!InitKeyboard())
 	{
-		DXTRACE_ERR_MSGBOX(DXGetErrorString(hr), hr) ;
+		MessageBox(NULL, L"Initialize keyboard failed", L"Error", 0);
 	}
 
 	// Initialize mouse
 	else if (!InitMouse())
 	{
-		DXTRACE_ERR_MSGBOX(DXGetErrorString(hr), hr) ;
+		MessageBox(NULL, L"Initialize mouse failed", L"Error", 0);
 	}
 
 	return true ;
@@ -71,7 +71,7 @@ bool DInput::InitKeyboard()
 	HRESULT hr = m_pDIObject->CreateDevice(GUID_SysKeyboard, &m_pDIKeyboardDevice, NULL) ;
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR_MSGBOX(DXGetErrorString(hr), hr) ;
+		MessageBox(NULL, L"Create keyboard device failed", L"Error", 0);
 		return false ;
 	}
 
@@ -79,7 +79,7 @@ bool DInput::InitKeyboard()
 	hr = m_pDIKeyboardDevice->SetDataFormat(&c_dfDIKeyboard) ;
 	if(FAILED(hr))
 	{
-		DXTRACE_ERR_MSGBOX(DXGetErrorString(hr), hr) ;
+		MessageBox(NULL, L"Set keyboard data failed", L"Error", 0);
 		return false ;
 	}
 
@@ -87,7 +87,7 @@ bool DInput::InitKeyboard()
 	hr = m_pDIKeyboardDevice->SetCooperativeLevel(GetForegroundWindow(), DISCL_BACKGROUND | DISCL_NONEXCLUSIVE) ;
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR_MSGBOX(DXGetErrorString(hr), hr) ;
+		MessageBox(NULL, L"Set cooperative level failed", L"Error", 0);
 		return false ;
 	}
 
@@ -95,7 +95,7 @@ bool DInput::InitKeyboard()
 	hr = m_pDIKeyboardDevice->Acquire() ;
 	if (FAILED(hr))
 	{
-		DXTRACE_ERR_MSGBOX(DXGetErrorString(hr), hr) ;
+		MessageBox(NULL, L"Acquire keyboard failed", L"Error", 0);
 		return false ;
 	}
 
@@ -110,7 +110,7 @@ bool DInput::InitMouse()
 	HRESULT hr = m_pDIObject->CreateDevice(GUID_SysMouse, &m_pDIMouseDevice, NULL) ;
 	if(FAILED(hr))
 	{
-		DXTRACE_ERR_MSGBOX(DXGetErrorString(hr), hr) ;
+		MessageBox(NULL, L"Create mouse device failed", L"Error", 0);
 		return false ;
 	}
 
@@ -118,7 +118,7 @@ bool DInput::InitMouse()
 	hr = m_pDIMouseDevice->SetDataFormat(&c_dfDIMouse2) ;
 	if(FAILED(hr))
 	{
-		DXTRACE_ERR_MSGBOX(DXGetErrorString(hr), hr) ;
+		MessageBox(NULL, L"Set mouse data format failed", L"Error", 0);
 		return false ;
 	}
 
@@ -126,7 +126,7 @@ bool DInput::InitMouse()
 	hr = m_pDIMouseDevice->SetCooperativeLevel(GetForegroundWindow(),DISCL_BACKGROUND | DISCL_NONEXCLUSIVE) ;
 	if(FAILED(hr))
 	{
-		DXTRACE_ERR_MSGBOX(DXGetErrorString(hr), hr) ;
+		MessageBox(NULL, L"Set mouse cooperative level failed", L"Error", 0);
 		return false ;
 	}
 	
@@ -134,7 +134,7 @@ bool DInput::InitMouse()
 	hr = m_pDIMouseDevice->Acquire() ;
 	if(FAILED(hr))
 	{
-		DXTRACE_ERR_MSGBOX(DXGetErrorString(hr), hr) ;
+		MessageBox(NULL, L"Acquire mouse failed", L"Error", 0);
 		return false ;
 	}
 

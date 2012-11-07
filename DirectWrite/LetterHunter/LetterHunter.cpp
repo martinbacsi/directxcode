@@ -156,6 +156,10 @@ void LetterHunter::render(float timeDelta)
 	// Set render target background color to white
 	rendertarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
 
+	// render background image
+	wchar_t*	imageFile = L"./Media/Picture/Fairy_of_the_Water.jpg";
+	drawBackgroundImage(imageFile);
+
 	// render text objects
 	for(unsigned int i = 0; i < textBuffer_.size(); ++i)
 	{
@@ -434,4 +438,43 @@ void LetterHunter::setTextSpeedFactor(float speedFactor)
 	{
 		textBuffer_[i]->setLetterSpeedFactor(speedFactor);
 	}
+}
+
+void LetterHunter::drawBackgroundImage(wchar_t* imageFile)
+{
+	static ID2D1Bitmap* pBitmap = NULL;
+	ID2D1RenderTarget*	renderTarget = d2d_->getD2DHwndRenderTarget();
+
+	static bool isImageLoad = false;
+	if(!isImageLoad)
+	{
+		// Create WIC factory
+		IWICImagingFactory*	pWICFactory	= NULL ;
+
+		HRESULT hr = CoCreateInstance(
+			CLSID_WICImagingFactory1,
+			NULL,
+			CLSCTX_INPROC_SERVER,
+			IID_IWICImagingFactory,
+			reinterpret_cast<void **>(&pWICFactory)
+			) ;
+
+		d2d_->LoadBitmapFromFile(
+			renderTarget,
+			pWICFactory,
+			imageFile,
+			0,
+			0,
+			&pBitmap
+			);
+
+		isImageLoad = true;
+	}
+
+	RECT rect;
+	GetWindowRect(hwnd_, &rect);
+	renderTarget->DrawBitmap(
+		pBitmap,
+		D2D1::Rect(rect.left, rect.top, rect.right, rect.bottom)
+		);
 }

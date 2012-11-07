@@ -133,7 +133,7 @@ void TextObject::update(float timeDelta)
 void TextObject::render()
 {
 	// draw boundary
-	drawBoundary();
+	// drawBoundary();
 
 	for(int i = 0; i < length_; ++i)
 	{

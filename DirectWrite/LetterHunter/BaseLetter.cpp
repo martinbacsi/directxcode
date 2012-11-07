@@ -1,4 +1,4 @@
-#include "BaseLetter.h"
+﻿#include "BaseLetter.h"
 
 #define SAFE_RELEASE(P) if(P){P->Release() ; P = NULL ;}
 
@@ -41,7 +41,7 @@ BaseLetter::BaseLetter(
 	velocity_.y = 0;
 
 	// Create font file reference
-	const WCHAR* filePath = L"C:/Windows/Fonts/SCHLBKB.TTF";
+	const WCHAR* filePath = L"C:/Windows/Fonts/timesbd.ttf";
 	HRESULT hr = pDWriteFactory->CreateFontFileReference(
 		filePath,
 		NULL,
@@ -344,25 +344,25 @@ void BaseLetter::drawBoundaryBackground() const
 	D2D1_RECT_F rect = getBoundRect();
 
 	// Calculate boundary width and height
-	float boundWidth = rect.right - rect.left;
+	float boundWidth  = rect.right - rect.left;
 	float boundHeight = rect.bottom - rect.top;
 	
 	if(boundWidth >= boundHeight)
 	{
 		// Extend boundHeight, so it equal to boundWidth
-		rect.top -= (boundWidth - boundHeight) / 2;
+		rect.top    -= (boundWidth - boundHeight) / 2;
 		rect.bottom += (boundWidth - boundHeight) / 2;
 	}
 	else // boundWidth < boundHeight
 	{
 		// Extend boundWidth, so it equals to boundHeight
-		rect.left -= (boundHeight - boundWidth) / 2;
+		rect.left  -= (boundHeight - boundWidth) / 2;
 		rect.right += (boundHeight - boundWidth) / 2;
 	}
 
 	// Extend rect by 10 at each side
-	rect.left	-= (rect.right - rect.left) * 0.1f;
-	rect.right	+= (rect.right - rect.left) * 0.1f;
+	rect.left	-=  (rect.right - rect.left) * 0.1f;
+	rect.right	+=  (rect.right - rect.left) * 0.1f;
 	rect.top	-= -(rect.bottom - rect.top) * 0.1f;
 	rect.bottom += -(rect.bottom - rect.top) * 0.2f;
 
