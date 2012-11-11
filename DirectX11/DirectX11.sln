@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Index_Buffer", "Index_Buffe
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DrawTriangle", "DrawTriangle\DrawTriangle.vcxproj", "{CBA3F13E-C42B-4640-9875-304568DE8956}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GetDeviceFeatureLevel", "GetDeviceFeatureLevel\GetDeviceFeatureLevel.vcxproj", "{4A2F5B8F-1CB8-40B6-A45E-BD263F78B9CB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -41,6 +43,10 @@ Global
 		{CBA3F13E-C42B-4640-9875-304568DE8956}.Debug|Win32.Build.0 = Debug|Win32
 		{CBA3F13E-C42B-4640-9875-304568DE8956}.Release|Win32.ActiveCfg = Release|Win32
 		{CBA3F13E-C42B-4640-9875-304568DE8956}.Release|Win32.Build.0 = Release|Win32
+		{4A2F5B8F-1CB8-40B6-A45E-BD263F78B9CB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4A2F5B8F-1CB8-40B6-A45E-BD263F78B9CB}.Debug|Win32.Build.0 = Debug|Win32
+		{4A2F5B8F-1CB8-40B6-A45E-BD263F78B9CB}.Release|Win32.ActiveCfg = Release|Win32
+		{4A2F5B8F-1CB8-40B6-A45E-BD263F78B9CB}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
