@@ -4,9 +4,7 @@ This demo show you how Direct2D intoperate with D3D, this is also a demostration
 
 #include <windows.h>
 #include <d3d11.h>
-//#include <d3dx11.h>
 #include <d3dcompiler.h>
-//#include <xnamath.h>
 #include <DirectXMath.h>
 #include <d2d1.h>
 
@@ -397,7 +395,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 
 	HWND hWnd = CreateWindowEx(NULL,  
 		winClass.lpszClassName,		// window class name
-		L"Triangle",					// window caption
+		L"Triangle",				// window caption
 		WS_OVERLAPPEDWINDOW, 		// window style
 		0,							// initial x position
 		0,							// initial y position
