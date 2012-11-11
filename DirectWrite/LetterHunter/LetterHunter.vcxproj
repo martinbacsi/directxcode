@@ -86,6 +86,7 @@
     <ClCompile Include="BaseLetter.cpp" />
     <ClCompile Include="MagicProps.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Score.cpp" />
     <ClCompile Include="Shooter.cpp" />
     <ClCompile Include="Sound.cpp" />
     <ClCompile Include="SoundManager.cpp" />
@@ -99,6 +100,7 @@
     <ClInclude Include="LetterHunter.h" />
     <ClInclude Include="BaseLetter.h" />
     <ClInclude Include="MagicProps.h" />
+    <ClInclude Include="Score.h" />
     <ClInclude Include="Shooter.h" />
     <ClInclude Include="Sound.h" />
     <ClInclude Include="SoundManager.h" />

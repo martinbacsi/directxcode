@@ -7,6 +7,7 @@
 #include "TextObject.h"
 #include "Bullet.h"
 #include "DInput.h"
+#include "Score.h"
 #include "SoundManager.h"
 
 using namespace std;
@@ -48,9 +49,10 @@ private:
 	static const int TEXTCOUNT = 10;
 	static const int BULLETCOUNT = 10;
 
-	D2D*	d2d_;
-	DInput*	dinput_;
-	SoundManager* soundManager_;
+	D2D*			d2d_;
+	DInput*			dinput_;
+	SoundManager*	soundManager_;
+	Score*			score_;
 
 	// Level of the game, this decides the moving speed of the letter, we compute the letter position as below
 	// [ newPosition = velocity * time * gameLevel ], when level raise up, the moving speed also becames fast.

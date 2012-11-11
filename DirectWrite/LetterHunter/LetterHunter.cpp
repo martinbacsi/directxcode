@@ -12,6 +12,7 @@ LetterHunter::LetterHunter(HWND hwnd, int maxTextCount)
 	d2d_(NULL),
 	dinput_(NULL),
 	soundManager_(NULL),
+	score_(NULL),
 	textBuffer_(NULL),
 	currentTextObject_(NULL)
 {
@@ -23,6 +24,10 @@ LetterHunter::LetterHunter(HWND hwnd, int maxTextCount)
 	// Initialize Direct Input
 	dinput_ = new DInput();
 	soundManager_ = new SoundManager();
+
+	// Initialize score obejct
+	score_ = new Score(d2d_->getD2DHwndRenderTarget(), d2d_->getDWriteFactory(), hwnd_);
+	score_->setColor(D2D1::ColorF(D2D1::ColorF::Red));
 
 	RECT rect;
 	GetWindowRect(hwnd_, &rect);
@@ -38,6 +43,7 @@ void LetterHunter::release()
 {
 	SAFE_DELETE(d2d_);
 	SAFE_DELETE(dinput_);
+	SAFE_DELETE(score_);
 
 	for(vector<TextObject*>::iterator itor = textBuffer_.begin(); itor != textBuffer_.end(); ++itor)
 	{
@@ -177,6 +183,9 @@ void LetterHunter::render(float timeDelta)
 			bulletBuffer_[i]->render();
 		}
 	}
+
+	// render score
+	score_->draw();
 
 	rendertarget->EndDraw();
 }
@@ -373,6 +382,9 @@ void LetterHunter::hitDetect(Bullet* bullet, TextObject* textObject)
 
 	if(bulletRect.top < textObejctRect.bottom)
 	{
+		// Update score
+		score_->add(1);
+
 		textObject->onHit();
 		if(!textObject->isLive())
 		{
