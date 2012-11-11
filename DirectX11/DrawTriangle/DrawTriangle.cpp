@@ -37,17 +37,16 @@ HRESULT InitD3D( HWND hWnd )
 	sd.OutputWindow = hWnd; // output window handle
 	sd.SampleDesc.Count = 1; // WHAT'S THIS?
 	sd.SampleDesc.Quality = 0; // WHAT'S THIS?
-	sd.Windowed = FALSE; // window mode
+	sd.Windowed = FALSE; // full-screen mode
 
 	// Create device and swap chain
-	D3D_FEATURE_LEVEL FeatureLevelsRequested = D3D_FEATURE_LEVEL_11_1; // Use d3d11
+	D3D_FEATURE_LEVEL FeatureLevelsRequested = D3D_FEATURE_LEVEL_11_0; // Use d3d11
 	UINT              numLevelsRequested = 1; // Number of levels 
 	D3D_FEATURE_LEVEL FeatureLevelsSupported;
 
 	HRESULT hr;
 	if (FAILED (hr = D3D11CreateDeviceAndSwapChain( NULL, 
-		D3D_DRIVER_TYPE_HARDWARE,
-		//D3D_DRIVER_TYPE_WARP,
+	    D3D_DRIVER_TYPE_HARDWARE,
 		NULL,
 		0,
 		&FeatureLevelsRequested,
