@@ -26,7 +26,7 @@ VOID CreateD2DResource(HWND hWnd)
 
 		// Create a Direct2D render target
 		hr = g_pD2DFactory->CreateHwndRenderTarget(
-			D2D1::RenderTargetProperties(),
+			D2D1::RenderTargetProperties( D2D1_RENDER_TARGET_TYPE_DEFAULT, D2D1::PixelFormat( DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED)),
 			D2D1::HwndRenderTargetProperties(
 			hWnd, 
 			D2D1::SizeU(rc.right - rc.left,rc.bottom - rc.top)
@@ -59,13 +59,13 @@ VOID DrawRectangle(HWND hwnd)
 	g_pRenderTarget->BeginDraw() ;
 
 	// Clear background color to White
-	g_pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
+	g_pRenderTarget->Clear(D2D1::ColorF( 0, 0.0f ));
 
-	// Draw Rectangle
-	g_pRenderTarget->DrawRectangle(
-		D2D1::RectF(100.f, 100.f, 500.f, 500.f),
-		g_pBlackBrush
-		);
+	//// Draw Rectangle
+	//g_pRenderTarget->DrawRectangle(
+	//	D2D1::RectF(100.f, 100.f, 500.f, 500.f),
+	//	g_pBlackBrush
+	//	);
 
 	HRESULT hr = g_pRenderTarget->EndDraw() ;
 	if (FAILED(hr))
