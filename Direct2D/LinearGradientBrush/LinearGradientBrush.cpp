@@ -3,14 +3,13 @@
 
 #define SAFE_RELEASE(P) if(P){P->Release() ; P = NULL ;}
 
-ID2D1Factory* pD2DFactory = NULL ;				// Direct2D factory
-ID2D1HwndRenderTarget* pRenderTarget = NULL;	// Render target
-ID2D1SolidColorBrush* pBlackBrush = NULL ;		// Black brush for rectangle outline
-ID2D1LinearGradientBrush* pLinearGradientBrush = NULL ;		// A linear gradient brush
+ID2D1Factory*             pD2DFactory          = NULL;		// Direct2D factory
+ID2D1HwndRenderTarget*    pRenderTarget        = NULL;	    // Render target
+ID2D1SolidColorBrush*     pBlackBrush          = NULL;		// Black brush for rectangle outline
+ID2D1LinearGradientBrush* pLinearGradientBrush = NULL;		// A linear gradient brush
 
 // Rectangle to draw
-D2D1_ROUNDED_RECT roundRect = D2D1::RoundedRect(D2D1::RectF(0, 0, 200, 200), 20, 20);
-
+D2D1_ROUNDED_RECT roundRect = D2D1::RoundedRect(D2D1::RectF(100, 100, 300, 200), 20, 20);
 
 RECT rc ;		// Render area
 HWND g_Hwnd ;	// Window handle
@@ -60,18 +59,22 @@ VOID CreateD2DResource(HWND hWnd)
 
 		// Define gradient stops
 		D2D1_GRADIENT_STOP gradientStops[2] ;
-		gradientStops[0].color = D2D1::ColorF(D2D1::ColorF::Yellow, 1) ;
-		gradientStops[0].position = 0.f ;
-		gradientStops[1].color = D2D1::ColorF(D2D1::ColorF::ForestGreen, 1) ;
-		gradientStops[1].position = 1.f ;
-
+		gradientStops[0].color = D2D1::ColorF(D2D1::ColorF::Yellow) ;
+		gradientStops[0].position = 0.0f ;
+		gradientStops[1].color = D2D1::ColorF(D2D1::ColorF::Red) ;
+		gradientStops[1].position = 1.0f ;
+		//gradientStops[2].color = D2D1::ColorF(D2D1::ColorF::Green) ;
+		//gradientStops[2].position = 0.6f ;
+ 
 		// Create gradient stops collection
 		ID2D1GradientStopCollection* pGradientStops = NULL ;
 		hr = pRenderTarget->CreateGradientStopCollection(
 			gradientStops,
 			2, 
 			D2D1_GAMMA_2_2,
-			D2D1_EXTEND_MODE_CLAMP,
+			//D2D1_EXTEND_MODE_CLAMP,
+			//D2D1_EXTEND_MODE_WRAP, 
+			D2D1_EXTEND_MODE_MIRROR,
 			&pGradientStops
 			) ;
 		if (FAILED(hr))
@@ -79,11 +82,17 @@ VOID CreateD2DResource(HWND hWnd)
 			MessageBox(NULL, "Create gradient stops collection failed!", "Error", 0);
 		}
 
+		// To test the Extend mode, we set the end point of GradientBrushProperties
+		// to the center of the rectangle
+		float centerX = (roundRect.rect.right + roundRect.rect.left) / 2;
+		float centerY = (roundRect.rect.bottom + roundRect.rect.top) / 2;
+
 		// Create a linear gradient brush to fill in the rectangle
 		hr = pRenderTarget->CreateLinearGradientBrush(
 			D2D1::LinearGradientBrushProperties(
 			D2D1::Point2F(roundRect.rect.left, roundRect.rect.top),
-			D2D1::Point2F(roundRect.rect.right, roundRect.rect.bottom)),
+			//D2D1::Point2F(roundRect.rect.right, roundRect.rect.bottom)),
+			D2D1::Point2F(centerX, roundRect.rect.top)),
 			pGradientStops,
 			&pLinearGradientBrush
 			) ;
