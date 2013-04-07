@@ -154,7 +154,7 @@ VOID InitVertexBuffer()
 	HRESULT	hr = g_pd3dDevice->CreateBuffer(&bd, &initData, &g_pVertexBuffer);
 	if(FAILED(hr))
 	{
-		MessageBox(NULL, "Create vertex buffer failed", "Error", 0);
+		MessageBox(NULL, L"Create vertex buffer failed", L"Error", 0);
 	}
 }
 
@@ -200,7 +200,7 @@ VOID InitIndexBuffer()
 	HRESULT hr = g_pd3dDevice->CreateBuffer(&indexBufferDesc, &indexBufferData, &g_pIndexBuffer);
 	if(FAILED(hr))
 	{
-		MessageBox(NULL, "Create index buffer failed", "Error", 0);
+		MessageBox(NULL, L"Create index buffer failed", L"Error", 0);
 	}
 }
 
@@ -217,7 +217,7 @@ VOID InitConstantBuffer()
 	HRESULT hr = g_pd3dDevice->CreateBuffer(&bd, NULL, &g_pConstantBuffer);
 	if(FAILED(hr))
 	{
-		MessageBox(NULL, "Create constant buffer failed", "Error", 0);
+		MessageBox(NULL, L"Create constant buffer failed", L"Error", 0);
 	}
 }
 
@@ -232,7 +232,7 @@ VOID InitVertexShader()
 	if(FAILED(hr))
 	{
 		pVSBlob->Release();
-		MessageBox(NULL, "Create vertex shader failed", "Error", 0);
+		MessageBox(NULL, L"Create vertex shader failed", L"Error", 0);
 	}
 
 	// Define the input layout
@@ -261,7 +261,7 @@ VOID InitPixelShader()
 	pPSBlob->Release();
 	if(FAILED(hr))
 	{
-		MessageBox(NULL, "Create pixel shader failed", "Error", 0);
+		MessageBox(NULL, L"Create pixel shader failed", L"Error", 0);
 	}
 }
 
@@ -301,7 +301,7 @@ VOID CompileShaderFromFile(WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShad
 		if(pErrorBlob != NULL)
 		{
 			//OutputDebugStringA(pErrorBlob->GetBufferPointer());
-			MessageBox(NULL, (char*)pErrorBlob->GetBufferPointer(), "Error", 0);
+			MessageBox(NULL, (WCHAR*)pErrorBlob->GetBufferPointer(), L"Error", 0);
 			pErrorBlob->Release();
 		}
 	}
@@ -416,7 +416,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 {
 	WNDCLASSEX winClass ;
 
-	winClass.lpszClassName = "Triangle";
+	winClass.lpszClassName = L"Cube";
 	winClass.cbSize        = sizeof(WNDCLASSEX);
 	winClass.style         = CS_HREDRAW | CS_VREDRAW;
 	winClass.lpfnWndProc   = MsgProc;
@@ -433,7 +433,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 
 	HWND hWnd = CreateWindowEx(NULL,  
 		winClass.lpszClassName,		// window class name
-		"Triangle",				// window caption
+		L"Cube",				// window caption
 		WS_OVERLAPPEDWINDOW, 		// window style
 		32,							// initial x position
 		32,							// initial y position
