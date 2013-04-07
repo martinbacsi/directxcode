@@ -6,9 +6,14 @@
 
 using namespace DirectX;
 
-//--------------------------------------------------------------------------------------
-// Structures
-//--------------------------------------------------------------------------------------
+// The vertex format
+struct SimpleVertex
+{
+	DirectX::XMFLOAT3 Pos;	// Position
+	DirectX::XMFLOAT3 Color; // color
+};
+
+// Constant buffer
 struct ConstantBuffer
 {
 	XMMATRIX mWorld;
@@ -26,21 +31,25 @@ ID3D11Buffer*			g_pIndexBuffer      = NULL;
 ID3D11Buffer*			g_pConstantBuffer   = NULL;
 ID3D11VertexShader*		g_pVertexShader		= NULL;
 ID3D11PixelShader*		g_pPixelShader		= NULL;
+
+// World, view and projection matrix
 XMMATRIX				g_mWorld;
 XMMATRIX				g_mView;
 XMMATRIX                g_mProj;
 
 bool					g_bActive			= true ; // Is window active?
 
+// This Macro used to release COM object
 #define SAFE_RELEASE(P) if(P){ P->Release(); P = NULL;}
 
+// Forward declaration
 VOID CompileShaderFromFile(WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);
 VOID InitVertexBuffer();
 VOID InitIndexBuffer();
 VOID InitConstantBuffer();
 VOID InitVertexShader();
 VOID InitPixelShader();
-VOID InitWorldViewProjMatrix();
+VOID InitWorldViewProjMatrix(HWND hWnd);
 
 HRESULT InitD3D( HWND hWnd )
 {
@@ -58,7 +67,7 @@ HRESULT InitD3D( HWND hWnd )
 	sd.OutputWindow = hWnd; // output window handle
 	sd.SampleDesc.Count = 1; // WHAT'S THIS?
 	sd.SampleDesc.Quality = 0; // WHAT'S THIS?
-	sd.Windowed = FALSE; // full-screen mode
+	sd.Windowed = TRUE; // full-screen mode
 
 	// Create device and swap chain
 	D3D_FEATURE_LEVEL FeatureLevelsRequested = D3D_FEATURE_LEVEL_11_0; // Use d3d11
@@ -103,43 +112,31 @@ HRESULT InitD3D( HWND hWnd )
 	vp.TopLeftX = 0;
 	vp.TopLeftY = 0;
 	g_pImmediateContext->RSSetViewports( 1, &vp );
-
+	
+	InitWorldViewProjMatrix(hWnd);
 	InitVertexBuffer();
 	InitIndexBuffer();
 	InitConstantBuffer();
 	InitVertexShader();
 	InitPixelShader();
-	InitWorldViewProjMatrix();
 		                       
 	return S_OK;
 }
 
 VOID InitVertexBuffer()
 {
-	// The vertex format
-	struct SimpleVertex
-	{
-		DirectX::XMFLOAT3 Pos;	// Position
-		DirectX::XMFLOAT3 Color; // color
-	};
-
+	
 	// Create the vertex buffer
 	SimpleVertex vertices[] = 
 	{
-		// old
-		/*DirectX::XMFLOAT3( 0.0f, 0.5f, 0.5f ),
-        DirectX::XMFLOAT3( 0.5f, -0.5f, 0.5f ),
-        DirectX::XMFLOAT3( -0.5f, -0.5f, 0.5f ),*/
-
-		// new
-		{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f)}, // 0
-		{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)}, // 1
-		{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)}, // 2
-		{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)}, // 3
-		{XMFLOAT3( 0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)}, // 4
-		{XMFLOAT3( 0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)}, // 5
-		{XMFLOAT3( 0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)}, // 6
-		{XMFLOAT3( 0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)}, // 7
+		{ XMFLOAT3( -1.0f, 1.0f, -1.0f ), XMFLOAT3( 0.0f, 0.0f, 1.0f) },
+        { XMFLOAT3( 1.0f,  1.0f, -1.0f ), XMFLOAT3( 0.0f, 1.0f, 0.0f) },
+        { XMFLOAT3( 1.0f,  1.0f,  1.0f ), XMFLOAT3( 0.0f, 1.0f, 1.0f) },
+        { XMFLOAT3(-1.0f,  1.0f,  1.0f ), XMFLOAT3( 1.0f, 0.0f, 0.0f) },
+        { XMFLOAT3(-1.0f, -1.0f, -1.0f ), XMFLOAT3( 1.0f, 0.0f, 1.0f) },
+        { XMFLOAT3( 1.0f, -1.0f, -1.0f ), XMFLOAT3( 1.0f, 1.0f, 0.0f) },
+        { XMFLOAT3( 1.0f, -1.0f,  1.0f ), XMFLOAT3( 1.0f, 1.0f, 1.0f) },
+        { XMFLOAT3(-1.0f, -1.0f,  1.0f ), XMFLOAT3( 0.0f, 0.0f, 0.0f) },
 	};
 
 	// Vertex Buffer
@@ -157,36 +154,31 @@ VOID InitVertexBuffer()
 	HRESULT	hr = g_pd3dDevice->CreateBuffer(&bd, &initData, &g_pVertexBuffer);
 	if(FAILED(hr))
 	{
-		MessageBox(NULL, L"Create vertex buffer failed", L"Error", 0);
+		MessageBox(NULL, "Create vertex buffer failed", "Error", 0);
 	}
-
-	// Set vertex buffer
-	UINT stride = sizeof(SimpleVertex);
-	UINT offset = 0;
-	g_pImmediateContext->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
 }
 
 VOID InitIndexBuffer()
 {
 	unsigned short cubeIndices[] = 
 	{
-		0,2,1, // -x
-		1,2,3,
+		3,1,0,
+        2,1,3,
 
-		4,5,6, // +x
-		5,7,6,
+        0,5,4,
+        1,5,0,
 
-		0,1,5, // -y
-		0,5,4,
+        3,4,7,
+        0,4,3,
 
-		2,6,7, // +y
-		2,7,3,
+        1,6,5,
+        2,6,1,
 
-		0,4,6, // -z
-		0,6,2,
+        2,7,6,
+        3,7,2,
 
-		1,3,7, // +z
-		1,7,5,
+        6,4,5,
+        7,4,6,
 	};
 
 	// Index buffer
@@ -208,11 +200,8 @@ VOID InitIndexBuffer()
 	HRESULT hr = g_pd3dDevice->CreateBuffer(&indexBufferDesc, &indexBufferData, &g_pIndexBuffer);
 	if(FAILED(hr))
 	{
-		MessageBox(NULL, L"Create index buffer failed", L"Error", 0);
+		MessageBox(NULL, "Create index buffer failed", "Error", 0);
 	}
-
-	// Set index buffer
-	g_pImmediateContext->IASetIndexBuffer(g_pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
 }
 
 VOID InitConstantBuffer()
@@ -228,7 +217,7 @@ VOID InitConstantBuffer()
 	HRESULT hr = g_pd3dDevice->CreateBuffer(&bd, NULL, &g_pConstantBuffer);
 	if(FAILED(hr))
 	{
-		MessageBox(NULL, L"Create constant buffer failed", L"Error", 0);
+		MessageBox(NULL, "Create constant buffer failed", "Error", 0);
 	}
 }
 
@@ -243,7 +232,7 @@ VOID InitVertexShader()
 	if(FAILED(hr))
 	{
 		pVSBlob->Release();
-		MessageBox(NULL, L"Create vertex shader failed", L"Error", 0);
+		MessageBox(NULL, "Create vertex shader failed", "Error", 0);
 	}
 
 	// Define the input layout
@@ -252,15 +241,13 @@ VOID InitVertexShader()
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{ "COLOR",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
+
 	UINT numElements = ARRAYSIZE(layout);
 
 	// Create the input layout
 	hr = g_pd3dDevice->CreateInputLayout(layout, numElements, pVSBlob->GetBufferPointer(), 
 													pVSBlob->GetBufferSize(), &g_pVertexLayout);
 	pVSBlob->Release();
-
-	// Set the input layout
-	g_pImmediateContext->IASetInputLayout(g_pVertexLayout);
 }
 
 VOID InitPixelShader()
@@ -274,17 +261,17 @@ VOID InitPixelShader()
 	pPSBlob->Release();
 	if(FAILED(hr))
 	{
-		MessageBox(NULL, L"Create pixel shader failed", L"Error", 0);
+		MessageBox(NULL, "Create pixel shader failed", "Error", 0);
 	}
 }
 
-VOID InitWorldViewProjMatrix()
+VOID InitWorldViewProjMatrix(HWND hwnd)
 {
 	// Initialize world matrix
 	g_mWorld = XMMatrixIdentity();
 
 	// Initialize view matrix
-	XMVECTOR eyePoint = XMVectorSet(0.0f, 10.0f, -5.0f, 0.0f);
+	XMVECTOR eyePoint = XMVectorSet(5.0f, 5.0f, -5.0f, 0.0f);
 	XMVECTOR lookAt   = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
 	XMVECTOR Up       = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	g_mView = XMMatrixLookAtLH(eyePoint, lookAt, Up);
@@ -294,12 +281,12 @@ VOID InitWorldViewProjMatrix()
 
 	// Calculate aspect ratio
 	RECT rc;
-    GetClientRect(GetForegroundWindow(), &rc);
+    GetClientRect(hwnd, &rc);
     UINT width = rc.right - rc.left;
     UINT height = rc.bottom - rc.top;
 	float aspectRatio = width / (float)height;
 
-	g_mProj = XMMatrixPerspectiveFovLH(fov, aspectRatio, 0.1f, 1000.0f);
+	g_mProj = XMMatrixPerspectiveFovLH(fov, aspectRatio, 1.0f, 1000.0f);
 }
 
 VOID CompileShaderFromFile(WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut)
@@ -313,7 +300,8 @@ VOID CompileShaderFromFile(WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShad
 	{
 		if(pErrorBlob != NULL)
 		{
-			OutputDebugString((WCHAR*)pErrorBlob->GetBufferPointer());
+			//OutputDebugStringA(pErrorBlob->GetBufferPointer());
+			MessageBox(NULL, (char*)pErrorBlob->GetBufferPointer(), "Error", 0);
 			pErrorBlob->Release();
 		}
 	}
@@ -351,15 +339,28 @@ VOID Render(float timeDelta)
 
 	// Set up matrix
 	ConstantBuffer cb;
-	cb.mWorld = XMMatrixTranspose(g_mWorld);
-	cb.mView  = XMMatrixTranspose(g_mView);
+	cb.mWorld      = XMMatrixTranspose(g_mWorld);
+	cb.mView       = XMMatrixTranspose(g_mView);
 	cb.mProjection = XMMatrixTranspose(g_mProj);
 	g_pImmediateContext->UpdateSubresource(g_pConstantBuffer, 0, NULL, &cb, 0, 0);
 
-	// Render the triangle
-	g_pImmediateContext->CSSetConstantBuffers(0, 1, &g_pConstantBuffer);
+	// Set vertext shader, pixel shader and constant buffer
 	g_pImmediateContext->VSSetShader(g_pVertexShader, NULL, 0);
 	g_pImmediateContext->PSSetShader(g_pPixelShader, NULL, 0);
+
+	// Set vertex buffer
+	UINT stride = sizeof(SimpleVertex);
+	UINT offset = 0;
+	g_pImmediateContext->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
+
+	// Set index buffer
+	g_pImmediateContext->IASetIndexBuffer(g_pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
+
+	// Set constant buffer
+	g_pImmediateContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);
+
+	// Set the input layout
+	g_pImmediateContext->IASetInputLayout(g_pVertexLayout);
 
 	// Set geometry type
 	g_pImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -415,7 +416,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 {
 	WNDCLASSEX winClass ;
 
-	winClass.lpszClassName = L"Triangle";
+	winClass.lpszClassName = "Triangle";
 	winClass.cbSize        = sizeof(WNDCLASSEX);
 	winClass.style         = CS_HREDRAW | CS_VREDRAW;
 	winClass.lpfnWndProc   = MsgProc;
@@ -432,7 +433,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 
 	HWND hWnd = CreateWindowEx(NULL,  
 		winClass.lpszClassName,		// window class name
-		L"Triangle",				// window caption
+		"Triangle",				// window caption
 		WS_OVERLAPPEDWINDOW, 		// window style
 		32,							// initial x position
 		32,							// initial y position
