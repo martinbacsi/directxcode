@@ -4,6 +4,8 @@
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 
+#include "ModelViewCamera.h"
+
 using namespace DirectX;
 
 // The vertex format
@@ -38,6 +40,8 @@ XMMATRIX				g_mView;
 XMMATRIX                g_mProj;
 
 bool					g_bActive			= true ; // Is window active?
+
+ModelViewCamera*         g_Camera;
 
 // This Macro used to release COM object
 #define SAFE_RELEASE(P) if(P){ P->Release(); P = NULL;}
@@ -118,6 +122,11 @@ HRESULT InitD3D( HWND hWnd )
 	vp.TopLeftX = 0;
 	vp.TopLeftY = 0;
 	g_pImmediateContext->RSSetViewports( 1, &vp );
+
+	// Set camera window
+	g_Camera = new ModelViewCamera();
+	g_Camera->SetWindow(width, height);
+	g_Camera->Reset();
 	
 	InitWorldViewProjMatrix(hWnd);
 	InitVertexBuffer();
@@ -231,7 +240,7 @@ VOID InitVertexShader()
 {
 	// Compile the vertex shader from file
 	ID3DBlob*	pVSBlob = NULL;
-	CompileShaderFromFile(L"cube_shader.fx", "VS", "vs_4_0", &pVSBlob);
+	CompileShaderFromFile(L"arcball.fx", "VS", "vs_4_0", &pVSBlob);
 
 	// Create vertex shader
 	HRESULT hr = g_pd3dDevice->CreateVertexShader(pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize(), NULL, &g_pVertexShader);
@@ -260,7 +269,7 @@ VOID InitPixelShader()
 {
 	// Compile the pixel shader
 	ID3DBlob*	pPSBlob = NULL;
-	CompileShaderFromFile(L"cube_shader.fx", "PS", "ps_4_0", &pPSBlob);
+	CompileShaderFromFile(L"arcball.fx", "PS", "ps_4_0", &pPSBlob);
 
 	// Create the pixel shader
 	HRESULT hr = g_pd3dDevice->CreatePixelShader(pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), NULL, &g_pPixelShader);
@@ -274,13 +283,14 @@ VOID InitPixelShader()
 VOID InitWorldViewProjMatrix(HWND hwnd)
 {
 	// Initialize world matrix
-	g_mWorld = XMMatrixIdentity();
+	XMMATRIX world = XMMatrixIdentity();
+	g_Camera->SetWorldMatrix(&world);
 
 	// Initialize view matrix
-	XMVECTOR eyePoint = XMVectorSet(5.0f, 5.0f, -5.0f, 0.0f);
-	XMVECTOR lookAt   = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-	XMVECTOR Up       = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	g_mView = XMMatrixLookAtLH(eyePoint, lookAt, Up);
+	XMFLOAT3 eyePoint = XMFLOAT3(0.0f, 0.0f, -1.0f);
+	XMFLOAT3 lookAt   = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	XMFLOAT3 Up       = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	g_Camera->SetViewParams(eyePoint, lookAt, Up);
 
 	// Initialize projection matrix
 	float fov = XM_PIDIV4;
@@ -291,8 +301,7 @@ VOID InitWorldViewProjMatrix(HWND hwnd)
     UINT width = rc.right - rc.left;
     UINT height = rc.bottom - rc.top;
 	float aspectRatio = width / (float)height;
-
-	g_mProj = XMMatrixPerspectiveFovLH(fov, aspectRatio, 1.0f, 1000.0f);
+	g_Camera->SetProjParams(fov, aspectRatio, 1.0f, 1000.0f);
 }
 
 VOID CompileShaderFromFile(WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut)
@@ -332,6 +341,13 @@ VOID Cleanup()
 	SAFE_RELEASE( g_pImmediateContext ) ;
 	SAFE_RELEASE( g_pd3dDevice ) ;
 
+	delete g_Camera;
+	g_Camera = NULL;
+}
+
+VOID OnFrameMove()
+{
+	g_Camera->OnFrameMove() ;
 }
 
 VOID Render(float timeDelta)
@@ -339,15 +355,21 @@ VOID Render(float timeDelta)
 	if (!g_bActive)
 		Sleep(50) ;
 
+	OnFrameMove();
+
 	// Clear the back-buffer to a BLUE color
 	float color[4] = { 0.0f, 0.125f, 0.3f, 1.0f };
-	g_pImmediateContext->ClearRenderTargetView( g_pRenderTargetView, color );
+	g_pImmediateContext->ClearRenderTargetView(g_pRenderTargetView, color);
 
 	// Set up matrix
 	ConstantBuffer cb;
-	cb.mWorld      = XMMatrixTranspose(g_mWorld);
-	cb.mView       = XMMatrixTranspose(g_mView);
-	cb.mProjection = XMMatrixTranspose(g_mProj);
+	XMMATRIX world = *g_Camera->GetWorldMatrix();
+	XMMATRIX view  = *g_Camera->GetViewMatrix();
+	XMMATRIX proj  = *g_Camera->GetProjMatrix();
+
+	cb.mWorld      = XMMatrixTranspose(world);
+	cb.mView       = XMMatrixTranspose(view);
+	cb.mProjection = XMMatrixTranspose(proj);
 	g_pImmediateContext->UpdateSubresource(g_pConstantBuffer, 0, NULL, &cb, 0, 0);
 
 	// Set vertext shader, pixel shader and constant buffer
@@ -415,6 +437,8 @@ LRESULT WINAPI MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 		return 0;
 	}
 
+	g_Camera->HandleMessages(hWnd, msg, wParam, lParam) ;
+
 	return DefWindowProc( hWnd, msg, wParam, lParam );
 }
 
@@ -422,7 +446,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 {
 	WNDCLASSEX winClass ;
 
-	winClass.lpszClassName = L"Cube";
+	winClass.lpszClassName = L"ArcBall";
 	winClass.cbSize        = sizeof(WNDCLASSEX);
 	winClass.style         = CS_HREDRAW | CS_VREDRAW;
 	winClass.lpfnWndProc   = MsgProc;
@@ -439,7 +463,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 
 	HWND hWnd = CreateWindowEx(NULL,  
 		winClass.lpszClassName,		// window class name
-		L"Cube",				// window caption
+		L"ArcBall",				// window caption
 		WS_OVERLAPPEDWINDOW, 		// window style
 		32,							// initial x position
 		32,							// initial y position
