@@ -60,7 +60,7 @@ void ModelViewCamera::OnFrameMove()
 
 	// Get the inverse of the view Arcball's rotation matrix
 	XMMATRIX mCameraRot ;
-	mCameraRot = XMMatrixInverse( NULL, m_ViewArcBall.GetRotationMatrix() );
+	mCameraRot = XMMatrixInverse( NULL, m_ViewArcBall.GetRotationMatrix());
 	if(XMMatrixIsInfinite(mCameraRot))
 	{
 		MessageBox(NULL, L"Matrix does not have inverse matrix", L"Error", 0);

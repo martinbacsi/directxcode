@@ -102,7 +102,7 @@ XMMATRIX ArcBall::GetRotationMatrixIncreament()
 XMVECTOR ArcBall::QuatFromBallPoints(XMFLOAT3 startPoint, XMFLOAT3 endPoint )
 {
 	XMVECTOR dotVector = XMVector3Dot(XMLoadFloat3(&startPoint), XMLoadFloat3(&endPoint));
-	float fDot = XMVectorGetX(dotVector) + XMVectorGetY(dotVector) + XMVectorGetZ(dotVector);
+	float fDot = XMVectorGetX(dotVector);
 
 	XMVECTOR vPart;
 	vPart = XMVector3Cross(XMLoadFloat3(&startPoint), XMLoadFloat3(&endPoint));
