@@ -22,9 +22,9 @@ ArcBall::~ArcBall()
 
 void ArcBall::Reset()
 {
-	m_qDown      = XMFLOAT4(0, 0, 0, 1);
-	m_qNow       = XMFLOAT4(0, 0, 0, 1);
-	m_increament = XMFLOAT4(0, 0, 0, 1);
+	m_qDown      = XMVectorSet(0, 0, 0, 1);
+	m_qNow       = XMVectorSet(0, 0, 0, 1);
+	m_increament = XMVectorSet(0, 0, 0, 1);
 	m_mRotation  = XMMatrixIdentity();
 	m_bDrag      = FALSE;
 	m_fRadius    = 1.0f;
@@ -52,7 +52,7 @@ void ArcBall::OnMove(float nX, float nY)
 		m_vCurrentPt = ScreenToVector(nX, nY);
 		m_increament = QuatFromBallPoints( m_oldPt, m_vCurrentPt );
 
-		XMStoreFloat4(&m_qNow, XMQuaternionMultiply(XMLoadFloat4(&m_qDown), XMLoadFloat4(&QuatFromBallPoints( m_vDownPt, m_vCurrentPt))));
+		m_qNow = XMQuaternionMultiply(m_qDown, QuatFromBallPoints( m_vDownPt, m_vCurrentPt));
 		m_oldPt = m_vCurrentPt ;
 	}
 }
@@ -73,40 +73,39 @@ void ArcBall::SetWindow(float nWidth, float nHeight, float fRadius)
 	 m_nWidth  = nWidth; 
 	 m_nHeight = nHeight; 
 	 m_fRadius = fRadius; 
-	 m_vCenter = XMFLOAT2(m_nWidth / 2.0f, m_nHeight / 2.0f);
 }
 
-XMFLOAT4 ArcBall::GetRotationQuat()
+XMVECTOR ArcBall::GetRotationQuat()
 {
 	return m_qNow ;
 }
 
 XMMATRIX ArcBall::GetRotationMatrix()
 {
-	m_mRotation = XMMatrixRotationQuaternion(XMLoadFloat4(&m_qNow)) ;
+	m_mRotation = XMMatrixRotationQuaternion(m_qNow) ;
 	return m_mRotation;
 }
 
-XMFLOAT4 ArcBall::GetRotationQuatIncreament()
+XMVECTOR ArcBall::GetRotationQuatIncreament()
 {
 	return m_increament ;
 }
 
 XMMATRIX ArcBall::GetRotationMatrixIncreament()
 {
-	m_mRotation = XMMatrixRotationQuaternion(XMLoadFloat4(&m_increament));
+	m_mRotation = XMMatrixRotationQuaternion(m_increament);
 	return m_mRotation;
 }
 
-XMFLOAT4 ArcBall::QuatFromBallPoints(XMVECTOR startPoint, XMVECTOR endPoint )
+XMVECTOR ArcBall::QuatFromBallPoints(XMVECTOR startPoint, XMVECTOR endPoint )
 {
 	XMVECTOR dotVector = XMVector3Dot(startPoint, endPoint);
 	float fDot = XMVectorGetX(dotVector);
 
 	XMVECTOR vPart;
-	vPart = XMVector3Cross(startPoint, endPoint);		
+	vPart = XMVector3Cross(startPoint, endPoint);	
 
-	XMFLOAT4 result = XMFLOAT4(XMVectorGetX(vPart), XMVectorGetY(vPart), XMVectorGetZ(vPart), fDot);
+	XMVECTOR result = XMVectorSet(XMVectorGetX(vPart), XMVectorGetY(vPart), XMVectorGetZ(vPart), fDot);
 	return result;
 }
 

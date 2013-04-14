@@ -23,7 +23,7 @@ internal:
 	const XMMATRIX* GetViewMatrix() const ;
 	const XMMATRIX* GetProjMatrix() const ;
 	void SetWorldMatrix(XMMATRIX *matModelWorld) ;
-	XMFLOAT4 GetRotationQuat();
+	XMVECTOR GetRotationQuat();
 	const XMMATRIX* GetModelRotMatrix() const ;
 
 	// Pointer event handler
@@ -38,7 +38,6 @@ private:
 	float m_fMaxRadius ;			// The Maximum distance from the camera to the model
 	float m_fMinRadius ;			// The Minimum distance from the camera to the model
 	int m_nMouseWheelDelta;			// Amount of middle wheel scroll (+/-)
-	XMFLOAT3 m_vModelCenter ;		// Model center
 	
 	XMVECTOR m_vEyePt ;				// Eye position
 	XMVECTOR m_vLookatPt ;			// Look at position

@@ -7,7 +7,7 @@ ModelViewCamera::ModelViewCamera(void)
 	m_matModelRotate   = XMMatrixIdentity();
 	m_matModelRotLast  = XMMatrixIdentity();
 	m_matCameraRotLast = XMMatrixIdentity();
-	m_vModelCenter     = XMFLOAT3( 0, 0, 0 );
+//	m_vModelCenter     = XMFLOAT3( 0, 0, 0 );
 	m_fRadius          = 2.0f;			
 	m_fMaxRadius       = 1500.0f;
 	m_fMinRadius       = 200.0f ;
@@ -172,7 +172,7 @@ void ModelViewCamera::SetWorldMatrix(XMMATRIX *matModelWorld)
 	m_bDragSinceLastUpdate = true ;
 }
 
-XMFLOAT4 ModelViewCamera::GetRotationQuat()
+XMVECTOR ModelViewCamera::GetRotationQuat()
 {
 	return m_WorldArcBall.GetRotationQuat() ;
 }
