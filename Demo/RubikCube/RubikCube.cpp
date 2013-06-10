@@ -4,42 +4,55 @@
 
 RubikCube::RubikCube(void)
     : kNumCubes(27),
+	  kNumFaces(6),
+	  cube_length_(10.0f),
+      gap_between_layers_(0.2f),
 	  total_rotate_angle_(0),
 	  rotate_speed_(1.5f),
 	  is_hit_(false),
-	  is_cubes_selected_(false)
+	  is_cubes_selected_(false),
+	  rotate_finish_(true),
+	  window_active_(false),
+	  init_window_x_(50),
+	  init_window_y_(50),
+	  init_window_width_(500),
+	  init_window_height_(500),
+	  current_window_width_(init_window_width_),
+	  current_window_height_(init_window_height_),
+	  last_window_width_(current_window_width_),
+	  last_window_height_(current_window_height_),
+	  texture_width_(128),
+	  texture_height_(128),
+	  inner_textures_(NULL)
 {
 	d3d9 = new D3D9();
 
-	camera = new Camera();
+	world_arcball_ = new ArcBall();
+
+	camera_ = new Camera();
 
 	// Create 27 unit cubes
 	cubes = new Cube[kNumCubes];
 
-	cube_length_ = 10.0f;
-	gap_between_layers_ = 0.2f;
-
-	// Cube length
-	length = 10.0f;
-
-	// Spaces between cubes
-	gaps = 0.2f;
-
 	// Create 6 faces
-	faces = new Rect[6];
+	faces = new Rect[kNumFaces];
+
+	// in order to short the code line, use short temp variables here
+	float length = cube_length_;
+	float gap = gap_between_layers_;
 
 	// The Rubik cube was build in the following order
 	// The center of the cube is the origin of the coordiantes system, so we can 
 	// Calulate the 8 corners of the Rubik cube with length and gaps
-	D3DXVECTOR3 A(-(1.5f * length + gaps),   1.5f * length + gaps , -(1.5f * length + gaps)); // The front-top-left corner
-	D3DXVECTOR3 B(  1.5f * length + gaps ,   1.5f * length + gaps , -(1.5f * length + gaps));
-	D3DXVECTOR3 C(  1.5f * length + gaps , -(1.5f * length + gaps), -(1.5f * length + gaps));
-	D3DXVECTOR3 D(-(1.5f * length + gaps), -(1.5f * length + gaps), -(1.5f * length + gaps));
+	D3DXVECTOR3 A(-(1.5f * length + gap),   1.5f * length + gap , -(1.5f * length + gap)); // The front-top-left corner
+	D3DXVECTOR3 B(  1.5f * length + gap ,   1.5f * length + gap , -(1.5f * length + gap));
+	D3DXVECTOR3 C(  1.5f * length + gap , -(1.5f * length + gap), -(1.5f * length + gap));
+	D3DXVECTOR3 D(-(1.5f * length + gap), -(1.5f * length + gap), -(1.5f * length + gap));
 
-	D3DXVECTOR3 E(-(1.5f * length + gaps),   1.5f * length + gaps , (1.5f * length + gaps)); // The back-top-left corner
-	D3DXVECTOR3 F(  1.5f * length + gaps ,   1.5f * length + gaps , (1.5f * length + gaps));
-	D3DXVECTOR3 G(  1.5f * length + gaps , -(1.5f * length + gaps), (1.5f * length + gaps));
-	D3DXVECTOR3 H(-(1.5f * length + gaps), -(1.5f * length + gaps), (1.5f * length + gaps));
+	D3DXVECTOR3 E(-(1.5f * length + gap),   1.5f * length + gap ,  (1.5f * length + gap)); // The back-top-left corner
+	D3DXVECTOR3 F(  1.5f * length + gap ,   1.5f * length + gap ,  (1.5f * length + gap));
+	D3DXVECTOR3 G(  1.5f * length + gap , -(1.5f * length + gap),  (1.5f * length + gap));
+	D3DXVECTOR3 H(-(1.5f * length + gap), -(1.5f * length + gap),  (1.5f * length + gap));
 
 	Rect  FrontFace(A, B, C, D) ; 
 	Rect   BackFace(E, F, G, H) ;
@@ -55,37 +68,14 @@ RubikCube::RubikCube(void)
 	faces[4] = TopFace;
 	faces[5] = BottomFace;
 
-	// Face length
-	faceLength = 3 * length + 2 * gaps;
+	texture_id_ = new int[kNumFaces];
+	face_textures_ = new IDirect3DTexture9*[kNumFaces];
 
-	// Half length of the face
-	HalfWidth = faceLength / 2;
-
-	inactive = false;
-	OneRotateFinish = true;
-
-	initWindowPosX   = 50;
-	initWindowPosY   = 50;
-
-	InitWindowWidth  = 800 ;
-	InitWindowHeight = 800 ;
-
-	CurrentWindowWidth = InitWindowWidth ;
-	CurrentWindowHeight = InitWindowHeight ;
-
-	LastWindowWidth = CurrentWindowWidth ;
-	LastWindowHeight = CurrentWindowHeight ;
-
-	texWidth  = 128;
-	texHeight = 128;
-
-	for(int i = 0; i < numFaces; ++i)
+	for(int i = 0; i < kNumFaces; ++i)
 	{
-		textureId[i] = -1;
-		pTextures[i] = NULL;
+		texture_id_[i] = -1;
+		face_textures_[i] = NULL;
 	}
-
-	pInnerTexture = NULL;
 }
 
 RubikCube::~RubikCube(void)
@@ -94,9 +84,12 @@ RubikCube::~RubikCube(void)
 	delete d3d9;
 	d3d9 = NULL;
 
+	delete world_arcball_;
+	world_arcball_ = NULL;
+
 	// Delete camera
-	delete camera;
-	camera = NULL;
+	delete camera_;
+	camera_ = NULL;
 
 	// Delete cubes
 	delete []cubes;
@@ -106,14 +99,24 @@ RubikCube::~RubikCube(void)
 	delete []faces;
 	faces = NULL;
 
-	// Release textures
-	for(int i = 0; i < numFaces; ++i)
+	delete []texture_id_;
+	texture_id_ = NULL;
+
+	// Release face textures
+	for(int i = 0; i < kNumFaces; ++i)
 	{
-		if(pTextures[i] != NULL)
+		if(face_textures_[i] != NULL)
 		{
-			pTextures[i]->Release();
-			pTextures[i] = NULL;
+			face_textures_[i]->Release();
+			face_textures_[i] = NULL;
 		}
+	}
+
+	// Release inner texture
+	if (inner_textures_ != NULL)
+	{
+		inner_textures_->Release();
+		inner_textures_ = NULL;
 	}
 }
 
@@ -122,50 +125,57 @@ void RubikCube::Initialize(HWND hWnd)
 	d3d9->InitD3D9(hWnd);
 	this->hWnd = hWnd;
 
+	// Init arcball
+	world_arcball_->Init(hWnd);
+
 	InitTextures();
+
+	// To short the code line
+	float length = cube_length_;
+	float gap = gap_between_layers_;
 
 	// Initialize the top-front-left corner of each unit cubes, we use 27 unit
 	// cubes to build up a Rubik cube.
 	D3DXVECTOR3 initPos[] = 
 	{
 		// Front layer, from left to right, top to bottom. 9 cubes
-		D3DXVECTOR3( -(1.5f * length + gaps),    1.5f * length + gaps, -(1.5f * length + gaps) ),
-		D3DXVECTOR3(          -0.5f * length,    1.5f * length + gaps, -(1.5f * length + gaps) ),
-		D3DXVECTOR3(    0.5f * length + gaps,    1.5f * length + gaps, -(1.5f * length + gaps) ),
+		D3DXVECTOR3( -(1.5f * length + gap),    1.5f * length + gap, -(1.5f * length + gap) ),
+		D3DXVECTOR3(         -0.5f * length,    1.5f * length + gap, -(1.5f * length + gap) ),
+		D3DXVECTOR3(    0.5f * length + gap,    1.5f * length + gap, -(1.5f * length + gap) ),
 
-		D3DXVECTOR3( -(1.5f * length + gaps),           0.5f * length, -(1.5f * length + gaps) ),
-		D3DXVECTOR3(          -0.5f * length,           0.5f * length, -(1.5f * length + gaps) ),
-		D3DXVECTOR3(    0.5f * length + gaps,           0.5f * length, -(1.5f * length + gaps) ),
+		D3DXVECTOR3( -(1.5f * length + gap),          0.5f * length, -(1.5f * length + gap) ),
+		D3DXVECTOR3(         -0.5f * length,          0.5f * length, -(1.5f * length + gap) ),
+		D3DXVECTOR3(    0.5f * length + gap,          0.5f * length, -(1.5f * length + gap) ),
 
-		D3DXVECTOR3( -(1.5f * length + gaps), -(0.5f * length + gaps), -(1.5f * length + gaps) ),
-		D3DXVECTOR3(          -0.5f * length, -(0.5f * length + gaps), -(1.5f * length + gaps) ),
-		D3DXVECTOR3(    0.5f * length + gaps, -(0.5f * length + gaps), -(1.5f * length + gaps) ),
+		D3DXVECTOR3( -(1.5f * length + gap), -(0.5f * length + gap), -(1.5f * length + gap) ),
+		D3DXVECTOR3(         -0.5f * length, -(0.5f * length + gap), -(1.5f * length + gap) ),
+		D3DXVECTOR3(    0.5f * length + gap, -(0.5f * length + gap), -(1.5f * length + gap) ),
 
 		// Middle layer, from left to right, top to bottom. 9 cubes
-		D3DXVECTOR3( -(1.5f * length + gaps),    1.5f * length + gaps,          -0.5f * length ),
-		D3DXVECTOR3(          -0.5f * length,    1.5f * length + gaps,          -0.5f * length ),
-		D3DXVECTOR3(    0.5f * length + gaps,    1.5f * length + gaps,          -0.5f * length ),
+		D3DXVECTOR3( -(1.5f * length + gap),    1.5f * length + gap,         -0.5f * length ),
+		D3DXVECTOR3(         -0.5f * length,    1.5f * length + gap,         -0.5f * length ),
+		D3DXVECTOR3(    0.5f * length + gap,    1.5f * length + gap,         -0.5f * length ),
 
-		D3DXVECTOR3( -(1.5f * length + gaps),           0.5f * length,          -0.5f * length ),
-		D3DXVECTOR3(          -0.5f * length,           0.5f * length,          -0.5f * length ),
-		D3DXVECTOR3(    0.5f * length + gaps,           0.5f * length,          -0.5f * length ),
+		D3DXVECTOR3( -(1.5f * length + gap),          0.5f * length,         -0.5f * length ),
+		D3DXVECTOR3(         -0.5f * length,          0.5f * length,         -0.5f * length ),
+		D3DXVECTOR3(    0.5f * length + gap,          0.5f * length,         -0.5f * length ),
 
-		D3DXVECTOR3( -(1.5f * length + gaps), -(0.5f * length + gaps),          -0.5f * length ),
-		D3DXVECTOR3(          -0.5f * length, -(0.5f * length + gaps),          -0.5f * length ),
-		D3DXVECTOR3(    0.5f * length + gaps, -(0.5f * length + gaps),          -0.5f * length ),
+		D3DXVECTOR3( -(1.5f * length + gap), -(0.5f * length + gap),         -0.5f * length ),
+		D3DXVECTOR3(         -0.5f * length, -(0.5f * length + gap),         -0.5f * length ),
+		D3DXVECTOR3(    0.5f * length + gap, -(0.5f * length + gap),         -0.5f * length ),
 
 		// Back layer, from left to right, top to bottom. 9 cubes
-		D3DXVECTOR3( -(1.5f * length + gaps),    1.5f * length + gaps,    0.5f * length + gaps ),
-		D3DXVECTOR3(          -0.5f * length,    1.5f * length + gaps,    0.5f * length + gaps ),
-		D3DXVECTOR3(    0.5f * length + gaps,    1.5f * length + gaps,    0.5f * length + gaps ),
+		D3DXVECTOR3( -(1.5f * length + gap),    1.5f * length + gap,    0.5f * length + gap ),
+		D3DXVECTOR3(         -0.5f * length,    1.5f * length + gap,    0.5f * length + gap ),
+		D3DXVECTOR3(    0.5f * length + gap,    1.5f * length + gap,    0.5f * length + gap ),
 
-		D3DXVECTOR3( -(1.5f * length + gaps),           0.5f * length,    0.5f * length + gaps ),
-		D3DXVECTOR3(          -0.5f * length,           0.5f * length,    0.5f * length + gaps ),
-		D3DXVECTOR3(    0.5f * length + gaps,           0.5f * length,    0.5f * length + gaps ),
+		D3DXVECTOR3( -(1.5f * length + gap),          0.5f * length,    0.5f * length + gap ),
+		D3DXVECTOR3(         -0.5f * length,          0.5f * length,    0.5f * length + gap ),
+		D3DXVECTOR3(    0.5f * length + gap,          0.5f * length,    0.5f * length + gap ),
 
-		D3DXVECTOR3( -(1.5f * length + gaps), -(0.5f * length + gaps),    0.5f * length + gaps ),
-		D3DXVECTOR3(          -0.5f * length, -(0.5f * length + gaps),    0.5f * length + gaps ),
-		D3DXVECTOR3(    0.5f * length + gaps, -(0.5f * length + gaps),    0.5f * length + gaps ),
+		D3DXVECTOR3( -(1.5f * length + gap), -(0.5f * length + gap),    0.5f * length + gap ),
+		D3DXVECTOR3(         -0.5f * length, -(0.5f * length + gap),    0.5f * length + gap ),
+		D3DXVECTOR3(    0.5f * length + gap, -(0.5f * length + gap),    0.5f * length + gap ),
 	};
 
 	// Initialize the 27 unit cubes
@@ -222,8 +232,8 @@ void RubikCube::Initialize(HWND hWnd)
 
 void RubikCube::Render()
 {
-	// Game paused or device lost, yields 25ms to other program
-	if(inactive)
+	// Window was inactive(minimized or hidden by other apps), yields 25ms to other program
+	if(!window_active_)
 	{
 		Sleep(25) ;
 	}
@@ -249,7 +259,7 @@ void RubikCube::Render()
 		}
 
 		// Restore world matrix since the Draw function in class Cube has set the world matrix for each cube
-		D3DXMATRIX matWorld = camera->GetWorldMatrix() ;
+		D3DXMATRIX matWorld = camera_->GetWorldMatrix() ;
 		pd3dDevice->SetTransform(D3DTS_WORLD, &matWorld) ;
 
 		pd3dDevice->EndScene();
@@ -267,9 +277,9 @@ void RubikCube::Render()
 
 void RubikCube::Shuffle()
 {
-	if(!OneRotateFinish)
+	if(!rotate_finish_)
 		return ;
-	OneRotateFinish = false ;
+	rotate_finish_ = false ;
 
 	// Set the random seed
 	srand((unsigned int)time(0));
@@ -290,7 +300,7 @@ void RubikCube::Shuffle()
 		//UpdateLayerInfo(layer, dir, 1) ;
 	}
 
-	OneRotateFinish = true ;
+	rotate_finish_ = true ;
 }
 
 // Switch from window mode and full-screen mode
@@ -325,8 +335,8 @@ void RubikCube::ToggleFullScreen()
 		//d3d9->setBackBufferHeight(windowHeight);
 
 		// Update back buffer size
-		d3d9->setBackBufferWidth(LastWindowWidth);
-		d3d9->setBackBufferHeight(LastWindowHeight);
+		d3d9->setBackBufferWidth(last_window_width_);
+		d3d9->setBackBufferHeight(last_window_height_);
 
 		// Restore window placement
 		SetWindowPlacement(hWnd, &wp) ;
@@ -338,9 +348,9 @@ void RubikCube::ToggleFullScreen()
 
 void RubikCube::OnLeftButtonDown(int x, int y)
 {
-	if(!OneRotateFinish) // another rotate is in process, return directly
+	if(!rotate_finish_) // another rotate is in process, return directly
 		return ;
-	OneRotateFinish = false ; // Prevent the other rotation during this rotate
+	rotate_finish_ = false ; // Prevent the other rotation during this rotate
 
 	is_cubes_selected_ = false;
 
@@ -350,7 +360,7 @@ void RubikCube::OnLeftButtonDown(int x, int y)
 	float maxDist = 100000.0f ;
 
 	// Select the face nearest to the camera
-	for(int i = 0; i < numFaces; i++)
+	for(int i = 0; i < kNumFaces; i++)
 	{
 		if(RayRectIntersection(ray, faces[i], currentHitPoint))
 		{
@@ -372,12 +382,12 @@ void RubikCube::OnLeftButtonDown(int x, int y)
 		return ;
 
 	// if the ray intersect with either of the two triangles, then it intersect with the rectangle
-	WorldBall.OnBegin(x, y) ;
+	world_arcball_->OnBegin(x, y) ;
 }
 
 void RubikCube::OnMouseMove(int x, int y)
 {
-	WorldBall.OnMove(x, y) ;
+	world_arcball_->OnMove(x, y) ;
 
 	// Get the picked face
 	Face face = GetPickedFace(previous_hitpoint_);
@@ -401,11 +411,22 @@ void RubikCube::OnMouseMove(int x, int y)
 
 	// Flip the angle if the direction is clockwise
 	// the positive direction is counter-clockwise around the rotate axis when look through the axis toward the origin.
-	if (rotate_direction_ == kClockWise)
+	if (rotate_direction_ == kCounterClockWise)
 		angle = -angle;
 
-	// Accumulate total angle
+	// Accumulate total angle and make sure the total_rotate_angle_ in range of
+	// [- PI / 2, PI / 2], after mouse was up, the left angle need to rotate is in this range.
 	total_rotate_angle_ += angle;
+	if (total_rotate_angle_ >= D3DX_PI / 2)
+	{
+		total_rotate_angle_ -= D3DX_PI / 2;
+	    ++num_rotate_half_PI_;
+	}
+	if (total_rotate_angle_ <= -D3DX_PI / 2)
+	{
+		total_rotate_angle_ += D3DX_PI / 2;
+		--num_rotate_half_PI_;
+	}
 
 	// Rotate
 	Rotate(rotate_axis_, angle);
@@ -416,33 +437,18 @@ void RubikCube::OnLeftButtonUp()
 {
 	is_hit_ = false ;
 
-	WorldBall.OnEnd();
+	world_arcball_->OnEnd();
 
 	float left_angle = 0.0f ;	// the angle need to rotate when mouse is up
-	int numOfHalfPI = 0 ;
-
-	// The left direction
-	RotateDirection left_direction;
-	if(total_rotate_angle_ >= 0.0f)
-		left_direction = kClockWise ;
-	else
-		left_direction = kCounterClockWise ;
-
-	// Count the absolute value of total_angle_
-	total_rotate_angle_ = abs(total_rotate_angle_) ;
-
-	// Count how many 90 degrees the cube has rotate
-	while (total_rotate_angle_ > D3DX_PI / 2)
-	{
-		total_rotate_angle_ -= D3DX_PI / 2;
-		numOfHalfPI++ ;
-	}
 
 	// more than D3DX_PI / 4 and less than D3DX_PI / 2 it treated as D3DX_PI / 2
-	if(total_rotate_angle_ > D3DX_PI / 4)
+	if(abs(total_rotate_angle_) > D3DX_PI / 4)
 	{
-		numOfHalfPI++ ;
 		left_angle = D3DX_PI / 2 - total_rotate_angle_ ;
+		if (total_rotate_angle_ > D3DX_PI / 4)
+			++num_rotate_half_PI_;
+		else // total_rotate_angle < -D3DX_PI / 4
+			--num_rotate_half_PI_;
 	}
 	else
 	{
@@ -451,16 +457,34 @@ void RubikCube::OnLeftButtonUp()
 
 	Rotate(rotate_axis_, left_angle);
 
+	// Make num_rotate_half_PI > 0, since we will mode 4 later
+	// so add it 4 each time, -1 = 3, -2 = 2, -3 = 1
+	// because - (pi / 2) = 3 * pi /2, -pi / 2 = pi / 2, - 3 * pi / 2 = pi / 2
+	while (num_rotate_half_PI_ < 0)
+		num_rotate_half_PI_ += 4;
+
+	num_rotate_half_PI_ %= 4;
+
+	for (int i = 0; i < kNumCubes; ++i)
+	{
+		if (cubes[i].GetIsSelected())
+		{
+			cubes[i].UpdateMatrix(rotate_axis_, num_rotate_half_PI_);
+			cubes[i].UpdateMinMaxPoints();
+		}
+	}
+
 	// clear total_angle_ for next accumulation
 	total_rotate_angle_ = 0.0f ;
-
-	OneRotateFinish = true ; // Make the next rotate enable
 
 	// Restore all selected flags of cubes
 	for (int i = 0; i < kNumCubes; ++i)
 	{
 		cubes[i].SetIsSelected(false);
 	}
+
+	// Enable next rotation.
+	rotate_finish_ = true ;
 }
 
 LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -472,7 +496,7 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 	case WM_ACTIVATE:
 		if(LOWORD(wParam) == WA_INACTIVE)
-			inactive = true ;
+			window_active_ = false ;
 		break ;
 
 	case WM_LBUTTONDOWN:
@@ -537,28 +561,28 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		{
 			// inactive the app when window is minimized
 			if(wParam == SIZE_MINIMIZED)
-				inactive = true ;
+				window_active_ = false ;
 
 			else if (wParam == SIZE_MAXIMIZED)
 			{
 				// Get current window size
-				CurrentWindowWidth = ( short )LOWORD( lParam );
-				CurrentWindowHeight = ( short )HIWORD( lParam );
+				current_window_width_ = ( short )LOWORD( lParam );
+				current_window_height_ = ( short )HIWORD( lParam );
 
-				if(CurrentWindowWidth != LastWindowWidth || CurrentWindowHeight != LastWindowHeight)
+				if(current_window_width_ != last_window_width_ || current_window_height_ != last_window_height_)
 				{
-					d3d9->setBackBufferWidth(CurrentWindowWidth);
-					d3d9->setBackBufferHeight(CurrentWindowHeight);
+					d3d9->setBackBufferWidth(current_window_width_);
+					d3d9->setBackBufferHeight(current_window_height_);
 					d3d9->ResetDevice();
 
-					LastWindowWidth = CurrentWindowWidth ;
-					LastWindowHeight = CurrentWindowHeight ;
+					last_window_width_ = current_window_width_ ;
+					last_window_height_ = current_window_height_ ;
 				}
 			}
 
 			else if (wParam == SIZE_RESTORED)
 			{
-				inactive = false ;
+				window_active_ = true ;
 
 				// Maximized -> Full Screen
 				if (d3d9->getFullScreen() == true)
@@ -574,16 +598,16 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				else
 				{
 					// Get current window size
-					CurrentWindowWidth = ( short )LOWORD( lParam );
-					CurrentWindowHeight = ( short )HIWORD( lParam );
+					current_window_width_ = ( short )LOWORD( lParam );
+					current_window_height_ = ( short )HIWORD( lParam );
 
 					// Reset device
-					d3d9->setBackBufferWidth(CurrentWindowWidth);
-					d3d9->setBackBufferHeight(CurrentWindowHeight);
+					d3d9->setBackBufferWidth(current_window_width_);
+					d3d9->setBackBufferHeight(current_window_height_);
 					d3d9->ResetDevice();
 
-					LastWindowWidth = CurrentWindowWidth ;
-					LastWindowHeight = CurrentWindowHeight ;
+					last_window_width_ = current_window_width_ ;
+					last_window_height_ = current_window_height_ ;
 				}
 			}
 		}
@@ -600,7 +624,7 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 void RubikCube::InitTextures()
 {
-	DWORD colors[numFaces] = 
+	DWORD colors[] = 
 	{
 		0xffffffff, // White,   front face
 		0xffffff00, // Yellow,	back face
@@ -611,36 +635,36 @@ void RubikCube::InitTextures()
 	};
 
 	// Create face textures
-	for(int i = 0; i < numFaces; ++i)
+	for(int i = 0; i < kNumFaces; ++i)
 	{
-		pTextures[i] = d3d9->CreateTexture(texWidth, texHeight, colors[i]);
+		face_textures_[i] = d3d9->CreateTexture(texture_width_, texture_height_, colors[i]);
 	}
 
 	// Create inner texture
-	pInnerTexture = d3d9->CreateInnerTexture(texWidth, texHeight, 0xffffffff);
+	inner_textures_ = d3d9->CreateInnerTexture(texture_width_, texture_height_, 0xffffffff);
 
-	Cube::SetFaceTexture(pTextures, numFaces);
-	Cube::SetInnerTexture(pInnerTexture);
+	Cube::SetFaceTexture(face_textures_, kNumFaces);
+	Cube::SetInnerTexture(inner_textures_);
 }
 
 int RubikCube::getWindowPosX() const
 {
-	return initWindowPosX;
+	return init_window_x_;
 }
 
 int RubikCube::getWindowPosY() const
 {
-	return initWindowPosY;
+	return init_window_y_;
 }
 
 int RubikCube::getWindowWidth() const
 {
-	return InitWindowWidth;
+	return init_window_width_;
 }
 
 int RubikCube::getWindowHeight() const
 {
-	return InitWindowHeight;
+	return init_window_height_;
 }
 
 /*
@@ -769,22 +793,22 @@ RotateDirection RubikCube::GetRotateDirection(Face face, D3DXVECTOR3& axis, D3DX
 		switch (face)
 		{
 			case kFrontFace:
-				if (delta_y < 0) { return kCounterClockWise; }
-				else             { return kClockWise; }
-				break;
-
-			case kBackFace:
 				if (delta_y > 0) { return kCounterClockWise; }
 				else             { return kClockWise; }
 				break;
 
+			case kBackFace:
+				if (delta_y < 0) { return kCounterClockWise; }
+				else             { return kClockWise; }
+				break;
+
 			case kTopFace:
-				if (delta_z < 0) { return kCounterClockWise; }
+				if (delta_z > 0) { return kCounterClockWise; }
 				else             { return kClockWise; }
 				break;
 
 			case kBottomFace:
-				if (delta_z > 0) { return kCounterClockWise; }
+				if (delta_z < 0) { return kCounterClockWise; }
 				else             { return kClockWise; }
 				break;
 			default:
@@ -853,11 +877,10 @@ RotateDirection RubikCube::GetRotateDirection(Face face, D3DXVECTOR3& axis, D3DX
 	}
 }
 
-
 float RubikCube::CalculateRotateAngle()
 {
 	// Get the rotation increment
-	D3DXQUATERNION quat = WorldBall.GetRotationQuatIncreament();
+	D3DXQUATERNION quat = world_arcball_->GetRotationQuatIncreament();
 
 	//extract rotation angle from quaternion
 	float angle = 2.0f * acosf(quat.w) * rotate_speed_ ;

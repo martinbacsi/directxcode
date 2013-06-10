@@ -1,103 +1,119 @@
 #include "ArcBall.h"
 
 ArcBall::ArcBall(void)
+    : is_dragged_(false),
+	  radius_(1.0f),
+	  previous_point_(D3DXVECTOR3(0, 0, 0)),
+	  current_point_(D3DXVECTOR3(0, 0, 0)),
+	  old_point_(D3DXVECTOR3(0, 0, 0)),
+	  previous_quaternion_(D3DXQUATERNION(0, 0, 0, 1)),
+      current_quaternion_(D3DXQUATERNION(0, 0, 0, 1)),
+      rotation_increament_(D3DXQUATERNION(0, 0, 0, 1))
 {
-	Reset() ;
-	m_vDownPt    = D3DXVECTOR3( 0, 0, 0 ) ;
-	m_oldPt	     = D3DXVECTOR3( 0, 0, 0 ) ;
-	m_vCurrentPt = D3DXVECTOR3( 0, 0, 0 ) ;
-
-	RECT rc ;
-	GetClientRect(GetForegroundWindow(), &rc) ;
-	SetWindow(rc.right, rc.bottom) ;
+	D3DXMatrixIdentity(&rotate_matrix_);
 }
 
 ArcBall::~ArcBall(void)
 {
 }
 
-void ArcBall::Reset()
+void ArcBall::Init(HWND hWnd)
 {
-	D3DXQuaternionIdentity( &m_qDown );
-	D3DXQuaternionIdentity( &m_qNow );
-	D3DXQuaternionIdentity( &m_increament ) ;
-	D3DXMatrixIdentity( &m_mRotation );
-	m_bDrag = FALSE;
-	m_fRadius = 1.0f;
+	RECT rc ;
+	GetClientRect(hWnd, &rc) ;
+
+	int window_width  = rc.right - rc.left;
+	int window_height = rc.bottom - rc.top;
+
+	SetWindow(window_width, window_height) ;
 }
 
-void ArcBall::OnBegin(int nX, int nY)
+void ArcBall::Reset()
+{
+	D3DXQuaternionIdentity(&previous_quaternion_);
+	D3DXQuaternionIdentity(&current_quaternion_);
+	D3DXQuaternionIdentity(&rotation_increament_) ;
+	D3DXMatrixIdentity(&rotate_matrix_);
+	is_dragged_ = false;
+	radius_ = 1.0f;
+}
+
+void ArcBall::OnBegin(int mouse_x, int mouse_y)
 {
 	// enter drag state only if user click the window's client area
-	if( nX >= 0 && nX <= m_nWidth && nY >= 0 && nY < m_nHeight )
+	if(mouse_x >= 0 && mouse_x <= window_width_ 
+	   && mouse_y >= 0 && mouse_y < window_height_)
 	{
-		m_bDrag = true ; // begin drag state
-		m_qDown = m_qNow ;
-		m_vDownPt = ScreenToVector((float)nX, (float)nY) ;
-		m_oldPt = m_vDownPt ;
+		is_dragged_ = true ; // begin drag state
+		previous_quaternion_ = current_quaternion_ ;
+		previous_point_ = ScreenToVector(mouse_x, mouse_y) ;
+		old_point_ = previous_point_ ;
 	}
 }
 
-void ArcBall::OnMove(int nX, int nY)
+void ArcBall::OnMove(int mouse_x, int mouse_y)
 {
-	if(m_bDrag)
+	if(is_dragged_)
 	{
-		m_vCurrentPt = ScreenToVector((float)nX, (float)nY) ;
-		m_increament = QuatFromBallPoints( m_oldPt, m_vCurrentPt ) ;
-		m_qNow = m_qDown * QuatFromBallPoints( m_vDownPt, m_vCurrentPt ) ;
-		m_oldPt = m_vCurrentPt ;
+		current_point_ = ScreenToVector(mouse_x, mouse_y) ;
+		rotation_increament_ = QuatFromBallPoints( old_point_, current_point_ ) ;
+		current_quaternion_ = previous_quaternion_ * QuatFromBallPoints( previous_point_, current_point_ ) ;
+		old_point_ = current_point_ ;
 	}
 }
 
 void ArcBall::OnEnd()
 {
-	m_bDrag = false ;
+	is_dragged_ = false ;
 }
 
-void ArcBall::SetWindow( int nWidth, int nHeight, float fRadius)
+void ArcBall::SetWindow(int window_width, int window_height, float arcball_radius)
 {
-	 m_nWidth = nWidth; 
-	 m_nHeight = nHeight; 
-	 m_fRadius = fRadius; 
-	 m_vCenter = D3DXVECTOR2(m_nWidth / 2.0f, m_nHeight / 2.0f);
+	 window_width_  = window_width; 
+	 window_height_ = window_height; 
+	 radius_		= arcball_radius; 
 }
 
 const D3DXMATRIX* ArcBall::GetRotationMatrix()
 {
-	return D3DXMatrixRotationQuaternion(&m_mRotation, &m_qNow) ;
+	return D3DXMatrixRotationQuaternion(&rotate_matrix_, &current_quaternion_) ;
 }
 
 D3DXQUATERNION ArcBall::GetRotationQuatIncreament()
 {
-	return m_increament ;
+	return rotation_increament_ ;
 }
 
-D3DXQUATERNION ArcBall::QuatFromBallPoints(const D3DXVECTOR3 &vFrom, const D3DXVECTOR3 &vTo)
+D3DXQUATERNION ArcBall::QuatFromBallPoints(D3DXVECTOR3& start_point, D3DXVECTOR3& end_point)
 {
-	D3DXVECTOR3 vPart;
-	float fDot = D3DXVec3Dot( &vFrom, &vTo );	
-	D3DXVec3Cross( &vPart, &vFrom, &vTo );		
+	// Calculate rotate angle
+	float angle = D3DXVec3Dot(&start_point, &end_point);	
 
-	return D3DXQUATERNION( vPart.x, vPart.y, vPart.z, fDot );
+	// Calculate rotate axis
+	D3DXVECTOR3 axis;
+	D3DXVec3Cross(&axis, &start_point, &end_point);		
+
+	// Build and return the Quaternion
+	return D3DXQUATERNION(axis.x, axis.y, axis.z, angle);
 }
 
-D3DXVECTOR3 ArcBall::ScreenToVector(float fScreenPtX, float fScreenPtY)
+D3DXVECTOR3 ArcBall::ScreenToVector(int screen_x, int screen_y)
 {
 	// Scale to screen
-	FLOAT x = -( fScreenPtX - m_nWidth / 2 ) / ( m_fRadius * m_nWidth / 2 );
-	FLOAT y = ( fScreenPtY - m_nHeight / 2 ) / ( m_fRadius * m_nHeight / 2 );
+	float x = -(screen_x - window_width_ / 2) / (radius_ * window_width_ / 2);
+	float y = (screen_y - window_height_ / 2) / (radius_ * window_height_ / 2);
 
-	FLOAT z = 0.0f;
-	FLOAT mag = x * x + y * y;
+	float z = 0.0f;
+	float mag = x * x + y * y;
 
-	if( mag > 1.0f )
+	if(mag > 1.0f)
 	{
-		FLOAT scale = 1.0f / sqrtf( mag );
+		float scale = 1.0f / sqrtf(mag);
 		x *= scale;
 		y *= scale;
 	}
 	else
-		z = sqrtf( 1.0f - mag );
+		z = sqrtf(1.0f - mag);
 
-	return D3DXVECTOR3( x, y, z );
+	return D3DXVECTOR3(x, y, z);
 }

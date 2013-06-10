@@ -5,13 +5,6 @@
 
 const float float_epsilon = 0.00001f;
 
-inline void swap(int& a, int& b)
-{
-	int temp = a;
-	a = b; 
-	b = temp;
-}
-
 struct Box
 {
 	D3DXVECTOR3 min_point;
@@ -105,7 +98,7 @@ inline float SquareDistance(D3DXVECTOR3 v1, D3DXVECTOR3 v2)
 // v0, v1, v2: vertices of triangle
 // t(out): weight of the intersection for the ray
 // u(out), v(out): barycentric coordinate of intersection
-inline bool RayTriangleIntersection(Ray* ray, Triangle* triangle, D3DXVECTOR3 *hitPoint)
+inline bool RayTriangleIntersection(Ray* ray, Triangle* triangle, D3DXVECTOR3* hit_point)
 {
 	D3DXVECTOR3 orig = ray->origin;
 	D3DXVECTOR3 dir  = ray->direction;
@@ -170,20 +163,20 @@ inline bool RayTriangleIntersection(Ray* ray, Triangle* triangle, D3DXVECTOR3 *h
 	// 1. O + Dt
 	// 2. (1 - u - v) * v0 + u * v1 + v * v2
 	// I use the first way.
-	*hitPoint = orig + (t * dir);
+	*hit_point = orig + (t * dir);
 
 	return true;
 }
 
 // Determine Whether a ray intersect with a rectangle
 // Divide the rectangle into two triangles and if the ray intersect with any of them
-inline bool RayRectIntersection(Ray& ray, Rect& rect, D3DXVECTOR3& hitPoint)
+inline bool RayRectIntersection(Ray& ray, Rect& rect, D3DXVECTOR3& hit_point)
 {
 	// Divide the rectangle into two triangles
 	Triangle t1(rect.v1, rect.v2, rect.v3);
 	Triangle t2(rect.v1, rect.v3, rect.v4) ;
 
-	return RayTriangleIntersection(&ray, &t1, &hitPoint) || RayTriangleIntersection(&ray, &t2, &hitPoint);
+	return RayTriangleIntersection(&ray, &t1, &hit_point) || RayTriangleIntersection(&ray, &t2, &hit_point);
 }
 
 // Determine whether a plane was intersect with a box

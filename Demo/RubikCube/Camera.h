@@ -13,32 +13,30 @@ public:
 	void Reset() ;
 	void OnFrameMove() ;
 	LRESULT HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) ;
-	void SetViewParams(D3DXVECTOR3* pvEyePt, D3DXVECTOR3* pvLookatPt, D3DXVECTOR3* pvUp);
-	void SetProjParams(float fFOV, float fAspect, float fNearPlane, float fFarPlane) ;
-	void SetWindow(int nWidth, int nHeight, float fArcballRadius = 1.0f) ;
+	void SetViewParams(const D3DXVECTOR3& eye_point, const D3DXVECTOR3& lookat_point, const D3DXVECTOR3& up_vector);
+	void SetProjParams(float field_of_view, float aspect_ratio, float near_plane, float far_plane) ;
+	void SetWindow(int window_width, int window_height, float arcball_radius = 1.0f) ;
 	const D3DXMATRIX GetWorldMatrix() const ;
 	const D3DXMATRIX GetViewMatrix() const ;
 	const D3DXMATRIX GetProjMatrix() const ;
 	const D3DXVECTOR3 GetEyePoint() const ;
-	void SetWorldMatrix(D3DXMATRIX *matModelWorld) ;
 
 private:
-	bool	m_bDragSinceLastUpdate ;
-	float	m_fRadius;				// Distance from the camera to model 
-	float	m_fMaxRadius ;			// The Maximum distance from the camera to the model
-	float	m_fMinRadius ;			// The Minimum distance from the camera to the model
-	int		m_nMouseWheelDelta;			// Amount of middle wheel scroll (+/-)
+	bool	frame_need_update_ ;
+	float	radius_;				// Distance from the camera to model 
+	float	max_radius_ ;			// The Maximum distance from the camera to the model
+	float	min_radius_ ;			// The Minimum distance from the camera to the model
+	int		mouse_wheel_delta_;		// Amount of middle wheel scroll (+/-)
 	
-	D3DXVECTOR3 m_vEyePt ;			// Eye position
-	D3DXVECTOR3 m_vLookatPt ;		// Look at position
-	D3DXVECTOR3 m_vUp ;				// Up vector
+	D3DXVECTOR3 eye_point_ ;			// Eye position
+	D3DXVECTOR3 lookat_point_ ;		// Look at position
+	D3DXVECTOR3 up_vector_ ;				// Up vector
 
-	D3DXMATRIX m_matWorld ;			// World matrix of model
-	D3DXMATRIX m_matView ;			// Camera View matrix
-	D3DXMATRIX m_matProj ;			// Camera Projection matrix
+	D3DXMATRIX world_matrix_ ;			// World matrix of model
+	D3DXMATRIX view_matrix_ ;			// Camera View matrix
+	D3DXMATRIX proj_matrix ;			// Camera Projection matrix
 
-	ArcBall m_WorldArcBall ;		// World arc ball 
-	ArcBall m_ViewArcBall ;			// View arc ball
+	ArcBall view_arcball_ ;			// View arc ball
 };
 
 #endif // end __CAMERA_H__

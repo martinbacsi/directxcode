@@ -86,7 +86,7 @@ void D3D9::InitD3D9(HWND hWnd)
 	D3DXVECTOR3 vecEye(0.0f, 0.0f, -10.0f);
 	D3DXVECTOR3 vecAt (0.0f, 0.0f, 0.0f);
 	D3DXVECTOR3 vecUp (0.0f, 1.0f, 0.0f) ;
-	camera->SetViewParams( &vecEye, &vecAt, &vecUp );
+	camera->SetViewParams(vecEye, vecAt, vecUp);
 	
 	// Setup projection matrix
 	float aspectRatio = (float)d3dpp.BackBufferWidth / (float)d3dpp.BackBufferHeight ;

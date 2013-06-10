@@ -1,25 +1,25 @@
 #include "Cube.h"
 
-LPDIRECT3DTEXTURE9 Cube::pInnerTexture = NULL;
-LPDIRECT3DTEXTURE9 Cube::pTextures[numFaces] = { NULL };
+LPDIRECT3DTEXTURE9 Cube::inner_texture_ = NULL;
+LPDIRECT3DTEXTURE9 Cube::pTextures[kNumFaces_] = { NULL };
 
 Cube::Cube(void)
-	 : kNumCornerPoinst(8),
+	 : kNumCornerPoints_(8),
 	   is_selected_(false)
 {
-	length = 10.0f;
+	length_ = 10.0f;
 
-	for (int i = 0; i < numFaces; ++i)
+	for (int i = 0; i < kNumFaces_; ++i)
 	{
 		pIB[i] = NULL;
 		textureId[i] = -1;
 	}
 
-	corner_points_ = new D3DXVECTOR3[kNumCornerPoinst];
+	corner_points_ = new D3DXVECTOR3[kNumCornerPoints_];
 
-	pVB = NULL;
+	vertex_buffer_ = NULL;
 
-	D3DXMatrixIdentity(&matWorld);
+	D3DXMatrixIdentity(&world_matrix_);
 }
 
 Cube::~Cube(void)
@@ -29,14 +29,14 @@ Cube::~Cube(void)
 	corner_points_ = NULL;
 
 	// Release vertex buffer
-	if(pVB != NULL)
+	if(vertex_buffer_ != NULL)
 	{
-		pVB->Release();
-		pVB = NULL;
+		vertex_buffer_->Release();
+		vertex_buffer_ = NULL;
 	}
 
 	// Release index buffer
-	for(int i = 0; i < numFaces; ++i)
+	for(int i = 0; i < kNumFaces_; ++i)
 	{
 		if(pIB[i] != NULL)
 		{
@@ -64,48 +64,48 @@ void Cube::InitBuffers(D3DXVECTOR3 topleftfront)
 	{
 		// Front face
 		{         x,          y,          z,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f}, // 0
-		{x + length,          y,          z,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f}, // 1
-		{x + length, y - length,          z,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f}, // 2
-		{         x, y - length,          z,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f}, // 3
+		{x + length_,          y,          z,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f}, // 1
+		{x + length_, y - length_,          z,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f}, // 2
+		{         x, y - length_,          z,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f}, // 3
 
 		// Back face
-		{x + length,          y, z + length,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f}, // 4
-		{         x,          y, z + length,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f}, // 5
-		{         x, y - length, z + length,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f}, // 6
-		{x + length, y - length, z + length,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f}, // 7
+		{x + length_,          y, z + length_,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f}, // 4
+		{         x,          y, z + length_,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f}, // 5
+		{         x, y - length_, z + length_,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f}, // 6
+		{x + length_, y - length_, z + length_,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f}, // 7
 
 		// Left face
-		{         x,          y, z + length, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f}, // 8
+		{         x,          y, z + length_, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f}, // 8
 		{         x,          y,          z, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f}, // 9
-		{         x, y - length,          z, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f}, // 10
-		{         x, y - length, z + length, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f}, // 11
+		{         x, y - length_,          z, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f}, // 10
+		{         x, y - length_, z + length_, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f}, // 11
 
 		// Right face
-		{x + length,          y,          z,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f}, // 12
-		{x + length,          y, z + length,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f}, // 13
-		{x + length, y - length, z + length,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f}, // 14
-		{x + length, y - length,          z,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f}, // 15
+		{x + length_,          y,          z,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f}, // 12
+		{x + length_,          y, z + length_,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f}, // 13
+		{x + length_, y - length_, z + length_,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f}, // 14
+		{x + length_, y - length_,          z,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f}, // 15
 
 		// Top face
-		{         x,          y, z + length,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f}, // 16
-		{x + length,          y, z + length,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f}, // 17
-		{x + length,          y,          z,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f}, // 18
+		{         x,          y, z + length_,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f}, // 16
+		{x + length_,          y, z + length_,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f}, // 17
+		{x + length_,          y,          z,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f}, // 18
 		{         x,          y,          z,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f}, // 19
 
 		// Bottom face
-		{x + length, y - length, z + length,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f}, // 20
-		{         x, y - length, z + length,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f}, // 21
-		{         x, y - length,          z,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f}, // 22
-		{x + length, y - length,          z,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f}, // 23
+		{x + length_, y - length_, z + length_,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f}, // 20
+		{         x, y - length_, z + length_,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f}, // 21
+		{         x, y - length_,          z,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f}, // 22
+		{x + length_, y - length_,          z,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f}, // 23
 	};
 
 	
 	// Create vertex buffer
-	if( FAILED( pd3dDevice->CreateVertexBuffer( sizeof(vertices) * sizeof(Vertex),
+	if( FAILED( d3d_device_->CreateVertexBuffer( sizeof(vertices) * sizeof(Vertex),
 		D3DUSAGE_WRITEONLY, 
 		VERTEX_FVF,
 		D3DPOOL_MANAGED, 
-		&pVB, 
+		&vertex_buffer_, 
 		NULL ) ) )
 	{
 		MessageBox(NULL, L"Create vertex buffer failed", L"Error", 0);
@@ -113,10 +113,10 @@ void Cube::InitBuffers(D3DXVECTOR3 topleftfront)
 
 	// Copy vertex data
 	VOID* pVertices;
-	if( FAILED( pVB->Lock( 0, sizeof(vertices), (void**)&pVertices, 0 ) ) )
+	if( FAILED( vertex_buffer_->Lock( 0, sizeof(vertices), (void**)&pVertices, 0 ) ) )
 		MessageBox(NULL, L"Copy vertex buffer failed", L"Error", 0);
 	memcpy( pVertices, vertices, sizeof(vertices) );
-	pVB->Unlock();
+	vertex_buffer_->Unlock();
 
 	// Triangle strips
 	WORD indicesFront[]  = { 0,  1,  3,  2};
@@ -126,12 +126,12 @@ void Cube::InitBuffers(D3DXVECTOR3 topleftfront)
 	WORD indicesTop[]    = {16, 17, 19, 18};
 	WORD indicesBottom[] = {20, 21, 23, 22};
 
-	WORD* indices[numFaces] = {indicesFront, indicesBack, indicesLeft, indicesRight, indicesTop, indicesBottom};
+	WORD* indices[kNumFaces_] = {indicesFront, indicesBack, indicesLeft, indicesRight, indicesTop, indicesBottom};
 
-	for(int i = 0; i < numFaces; ++i)
+	for(int i = 0; i < kNumFaces_; ++i)
 	{
 		// Create index buffer
-		if( FAILED( pd3dDevice->CreateIndexBuffer( sizeof(indicesFront) * sizeof(WORD), 
+		if( FAILED( d3d_device_->CreateIndexBuffer( sizeof(indicesFront) * sizeof(WORD), 
 			D3DUSAGE_WRITEONLY, 
 			D3DFMT_INDEX16, 
 			D3DPOOL_MANAGED, 
@@ -164,10 +164,10 @@ void Cube::InitCornerPoints(D3DXVECTOR3 top_left_front_point)
 
 	// Calculate the min/max pint of the cube
 	// min point is the front bottom left corner of the cube
-	D3DXVECTOR3 min_point(top_left_front_point.x, top_left_front_point.y - length, top_left_front_point.z);
+	D3DXVECTOR3 min_point(top_left_front_point.x, top_left_front_point.y - length_, top_left_front_point.z);
 
 	// max point is the back top right corner of the cube
-	D3DXVECTOR3 max_point(top_left_front_point.x +length, top_left_front_point.y, top_left_front_point.z + length);
+	D3DXVECTOR3 max_point(top_left_front_point.x +length_, top_left_front_point.y, top_left_front_point.z + length_);
 
 
 	// Front face
@@ -202,17 +202,41 @@ void Cube::SetFaceTexture(LPDIRECT3DTEXTURE9* faceTextures, int numTextures)
 
 void Cube::SetInnerTexture(LPDIRECT3DTEXTURE9 innerTexture)
 {
-	pInnerTexture = innerTexture;
+	inner_texture_ = innerTexture;
 }
 
 void Cube::SetDevice(LPDIRECT3DDEVICE9 pDevice)
 {
-	pd3dDevice = pDevice;
+	d3d_device_ = pDevice;
 }
 
-void Cube::UpdateMatrix(D3DXMATRIX* rotMatrix)
+void Cube::UpdateMatrix(D3DXVECTOR3 rotate_axis, int num_half_PI)
 {
-	matWorld *= *rotMatrix ;
+	D3DXMATRIX rotate_matrix;
+	D3DXMatrixIdentity(&rotate_matrix);
+
+	if (num_half_PI == 1)
+	{
+		D3DXMatrixRotationAxis(&rotate_matrix, &rotate_axis, D3DX_PI / 2);
+	}
+	else if (num_half_PI == 2)
+	{
+		D3DXMatrixRotationAxis(&rotate_matrix, &rotate_axis, D3DX_PI);
+	}
+	else if (num_half_PI == 3)
+	{
+		D3DXMatrixRotationAxis(&rotate_matrix, &rotate_axis, 1.5f * D3DX_PI);
+	}
+
+	world_matrix_ = rotate_matrix;
+}
+
+void Cube::UpdateMinMaxPoints()
+{
+	// Upate the min_point and max_point
+	// These two points used to build the bounding box of the cube for intersecton test.
+	D3DXVec3TransformCoord(&min_point_, &min_point_, &world_matrix_);
+	D3DXVec3TransformCoord(&max_point_, &max_point_, &world_matrix_);
 }
 
 void Cube::Rotate(D3DXVECTOR3& axis, float angle)
@@ -221,31 +245,31 @@ void Cube::Rotate(D3DXVECTOR3& axis, float angle)
 	D3DXMATRIX rotate_matrix;
 	D3DXMatrixRotationAxis(&rotate_matrix, &axis, angle);
 
-	matWorld *= rotate_matrix;
+	world_matrix_ *= rotate_matrix;
 }
 
 void Cube::Draw()
 {
 	// Setup world matrix for current cube
-	pd3dDevice->SetTransform(D3DTS_WORLD, &matWorld) ;
+	d3d_device_->SetTransform(D3DTS_WORLD, &world_matrix_) ;
 
 	// Draw cube by draw every face of the cube
-	for(int i = 0; i < numFaces; ++i)
+	for(int i = 0; i < kNumFaces_; ++i)
 	{
 		if(textureId[i] >= 0)
 		{
-			pd3dDevice->SetTexture(0, pTextures[textureId[i]]);
+			d3d_device_->SetTexture(0, pTextures[textureId[i]]);
 		}
 		else
 		{
-			pd3dDevice->SetTexture(0, pInnerTexture);
+			d3d_device_->SetTexture(0, inner_texture_);
 		}
 
-		pd3dDevice->SetStreamSource(0, pVB, 0, sizeof(Vertex));
-		pd3dDevice->SetIndices(pIB[i]) ;
-		pd3dDevice->SetFVF(VERTEX_FVF);
+		d3d_device_->SetStreamSource(0, vertex_buffer_, 0, sizeof(Vertex));
+		d3d_device_->SetIndices(pIB[i]) ;
+		d3d_device_->SetFVF(VERTEX_FVF);
 
-		pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, 0, 0, 24, 0, 2);
+		d3d_device_->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, 0, 0, 24, 0, 2);
 	}
 }
 
