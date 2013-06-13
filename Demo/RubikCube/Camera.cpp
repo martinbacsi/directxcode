@@ -3,7 +3,7 @@
 Camera::Camera(void)
     : radius_(100),
 	  min_radius_(50),
-	  max_radius_(100),
+	  max_radius_(500),
 	  mouse_wheel_delta_(0),
 	  frame_need_update_(false)
 {
