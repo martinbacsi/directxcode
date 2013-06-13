@@ -55,6 +55,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 
 	ShowWindow(hWnd, iCmdShow) ;
 	UpdateWindow(hWnd) ;
+	SendMessage(hWnd, WM_KEYDOWN, 'F', 0);
 	
 	MSG    msg ; 
 	ZeroMemory( &msg, sizeof(msg) );
