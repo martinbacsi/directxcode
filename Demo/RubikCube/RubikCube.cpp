@@ -13,10 +13,10 @@ RubikCube::RubikCube(void)
 	  is_cubes_selected_(false),
 	  rotate_finish_(true),
 	  window_active_(false),
-	  init_window_x_(50),
-	  init_window_y_(50),
-	  init_window_width_(800),
-	  init_window_height_(800),
+	  init_window_x_(0),
+	  init_window_y_(0),
+	  init_window_width_(100),
+	  init_window_height_(100),
 	  current_window_width_(init_window_width_),
 	  current_window_height_(init_window_height_),
 	  last_window_width_(current_window_width_),
@@ -382,6 +382,9 @@ void RubikCube::OnLeftButtonDown(int x, int y)
 
 void RubikCube::OnMouseMove(int x, int y)
 {
+	if (!is_hit_)
+		return;
+
 	world_arcball_->OnMove(x, y) ;
 
 	current_vector_ = d3d9->ScreenToVector3(x, y);
@@ -540,13 +543,9 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 	case WM_MOUSEMOVE:
 		{
-			// Only response when the picking ray hit the cube
-			if(is_hit_)
-			{
-				int iMouseX = ( short )LOWORD( lParam );
-				int iMouseY = ( short )HIWORD( lParam );
-				OnMouseMove(iMouseX, iMouseY) ;
-			}
+			int iMouseX = ( short )LOWORD( lParam );
+			int iMouseY = ( short )HIWORD( lParam );
+			OnMouseMove(iMouseX, iMouseY) ;
 		}
 		break ;
 
