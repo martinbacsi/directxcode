@@ -1,10 +1,10 @@
 #include "D3D9.h"
 
 D3D9::D3D9(void)
+    : d3d_(NULL),
+	  d3ddevice_(NULL),
+	  is_fullscreen_(true)
 {
-	pD3D			= NULL;
-	pd3dDevice		= NULL;
-	isFullScreen = false;
 	camera = new Camera();
 }
 
@@ -14,17 +14,17 @@ D3D9::~D3D9(void)
 	camera = NULL;
 
 	// Release Direct3D Device
-	if(pd3dDevice != NULL)
+	if(d3ddevice_ != NULL)
 	{
-		pd3dDevice->Release();
-		pd3dDevice = NULL;
+		d3ddevice_->Release();
+		d3ddevice_ = NULL;
 	}
 
 	// Release Direct3D object
-	if(pD3D != NULL)
+	if(d3d_ != NULL)
 	{
-		pD3D->Release();
-		pD3D = NULL;
+		d3d_->Release();
+		d3d_ = NULL;
 	}
 }
 
@@ -33,50 +33,50 @@ void D3D9::InitD3D9(HWND hWnd)
 	this->hWnd = hWnd;
 
 	// Create the D3D object.
-	if( NULL == ( pD3D = Direct3DCreate9( D3D_SDK_VERSION ) ) )
+	if( NULL == ( d3d_ = Direct3DCreate9( D3D_SDK_VERSION ) ) )
 		MessageBox(hWnd, L"Create Direct3D9 failed!", L"error!", 0) ;
 
-	ZeroMemory( &d3dpp, sizeof(d3dpp) );
+	ZeroMemory( &d3dpp_, sizeof(d3dpp_) );
 
 	// Get max display resolution and set it as back buffer size
 	D3DDISPLAYMODE displayMode ;
-	pD3D->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &displayMode) ;
+	d3d_->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &displayMode) ;
 
 	// Initialize the max resolution width and height
-	maxDisplayWidth  = displayMode.Width;
-	maxDisplayHeight = displayMode.Height;
+	screen_width_  = displayMode.Width;
+	screen_height_ = displayMode.Height;
 
-	if(isFullScreen)
+	if(is_fullscreen_)
 	{
-		d3dpp.Windowed = FALSE;
-		d3dpp.BackBufferWidth  = displayMode.Width;
-		d3dpp.BackBufferHeight = displayMode.Height;
+		d3dpp_.Windowed = FALSE;
+		d3dpp_.BackBufferWidth  = displayMode.Width;
+		d3dpp_.BackBufferHeight = displayMode.Height;
 	}
 	else
 	{
-		d3dpp.Windowed = TRUE;
+		d3dpp_.Windowed = TRUE;
 
 		// Get current window size and set it as back buffer size
 		RECT rect;
 		GetClientRect(hWnd, &rect);
-		d3dpp.BackBufferWidth  = rect.right - rect.left;
-		d3dpp.BackBufferHeight = rect.bottom - rect.top;
+		d3dpp_.BackBufferWidth  = rect.right - rect.left;
+		d3dpp_.BackBufferHeight = rect.bottom - rect.top;
 	}
 	
 	// We didn't specify the back-buffer width and height, D3D will initialize it to the window width and height
-	d3dpp.hDeviceWindow = hWnd;
-	d3dpp.SwapEffect				= D3DSWAPEFFECT_DISCARD;
-	d3dpp.BackBufferCount           = 1;
-	d3dpp.BackBufferFormat			= D3DFMT_X8R8G8B8;
-	d3dpp.EnableAutoDepthStencil	= TRUE ;
-	d3dpp.AutoDepthStencilFormat	= D3DFMT_D16 ;
+	d3dpp_.hDeviceWindow = hWnd;
+	d3dpp_.SwapEffect				= D3DSWAPEFFECT_DISCARD;
+	d3dpp_.BackBufferCount           = 1;
+	d3dpp_.BackBufferFormat			= D3DFMT_X8R8G8B8;
+	d3dpp_.EnableAutoDepthStencil	= TRUE ;
+	d3dpp_.AutoDepthStencilFormat	= D3DFMT_D16 ;
 	
 	// Create the D3DDevice
-	HRESULT hr = pD3D->CreateDevice(D3DADAPTER_DEFAULT, 
+	HRESULT hr = d3d_->CreateDevice(D3DADAPTER_DEFAULT, 
 		D3DDEVTYPE_HAL, 
 		hWnd,
 		D3DCREATE_SOFTWARE_VERTEXPROCESSING,
-		&d3dpp, &pd3dDevice );
+		&d3dpp_, &d3ddevice_ );
 	if(FAILED(hr))
 	{
 		MessageBox(hWnd, L"Create Direct3D9 device failed!", L"error!", 0) ;
@@ -89,8 +89,10 @@ void D3D9::InitD3D9(HWND hWnd)
 	camera->SetViewParams(vecEye, vecAt, vecUp);
 	
 	// Setup projection matrix
-	float aspectRatio = (float)d3dpp.BackBufferWidth / (float)d3dpp.BackBufferHeight ;
+	float aspectRatio = (float)d3dpp_.BackBufferWidth / (float)d3dpp_.BackBufferHeight ;
 	camera->SetProjParams(D3DX_PI / 4, aspectRatio, 1.0f, 1000.0f) ;
+
+	camera->SetWindow(displayMode.Width, displayMode.Height);
 }
 
 LPDIRECT3DTEXTURE9 D3D9::CreateTexture(int texWidth, int texHeight, D3DCOLOR color)
@@ -99,7 +101,7 @@ LPDIRECT3DTEXTURE9 D3D9::CreateTexture(int texWidth, int texHeight, D3DCOLOR col
 
 	//LPDIRECT3DDEVICE9 pDevice = d3d9->getD3DDevice();
 
-	HRESULT hr = D3DXCreateTexture(pd3dDevice, 
+	HRESULT hr = D3DXCreateTexture(d3ddevice_, 
 		texWidth, 
 		texHeight, 
 		0, 
@@ -154,7 +156,7 @@ LPDIRECT3DTEXTURE9 D3D9::CreateInnerTexture(int texWidth, int texHeight, D3DCOLO
 {
 	LPDIRECT3DTEXTURE9 pTexture;
 
-	HRESULT hr = D3DXCreateTexture(pd3dDevice, 
+	HRESULT hr = D3DXCreateTexture(d3ddevice_, 
 		texWidth, 
 		texHeight, 
 		0, 
@@ -198,18 +200,18 @@ LPDIRECT3DTEXTURE9 D3D9::CreateInnerTexture(int texWidth, int texHeight, D3DCOLO
 	return pTexture;
 }
 
-void D3D9::setupMatrix()
+void D3D9::SetupMatrix()
 {
 	// View matrix
 	D3DXMATRIX matView = camera->GetViewMatrix() ;
-	pd3dDevice->SetTransform(D3DTS_VIEW, &matView) ;
+	d3ddevice_->SetTransform(D3DTS_VIEW, &matView) ;
 
 	// Projection matrix
 	D3DXMATRIX matProj = camera->GetProjMatrix() ;
-	pd3dDevice->SetTransform(D3DTS_PROJECTION, &matProj) ;
+	d3ddevice_->SetTransform(D3DTS_PROJECTION, &matProj) ;
 }
 
-void D3D9::setupLight()
+void D3D9::SetupLight()
 {
 	// Create light
 	D3DLIGHT9 pointLight ;
@@ -242,25 +244,25 @@ void D3D9::setupLight()
 	material.Specular = D3DXCOLOR(1.0f, 1.0f, 1.0f, 0);
 	material.Emissive = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.0f);
 	material.Power = 2.0f ;
-	pd3dDevice->SetMaterial(&material) ;
+	d3ddevice_->SetMaterial(&material) ;
 
 	// Enable light
-	pd3dDevice->SetLight(0, &pointLight) ;		// Set light ;
-	pd3dDevice->LightEnable(0, true) ;			// Enable light
+	d3ddevice_->SetLight(0, &pointLight) ;		// Set light ;
+	d3ddevice_->LightEnable(0, true) ;			// Enable light
 }
 
 void D3D9::ResizeD3DScene(int width, int height)
 {
-	if (height == 0 )				// Prevent A Divide By Zero By
+	if (height == 0)				// Prevent A Divide By Zero By
 		height = 1;					// Making Height Equal One
 
 	// Compute aspect ratio
 	float fAspectRatio = width / (FLOAT)height;
 
 	// Setup Projection matrix
-	camera->SetProjParams( D3DX_PI/4, fAspectRatio, 1.0f, 1000.0f );
+	camera->SetProjParams(D3DX_PI / 4, fAspectRatio, 1.0f, 1000.0f);
 
-	camera->SetWindow( width, height );
+	camera->SetWindow(width, height);
 }
 
 // We can remove this parameter here, and use device to get the 
@@ -268,16 +270,16 @@ void D3D9::ResizeD3DScene(int width, int height)
 HRESULT D3D9::ResetDevice()
 {
 	// Check device state
-	HRESULT hr = pd3dDevice->TestCooperativeLevel() ;
+	HRESULT hr = d3ddevice_->TestCooperativeLevel() ;
 
 	// Device can be reset now
 	if (SUCCEEDED(hr) || hr == D3DERR_DEVICENOTRESET)
 	{
 		// Reset device
-		HRESULT hr = pd3dDevice->Reset(&d3dpp);
+		HRESULT hr = d3ddevice_->Reset(&d3dpp_);
 		if (SUCCEEDED(hr))
 		{
-			ResizeD3DScene(d3dpp.BackBufferWidth, d3dpp.BackBufferHeight) ;
+			ResizeD3DScene(d3dpp_.BackBufferWidth, d3dpp_.BackBufferHeight) ;
 		}
 		else // Reset device failed, show error box
 		{
@@ -313,11 +315,11 @@ Ray D3D9::CalculatePickingRay(int x, int y)
 
 	// Get viewport
 	D3DVIEWPORT9 vp;
-	pd3dDevice->GetViewport(&vp);
+	d3ddevice_->GetViewport(&vp);
 
 	// Get Projection matrix
 	D3DXMATRIX proj;
-	pd3dDevice->GetTransform(D3DTS_PROJECTION, &proj);
+	d3ddevice_->GetTransform(D3DTS_PROJECTION, &proj);
 
 	px = ((( 2.0f*x) / vp.Width)  - 1.0f) / proj(0, 0);
 	py = (((-2.0f*y) / vp.Height) + 1.0f) / proj(1, 1);
@@ -328,11 +330,11 @@ Ray D3D9::CalculatePickingRay(int x, int y)
 
 	// Get view matrix
 	D3DXMATRIX view;
-	pd3dDevice->GetTransform(D3DTS_VIEW, &view);
+	d3ddevice_->GetTransform(D3DTS_VIEW, &view);
 
 	// Get world matrix
 	D3DXMATRIX world;
-	pd3dDevice->GetTransform(D3DTS_WORLD, &world);
+	d3ddevice_->GetTransform(D3DTS_WORLD, &world);
 
 	// Concatinate them in to single matrix
 	D3DXMATRIX WorldView = world * view;
@@ -359,11 +361,11 @@ D3DXVECTOR3 D3D9::ScreenToVector3(int x, int y)
 
 	// Get viewport
 	D3DVIEWPORT9 vp;
-	pd3dDevice->GetViewport(&vp);
+	d3ddevice_->GetViewport(&vp);
 
 	// Get Projection matrix
 	D3DXMATRIX proj;
-	pd3dDevice->GetTransform(D3DTS_PROJECTION, &proj);
+	d3ddevice_->GetTransform(D3DTS_PROJECTION, &proj);
 
 	vector3.x = ((( 2.0f*x) / vp.Width)  - 1.0f) / proj(0, 0);
 	vector3.y = (((-2.0f*y) / vp.Height) + 1.0f) / proj(1, 1);
@@ -371,11 +373,11 @@ D3DXVECTOR3 D3D9::ScreenToVector3(int x, int y)
 
 	// Get view matrix
 	D3DXMATRIX view;
-	pd3dDevice->GetTransform(D3DTS_VIEW, &view);
+	d3ddevice_->GetTransform(D3DTS_VIEW, &view);
 
 	// Get world matrix
 	D3DXMATRIX world;
-	pd3dDevice->GetTransform(D3DTS_WORLD, &world);
+	d3ddevice_->GetTransform(D3DTS_WORLD, &world);
 
 	// Concatinate them in to single matrix
 	D3DXMATRIX WorldView = world * view;
@@ -396,72 +398,68 @@ LRESULT D3D9::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return camera->HandleMessages(hWnd, uMsg, wParam, lParam);
 }
 
-LPDIRECT3D9 D3D9::getD3D9() const
+LPDIRECT3D9 D3D9::GetD3D9() const
 {
-	return pD3D;
+	return d3d_;
 }
 
-LPDIRECT3DDEVICE9 D3D9::getD3DDevice() const
+LPDIRECT3DDEVICE9 D3D9::GetD3DDevice() const
 {
-	return pd3dDevice;
+	return d3ddevice_;
 }
 
-D3DPRESENT_PARAMETERS D3D9::getD3Dpp() const
+D3DPRESENT_PARAMETERS D3D9::GetD3Dpp() const
 {
-	return d3dpp;
+	return d3dpp_;
 }
 
-void D3D9::setBackBufferWidth(int width)
+void D3D9::SetBackBufferWidth(int width)
 {
-	d3dpp.BackBufferWidth = width;
+	d3dpp_.BackBufferWidth = width;
 }
 
-void D3D9::setBackBufferHeight(int height)
+void D3D9::SetBackBufferHeight(int height)
 {
-	d3dpp.BackBufferHeight = height;
+	d3dpp_.BackBufferHeight = height;
 }
 
-void D3D9::setFullScreen(bool isFullScreen)
+void D3D9::SetIsFullScreen(bool is_fullscreen)
 {
-	this->isFullScreen = isFullScreen;
+	is_fullscreen_ = is_fullscreen;
+	d3dpp_.Windowed = !is_fullscreen;
 }
 
-bool D3D9::getFullScreen() const
+bool D3D9::GetIsFullScreen() const
 {
-	return isFullScreen;
+	return is_fullscreen_;
 }
 
-void D3D9::setWindowMode(bool isWindowed)
+int	D3D9::GetLastWindowWidth() const
 {
-	d3dpp.Windowed = isWindowed;
+	return last_window_width_;
 }
 
-int	D3D9::getLastWindowWidth() const
+void D3D9::SetLastWindowWidth(int windowWidth)
 {
-	return lastWindowWidth;
+	last_window_width_ = windowWidth;
 }
 
-void D3D9::setLastWindowWidth(int windowWidth)
+int	D3D9::GetLastWindowHeight() const
 {
-	lastWindowWidth = windowWidth;
+	return last_window_height_;
 }
 
-int	D3D9::getLastWindowHeight() const
+void D3D9::SetLastWindowHeight(int windowHeight)
 {
-	return lastWindowHeight;
+	last_window_height_ = windowHeight;
 }
 
-void D3D9::setLastWindowHeight(int windowHeight)
+int	D3D9::GetScreenWidth() const
 {
-	lastWindowHeight = windowHeight;
+	return screen_width_;
 }
 
-int	D3D9::getMaxDisplayWidth() const
+int D3D9::GetScreenHeight() const
 {
-	return maxDisplayWidth;
-}
-
-int D3D9::getMaxDiplayHeight() const
-{
-	return maxDisplayHeight;
+	return screen_height_;
 }

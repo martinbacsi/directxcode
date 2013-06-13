@@ -6,7 +6,7 @@ RubikCube::RubikCube(void)
     : kNumCubes(27),
 	  kNumFaces(6),
 	  cube_length_(10.0f),
-      gap_between_layers_(0.2f),
+      gap_between_layers_(0.15f),
 	  total_rotate_angle_(0),
 	  rotate_speed_(1.5f),
 	  is_hit_(false),
@@ -15,8 +15,8 @@ RubikCube::RubikCube(void)
 	  window_active_(false),
 	  init_window_x_(50),
 	  init_window_y_(50),
-	  init_window_width_(500),
-	  init_window_height_(500),
+	  init_window_width_(800),
+	  init_window_height_(800),
 	  current_window_width_(init_window_width_),
 	  current_window_height_(init_window_height_),
 	  last_window_width_(current_window_width_),
@@ -125,9 +125,6 @@ void RubikCube::Initialize(HWND hWnd)
 	d3d9->InitD3D9(hWnd);
 	this->hWnd = hWnd;
 
-	// Init arcball
-	world_arcball_->Init(hWnd);
-
 	InitTextures();
 
 	// To short the code line
@@ -181,7 +178,7 @@ void RubikCube::Initialize(HWND hWnd)
 	// Initialize the 27 unit cubes
 	for(int i = 0; i < kNumCubes; i++)
 	{
-		cubes[i].SetDevice(d3d9->getD3DDevice());
+		cubes[i].SetDevice(d3d9->GetD3DDevice());
 		cubes[i].Init(initPos[i]);
 	}
 
@@ -241,16 +238,16 @@ void RubikCube::Render()
 	// Update frame
 	d3d9->FrameMove() ;
 
-	d3d9->setupMatrix();
+	d3d9->SetupMatrix();
 
-	d3d9->setupLight();
+	d3d9->SetupLight();
 
-	LPDIRECT3DDEVICE9 pd3dDevice = d3d9->getD3DDevice();
+	LPDIRECT3DDEVICE9 d3ddevice_ = d3d9->GetD3DDevice();
 
 	// Clear the back buffer to a black color
-	pd3dDevice->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x4F94CD, 1.0f, 0);
+	d3ddevice_->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x4F94CD, 1.0f, 0);
 
-	if( SUCCEEDED(pd3dDevice->BeginScene()))
+	if( SUCCEEDED(d3ddevice_->BeginScene()))
 	{
 		//draw all unit cubes to build the Rubik cube
 		for(int i = 0; i < kNumCubes; i++)
@@ -260,13 +257,13 @@ void RubikCube::Render()
 
 		// Restore world matrix since the Draw function in class Cube has set the world matrix for each cube
 		D3DXMATRIX matWorld = camera_->GetWorldMatrix() ;
-		pd3dDevice->SetTransform(D3DTS_WORLD, &matWorld) ;
+		d3ddevice_->SetTransform(D3DTS_WORLD, &matWorld) ;
 
-		pd3dDevice->EndScene();
+		d3ddevice_->EndScene();
 	}
 
 	// Present the back buffer contents to the display
-	HRESULT hr = pd3dDevice->Present(NULL, NULL, NULL, NULL);
+	HRESULT hr = d3ddevice_->Present(NULL, NULL, NULL, NULL);
 
 	// Render failed, try to reset device
 	if(FAILED(hr))
@@ -309,34 +306,29 @@ void RubikCube::ToggleFullScreen()
 	wp.length = sizeof(WINDOWPLACEMENT) ;
 
 	// Window -> Full-Screen
-	if(d3d9->getFullScreen() == false)
+	if(d3d9->GetIsFullScreen() == false)
 	{
-		d3d9->setFullScreen(true);
-		d3d9->setWindowMode(false);
+		d3d9->SetIsFullScreen(true);
 
 		// Get and save window placement
 		GetWindowPlacement(hWnd, &wp) ;
 
 		// Update back buffer to desktop resolution
-		d3d9->setBackBufferWidth(d3d9->getMaxDisplayWidth());
-		d3d9->setBackBufferHeight(d3d9->getMaxDiplayHeight());
+		d3d9->SetBackBufferWidth(d3d9->GetScreenWidth());
+		d3d9->SetBackBufferHeight(d3d9->GetScreenHeight());
 	}
 	else // Full-Screen -> Window
 	{
-		d3d9->setFullScreen(false);
-		d3d9->setWindowMode(true);
-
-		// Get window placement
-		int windowWidth  = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
-		int windowHeight = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
-
-		//// Why does this not work?
-		//d3d9->setBackBufferWidth(windowWidth);
-		//d3d9->setBackBufferHeight(windowHeight);
+		d3d9->SetIsFullScreen(false);
 
 		// Update back buffer size
-		d3d9->setBackBufferWidth(last_window_width_);
-		d3d9->setBackBufferHeight(last_window_height_);
+		d3d9->SetBackBufferWidth(last_window_width_);
+		d3d9->SetBackBufferHeight(last_window_height_);
+
+		// When swith from Full-Screen mode to window mode and the wp structe was not initialized
+		// The window position and size was unavailable, this will happened when the app start as full-screen mode
+		// give a defaul value of it.
+		//
 
 		// Restore window placement
 		SetWindowPlacement(hWnd, &wp) ;
@@ -352,9 +344,12 @@ void RubikCube::OnLeftButtonDown(int x, int y)
 		return ;
 	rotate_finish_ = false ; // Prevent the other rotation during this rotate
 
-	is_cubes_selected_ = false;
+	// Clear total angle
+	total_rotate_angle_ = 0;
 
 	Ray ray = d3d9->CalculatePickingRay(x, y) ;
+
+	previous_vector_ = d3d9->ScreenToVector3(x, y);
 
 	D3DXVECTOR3 currentHitPoint;	// hit point on the face
 	float maxDist = 100000.0f ;
@@ -389,47 +384,42 @@ void RubikCube::OnMouseMove(int x, int y)
 {
 	world_arcball_->OnMove(x, y) ;
 
+	current_vector_ = d3d9->ScreenToVector3(x, y);
+
 	// Get the picked face
 	Face face = GetPickedFace(previous_hitpoint_);
 
 	Ray picking_ray = d3d9->CalculatePickingRay(x, y);
 	RayRectIntersection(picking_ray, faces[face], current_hitpoint_);
 
-	D3DXPLANE plane = GeneratePlane(face, previous_hitpoint_, current_hitpoint_);
+	D3DXPLANE plane;
 
 	if (!is_cubes_selected_)
 	{
-		MarkRotateCubes(plane);
 		is_cubes_selected_ = true;
+
+		// Calculate picking plane.
+		plane = GeneratePlane(face, previous_hitpoint_, current_hitpoint_);
+		MarkRotateCubes(plane);
 	
 		rotate_axis_ = GetRotateAxis(face, previous_hitpoint_, current_hitpoint_);
 	}
 
 	float angle = CalculateRotateAngle();
 
-	rotate_direction_ = GetRotateDirection(face, rotate_axis_, previous_hitpoint_, current_hitpoint_);
+	rotate_direction_ = GetRotateDirection(face, rotate_axis_, previous_vector_, current_vector_);
 
-	// Flip the angle if the direction is clockwise
-	// the positive direction is counter-clockwise around the rotate axis when look through the axis toward the origin.
+	// Flip the angle if the direction is counter-clockwise
+	// the positive direction is clockwise around the rotate axis when look through the axis toward the origin.
 	if (rotate_direction_ == kCounterClockWise)
 		angle = -angle;
-
-	// Accumulate total angle and make sure the total_rotate_angle_ in range of
-	// [- PI / 2, PI / 2], after mouse was up, the left angle need to rotate is in this range.
 	total_rotate_angle_ += angle;
-	if (total_rotate_angle_ >= D3DX_PI / 2)
-	{
-		total_rotate_angle_ -= D3DX_PI / 2;
-	    ++num_rotate_half_PI_;
-	}
-	if (total_rotate_angle_ <= -D3DX_PI / 2)
-	{
-		total_rotate_angle_ += D3DX_PI / 2;
-		--num_rotate_half_PI_;
-	}
 
 	// Rotate
 	Rotate(rotate_axis_, angle);
+
+	// Update previous_hitpoint_
+	previous_vector_ = current_vector_;
 }
 
 // When Left button up, complete the rotation of the left angle to align the cube and update the layer info
@@ -440,19 +430,46 @@ void RubikCube::OnLeftButtonUp()
 	world_arcball_->OnEnd();
 
 	float left_angle = 0.0f ;	// the angle need to rotate when mouse is up
+	int   num_half_PI = 0;
 
-	// more than D3DX_PI / 4 and less than D3DX_PI / 2 it treated as D3DX_PI / 2
-	if(abs(total_rotate_angle_) > D3DX_PI / 4)
+	if (total_rotate_angle_ > 0)
 	{
-		left_angle = D3DX_PI / 2 - total_rotate_angle_ ;
-		if (total_rotate_angle_ > D3DX_PI / 4)
-			++num_rotate_half_PI_;
-		else // total_rotate_angle < -D3DX_PI / 4
-			--num_rotate_half_PI_;
+		while (total_rotate_angle_ >= D3DX_PI / 2)
+		{
+			total_rotate_angle_ -= D3DX_PI / 2;
+			++num_half_PI;
+		}
+
+		if ((total_rotate_angle_ >= 0) && (total_rotate_angle_ <= D3DX_PI / 4))
+		{
+			left_angle = -total_rotate_angle_;
+		}
+
+		else // ((total_rotate_angle_ > D3DX_PI / 4) && (total_rotate_angle_ < D3DX_PI / 2))
+		{
+			++num_half_PI;
+			left_angle = D3DX_PI / 2 - total_rotate_angle_;
+		}
+
 	}
-	else
+	else // total_rotate_angle_ < 0
 	{
-		left_angle = -total_rotate_angle_;
+		while (total_rotate_angle_ <= -D3DX_PI / 2)
+		{
+			total_rotate_angle_ += D3DX_PI / 2;
+			--num_half_PI;
+		}
+
+		if ((total_rotate_angle_ >= -D3DX_PI / 4) && (total_rotate_angle_ <= 0))
+		{
+			left_angle = -total_rotate_angle_;
+		}
+
+		else // ((total_rotate_angle_ > -D3DX_PI / 2) && (total_rotate_angle_ < -D3DX_PI / 4))
+		{
+			--num_half_PI;
+			left_angle = -D3DX_PI / 2 - total_rotate_angle_;
+		}
 	}
 
 	Rotate(rotate_axis_, left_angle);
@@ -460,28 +477,27 @@ void RubikCube::OnLeftButtonUp()
 	// Make num_rotate_half_PI > 0, since we will mode 4 later
 	// so add it 4 each time, -1 = 3, -2 = 2, -3 = 1
 	// because - (pi / 2) = 3 * pi /2, -pi / 2 = pi / 2, - 3 * pi / 2 = pi / 2
-	while (num_rotate_half_PI_ < 0)
-		num_rotate_half_PI_ += 4;
+	while (num_half_PI < 0)
+		num_half_PI += 4;
 
-	num_rotate_half_PI_ %= 4;
+	num_half_PI %= 4;
 
 	for (int i = 0; i < kNumCubes; ++i)
 	{
 		if (cubes[i].GetIsSelected())
 		{
-			cubes[i].UpdateMatrix(rotate_axis_, num_rotate_half_PI_);
-			cubes[i].UpdateMinMaxPoints();
+			cubes[i].UpdateMinMaxPoints(rotate_axis_, num_half_PI);
 		}
 	}
-
-	// clear total_angle_ for next accumulation
-	total_rotate_angle_ = 0.0f ;
 
 	// Restore all selected flags of cubes
 	for (int i = 0; i < kNumCubes; ++i)
 	{
 		cubes[i].SetIsSelected(false);
 	}
+
+	// When mouse up, one rotation was finished, no cube was selected
+	is_cubes_selected_ = false;
 
 	// Enable next rotation.
 	rotate_finish_ = true ;
@@ -545,9 +561,6 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			case 'F':
 				ToggleFullScreen() ;
 				break;
-			case 'R':
-				Shuffle() ;
-				break ;
 			case VK_ESCAPE:
 				SendMessage(hWnd, WM_CLOSE, 0, 0);
 				break ;
@@ -571,8 +584,8 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 				if(current_window_width_ != last_window_width_ || current_window_height_ != last_window_height_)
 				{
-					d3d9->setBackBufferWidth(current_window_width_);
-					d3d9->setBackBufferHeight(current_window_height_);
+					d3d9->SetBackBufferWidth(current_window_width_);
+					d3d9->SetBackBufferHeight(current_window_height_);
 					d3d9->ResetDevice();
 
 					last_window_width_ = current_window_width_ ;
@@ -585,12 +598,11 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				window_active_ = true ;
 
 				// Maximized -> Full Screen
-				if (d3d9->getFullScreen() == true)
+				if (d3d9->GetIsFullScreen() == true)
 				{
 					// Update back buffer to desktop resolution
-					d3d9->setWindowMode(false);
-					d3d9->setBackBufferWidth(d3d9->getMaxDisplayWidth());
-					d3d9->setBackBufferHeight(d3d9->getMaxDiplayHeight());
+					d3d9->SetBackBufferWidth(d3d9->GetScreenWidth());
+					d3d9->SetBackBufferHeight(d3d9->GetScreenHeight());
 
 					// Reset device
 					d3d9->ResetDevice();
@@ -602,8 +614,8 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					current_window_height_ = ( short )HIWORD( lParam );
 
 					// Reset device
-					d3d9->setBackBufferWidth(current_window_width_);
-					d3d9->setBackBufferHeight(current_window_height_);
+					d3d9->SetBackBufferWidth(current_window_width_);
+					d3d9->SetBackBufferHeight(current_window_height_);
 					d3d9->ResetDevice();
 
 					last_window_width_ = current_window_width_ ;
@@ -647,22 +659,22 @@ void RubikCube::InitTextures()
 	Cube::SetInnerTexture(inner_textures_);
 }
 
-int RubikCube::getWindowPosX() const
+int RubikCube::GetWindowPosX() const
 {
 	return init_window_x_;
 }
 
-int RubikCube::getWindowPosY() const
+int RubikCube::GetWindowPosY() const
 {
 	return init_window_y_;
 }
 
-int RubikCube::getWindowWidth() const
+int RubikCube::GetWindowWidth() const
 {
 	return init_window_width_;
 }
 
-int RubikCube::getWindowHeight() const
+int RubikCube::GetWindowHeight() const
 {
 	return init_window_height_;
 }
@@ -781,11 +793,11 @@ D3DXVECTOR3 RubikCube::GetRotateAxis(Face face, D3DXVECTOR3& previous_point, D3D
 	}
 }
 
-RotateDirection RubikCube::GetRotateDirection(Face face, D3DXVECTOR3& axis, D3DXVECTOR3& previous_point, D3DXVECTOR3& current_point)
+RotateDirection RubikCube::GetRotateDirection(Face face, D3DXVECTOR3& axis, D3DXVECTOR3& previous_vector, D3DXVECTOR3& current_vector)
 {
-	float delta_x = previous_point.x - current_point.x;
-	float delta_y = previous_point.y - current_point.y;
-	float delta_z = previous_point.z - current_point.z;
+	float delta_x = previous_vector.x - current_vector.x;
+	float delta_y = previous_vector.y - current_vector.y;
+	float delta_z = previous_vector.z - current_vector.z;
 
 	// Rotate around x-axis
 	if (axis.x != 0)

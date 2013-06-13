@@ -11,21 +11,18 @@ ArcBall::ArcBall(void)
       rotation_increament_(D3DXQUATERNION(0, 0, 0, 1))
 {
 	D3DXMatrixIdentity(&rotate_matrix_);
-}
 
-ArcBall::~ArcBall(void)
-{
-}
-
-void ArcBall::Init(HWND hWnd)
-{
 	RECT rc ;
-	GetClientRect(hWnd, &rc) ;
+	GetClientRect(GetForegroundWindow(), &rc) ;
 
 	int window_width  = rc.right - rc.left;
 	int window_height = rc.bottom - rc.top;
 
 	SetWindow(window_width, window_height) ;
+}
+
+ArcBall::~ArcBall(void)
+{
 }
 
 void ArcBall::Reset()

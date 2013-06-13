@@ -23,8 +23,8 @@ public:
 	void SetTextureId(int faceId, int textureId);
 	static void SetFaceTexture(LPDIRECT3DTEXTURE9* faceTextures, int numTextures);
 	static void SetInnerTexture(LPDIRECT3DTEXTURE9 innerTexture);
-	void UpdateMatrix(D3DXVECTOR3 rotate_axis, int num_half_PI);
-	void UpdateMinMaxPoints();
+	//void UpdateMatrix(D3DXVECTOR3 rotate_axis, int num_half_PI);
+	void UpdateMinMaxPoints(D3DXVECTOR3 rotate_axis, int num_half_PI);
 	void Rotate(D3DXVECTOR3& axis, float angle);
 	void Draw();
 

@@ -5,10 +5,10 @@
 
 RubikCube rubikCube;
 
-int initWindowPosX	 = rubikCube.getWindowPosX();
-int initWindowPosY	 = rubikCube.getWindowPosY();
-int InitWindowWidth	 = rubikCube.getWindowWidth() ;
-int InitWindowHeight = rubikCube.getWindowHeight() ;
+int initWindowPosX	 = rubikCube.GetWindowPosX();
+int initWindowPosY	 = rubikCube.GetWindowPosY();
+int InitWindowWidth	 = rubikCube.GetWindowWidth() ;
+int InitWindowHeight = rubikCube.GetWindowHeight() ;
 
 // Message process
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)   

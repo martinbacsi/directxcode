@@ -36,10 +36,10 @@ public:
 	void Initialize(HWND hWnd);
 	void Render();
 	LRESULT HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	int getWindowPosX() const;
-	int getWindowPosY() const;
-	int getWindowWidth() const;
-	int getWindowHeight() const;
+	int GetWindowPosX() const;
+	int GetWindowPosY() const;
+	int GetWindowWidth() const;
+	int GetWindowHeight() const;
 
 private:
 	void Shuffle();
@@ -48,35 +48,37 @@ private:
 	void OnMouseMove(int x, int y);
 	void OnLeftButtonUp();
 	void InitTextures();
-	Face GetPickedFace(D3DXVECTOR3 hit_point) const; // Get the face picking by mouse 
+	Face GetPickedFace(D3DXVECTOR3 hit_point) const;	// Get the face picking by mouse 
 	D3DXPLANE GeneratePlane(Face face, D3DXVECTOR3& previous_point, D3DXVECTOR3& current_point);
 	void MarkRotateCubes(D3DXPLANE& plane);			// Mark which cube to rotate, set is_selected = true
 	D3DXVECTOR3 GetRotateAxis(Face face, D3DXVECTOR3& previous_point, D3DXVECTOR3& current_point);
 	float CalculateRotateAngle();
-	RotateDirection GetRotateDirection(Face face, D3DXVECTOR3& axis, D3DXVECTOR3& previous_point, D3DXVECTOR3& current_point);
-	void Rotate(D3DXVECTOR3& axis, float angle);		// Rotate a layer
+	RotateDirection GetRotateDirection(Face face, D3DXVECTOR3& axis, D3DXVECTOR3& previous_vector, D3DXVECTOR3& current_vector);
+	void Rotate(D3DXVECTOR3& axis, float angle);	// Rotate a layer
 
 private:
-	const int kNumCubes; // Number of unit cubes, 27 unit cubes build up a rubik cube.
-	Cube* cubes;						// Array to store 27 unit cubes
+	const int kNumCubes;	// Number of unit cubes, 27 unit cubes build up a rubik cube.
+	Cube* cubes;			// Array to store 27 unit cubes
 
-	const int kNumFaces;  // Number of faces
-	Rect* faces;					// Store faces in rect
+	const int kNumFaces;	// Number of faces
+	Rect* faces;				// Store faces in rect
 
-	float cube_length_;				// length of the unit cube.
-	float gap_between_layers_;		// the length between two layers.
+	float cube_length_;			// length of the unit cube.
+	float gap_between_layers_;	// the length between two layers.
 
-	bool is_hit_;					// The picking ray hit the RubikCube
-	bool rotate_finish_;			// A rotaton action was finished.
-	bool is_cubes_selected_;		// Does cubes selected in current rotation?
-	bool window_active_;			// Window was inactive? turn when device lost, window minimized...
+	bool is_hit_;				// The picking ray hit the RubikCube
+	bool rotate_finish_;		// A rotaton action was finished.
+	bool is_cubes_selected_;	// Does cubes selected in current rotation?
+	bool window_active_;		// Window was inactive? turn when device lost, window minimized...
 
-	D3DXVECTOR3 current_hitpoint_;		// Current hit point
-	D3DXVECTOR3 previous_hitpoint_;		// Last hit point
+	D3DXVECTOR3 previous_hitpoint_;
+	D3DXVECTOR3 current_hitpoint_;
+
+	D3DXVECTOR3 current_vector_;		// Current hit point
+	D3DXVECTOR3 previous_vector_;		// Last hit point
 
 	float rotate_speed_;				// layer rotation speed
 	float total_rotate_angle_;			// The angle rotated when mouse up
-	int   num_rotate_half_PI_;			// How many PI / 2 has been rotated.
 	D3DXVECTOR3 rotate_axis_;			// Rotate axis, X or Y or Z
 	RotateDirection rotate_direction_;	// Rotate direction
 
@@ -85,7 +87,7 @@ private:
 	Camera*	camera_;			// Model view camera
 
 	HWND hWnd;
-	WINDOWPLACEMENT wp ;	// Window position and size
+	WINDOWPLACEMENT wp ;		// Window position and size
 
 	// Initial window position and size
 	int init_window_x_;

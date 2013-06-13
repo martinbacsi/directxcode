@@ -63,40 +63,40 @@ void Cube::InitBuffers(D3DXVECTOR3 topleftfront)
 	Vertex vertices[] =
 	{
 		// Front face
-		{         x,          y,          z,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f}, // 0
-		{x + length_,          y,          z,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f}, // 1
-		{x + length_, y - length_,          z,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f}, // 2
-		{         x, y - length_,          z,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f}, // 3
+		{          x,           y,           z,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f}, // 0
+		{x + length_,           y,           z,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f}, // 1
+		{x + length_, y - length_,           z,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f}, // 2
+		{          x, y - length_,           z,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f}, // 3
 
 		// Back face
-		{x + length_,          y, z + length_,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f}, // 4
-		{         x,          y, z + length_,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f}, // 5
-		{         x, y - length_, z + length_,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f}, // 6
+		{x + length_,           y, z + length_,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f}, // 4
+		{          x,           y, z + length_,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f}, // 5
+		{          x, y - length_, z + length_,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f}, // 6
 		{x + length_, y - length_, z + length_,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f}, // 7
 
 		// Left face
-		{         x,          y, z + length_, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f}, // 8
-		{         x,          y,          z, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f}, // 9
-		{         x, y - length_,          z, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f}, // 10
-		{         x, y - length_, z + length_, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f}, // 11
+		{          x,           y, z + length_, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f}, // 8
+		{          x,           y,           z, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f}, // 9
+		{          x, y - length_,           z, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f}, // 10
+		{          x, y - length_, z + length_, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f}, // 11
 
-		// Right face
-		{x + length_,          y,          z,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f}, // 12
-		{x + length_,          y, z + length_,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f}, // 13
+		// Right face 
+		{x + length_,           y,           z,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f}, // 12
+		{x + length_,           y, z + length_,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f}, // 13
 		{x + length_, y - length_, z + length_,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f}, // 14
-		{x + length_, y - length_,          z,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f}, // 15
+		{x + length_, y - length_,           z,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f}, // 15
 
 		// Top face
-		{         x,          y, z + length_,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f}, // 16
-		{x + length_,          y, z + length_,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f}, // 17
-		{x + length_,          y,          z,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f}, // 18
-		{         x,          y,          z,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f}, // 19
+		{          x,           y, z + length_,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f}, // 16
+		{x + length_,           y, z + length_,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f}, // 17
+		{x + length_,           y,           z,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f}, // 18
+		{          x,           y,           z,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f}, // 19
 
 		// Bottom face
 		{x + length_, y - length_, z + length_,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f}, // 20
-		{         x, y - length_, z + length_,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f}, // 21
-		{         x, y - length_,          z,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f}, // 22
-		{x + length_, y - length_,          z,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f}, // 23
+		{          x, y - length_, z + length_,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f}, // 21
+		{          x, y - length_,           z,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f}, // 22
+		{x + length_, y - length_,           z,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f}, // 23
 	};
 
 	
@@ -210,12 +210,18 @@ void Cube::SetDevice(LPDIRECT3DDEVICE9 pDevice)
 	d3d_device_ = pDevice;
 }
 
-void Cube::UpdateMatrix(D3DXVECTOR3 rotate_axis, int num_half_PI)
+void Cube::UpdateMinMaxPoints(D3DXVECTOR3 rotate_axis, int num_half_PI)
 {
+	// Build up the rotation matrix with the overall angle
+	// This angle is times of D3DX_PI / 2.
 	D3DXMATRIX rotate_matrix;
 	D3DXMatrixIdentity(&rotate_matrix);
-
-	if (num_half_PI == 1)
+	
+	if (num_half_PI == 0)
+	{
+		D3DXMatrixRotationAxis(&rotate_matrix, &rotate_axis, 0);
+	}
+	else if (num_half_PI == 1)
 	{
 		D3DXMatrixRotationAxis(&rotate_matrix, &rotate_axis, D3DX_PI / 2);
 	}
@@ -223,20 +229,26 @@ void Cube::UpdateMatrix(D3DXVECTOR3 rotate_axis, int num_half_PI)
 	{
 		D3DXMatrixRotationAxis(&rotate_matrix, &rotate_axis, D3DX_PI);
 	}
-	else if (num_half_PI == 3)
+	else // (num_half_PI == 3)
 	{
 		D3DXMatrixRotationAxis(&rotate_matrix, &rotate_axis, 1.5f * D3DX_PI);
 	}
 
-	world_matrix_ = rotate_matrix;
-}
+	// Translate the min_point_ and max_point_ of the cube, after rotation, the two points 
+	// was changed, need to recalculate them with the rotation matrix.
+	D3DXVECTOR3 min_point;
+	D3DXVECTOR3 max_point;
+	D3DXVec3TransformCoord(&min_point, &min_point_, &rotate_matrix);
+	D3DXVec3TransformCoord(&max_point, &max_point_, &rotate_matrix);
 
-void Cube::UpdateMinMaxPoints()
-{
-	// Upate the min_point and max_point
-	// These two points used to build the bounding box of the cube for intersecton test.
-	D3DXVec3TransformCoord(&min_point_, &min_point_, &world_matrix_);
-	D3DXVec3TransformCoord(&max_point_, &max_point_, &world_matrix_);
+	// After translate by the world matrix, the min/max point need recalculate
+	min_point_.x = min(min_point.x, max_point.x);
+	min_point_.y = min(min_point.y, max_point.y);
+	min_point_.z = min(min_point.z, max_point.z);
+
+	max_point_.x = max(min_point.x, max_point.x);
+	max_point_.y = max(min_point.y, max_point.y);
+	max_point_.z = max(min_point.z, max_point.z);
 }
 
 void Cube::Rotate(D3DXVECTOR3& axis, float angle)
@@ -245,6 +257,7 @@ void Cube::Rotate(D3DXVECTOR3& axis, float angle)
 	D3DXMATRIX rotate_matrix;
 	D3DXMatrixRotationAxis(&rotate_matrix, &axis, angle);
 
+	// This may cause the matrix multiplication accumulate errors, how to fix it?
 	world_matrix_ *= rotate_matrix;
 }
 

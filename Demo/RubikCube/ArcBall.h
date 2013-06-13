@@ -10,7 +10,6 @@ public:
 	~ArcBall(void);
 
 public:
-	void Init(HWND hWnd);
 	void Reset() ;
 	void OnBegin(int mouse_x, int mouse_y) ;
 	void OnMove(int mouse_x, int mouse_y) ;
