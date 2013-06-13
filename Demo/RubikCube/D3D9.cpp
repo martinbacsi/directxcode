@@ -3,7 +3,7 @@
 D3D9::D3D9(void)
     : d3d_(NULL),
 	  d3ddevice_(NULL),
-	  is_fullscreen_(true)
+	  is_fullscreen_(false)
 {
 	camera = new Camera();
 }
@@ -92,7 +92,7 @@ void D3D9::InitD3D9(HWND hWnd)
 	float aspectRatio = (float)d3dpp_.BackBufferWidth / (float)d3dpp_.BackBufferHeight ;
 	camera->SetProjParams(D3DX_PI / 4, aspectRatio, 1.0f, 1000.0f) ;
 
-	camera->SetWindow(displayMode.Width, displayMode.Height);
+	ResetDevice();
 }
 
 LPDIRECT3DTEXTURE9 D3D9::CreateTexture(int texWidth, int texHeight, D3DCOLOR color)
