@@ -55,6 +55,7 @@ private:
 	float CalculateRotateAngle();
 	RotateDirection GetRotateDirection(Face face, D3DXVECTOR3& axis, D3DXVECTOR3& previous_vector, D3DXVECTOR3& current_vector);
 	void Rotate(D3DXVECTOR3& axis, float angle);	// Rotate a layer
+	void RotateLayer(int layer, D3DXVECTOR3& axis, float angle);
 
 private:
 	const int kNumCubes;	// Number of unit cubes, 27 unit cubes build up a rubik cube.
@@ -63,7 +64,6 @@ private:
 	const int kNumFaces;	// Number of faces
 	Rect* faces;				// Store faces in rect
 
-	float cube_length_;			// length of the unit cube.
 	float gap_between_layers_;	// the length between two layers.
 
 	bool is_hit_;				// The picking ray hit the RubikCube
