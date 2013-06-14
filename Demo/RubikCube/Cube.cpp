@@ -5,10 +5,10 @@ LPDIRECT3DTEXTURE9 Cube::pTextures[kNumFaces_] = { NULL };
 
 Cube::Cube(void)
 	 : kNumCornerPoints_(8),
-	   is_selected_(false)
+	   length_(10.0f),
+	   is_selected_(false),
+	   vertex_buffer_(NULL)
 {
-	length_ = 10.0f;
-
 	for (int i = 0; i < kNumFaces_; ++i)
 	{
 		pIB[i] = NULL;
@@ -16,9 +16,6 @@ Cube::Cube(void)
 	}
 
 	corner_points_ = new D3DXVECTOR3[kNumCornerPoints_];
-
-	vertex_buffer_ = NULL;
-
 	D3DXMatrixIdentity(&world_matrix_);
 }
 
@@ -286,6 +283,11 @@ void Cube::Draw()
 	}
 }
 
+float Cube::GetLength() const
+{
+	return length_;
+}
+
 D3DXVECTOR3 Cube::GetMinPoint() const
 {
 	return min_point_;
@@ -304,4 +306,11 @@ void Cube::SetIsSelected(bool is_selected)
 bool Cube::GetIsSelected() const
 {
 	return is_selected_;
+}
+
+bool Cube::InLayer(int layer_id)
+{
+	return ( layer_id_x_ == layer_id 
+		  || layer_id_y_ == layer_id
+		  || layer_id_z_ == layer_id );
 }

@@ -32,7 +32,7 @@ void Camera::OnFrameMove()
 
 	if(mouse_wheel_delta_)
 	{
-		radius_ -= mouse_wheel_delta_ * radius_ * 0.1f / 120.0f;
+		radius_ -= mouse_wheel_delta_ * radius_ * 0.1f / 360.0f;
 
 		// Make the radius in range of [min_radius_, max_radius_]
 		// This can Prevent the cube became too big or too small

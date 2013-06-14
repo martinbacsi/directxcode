@@ -25,8 +25,11 @@ public:
 	static void SetInnerTexture(LPDIRECT3DTEXTURE9 innerTexture);
 	//void UpdateMatrix(D3DXVECTOR3 rotate_axis, int num_half_PI);
 	void UpdateMinMaxPoints(D3DXVECTOR3 rotate_axis, int num_half_PI);
+	void UpdateLayerId();
 	void Rotate(D3DXVECTOR3& axis, float angle);
 	void Draw();
+
+	float GetLength() const;
 
 	D3DXVECTOR3 GetMinPoint() const;
 	D3DXVECTOR3 GetMaxPoint() const;
@@ -34,9 +37,13 @@ public:
 	void SetIsSelected(bool is_selected);
 	bool GetIsSelected() const;
 
+	// Determine whether cube in a given layer
+	bool InLayer(int layer_id);
+
 private:
 	void InitBuffers(D3DXVECTOR3 topleftfront);
 	void InitCornerPoints(D3DXVECTOR3 top_left_front_point);	// Initialize corner points.
+	void InitLayerIds();
 
 private:
 	float length_;								// side length_ of the cube.
@@ -47,6 +54,19 @@ private:
 	int textureId[kNumFaces_];					// the index is the faceId, the value is the textureId.
 
 	bool is_selected_;							// Whether cube was selected in current rotation.
+	
+	// Each cube in the Rubik Cube has 3 layer id, for a 3 x 3 Rubik Cube, the layer id was count as below:
+	// along X axis, from negative to positive(left -> right) 0, 1, 2
+	// along Y axis, from negative to positive(bottom -> top) 3, 4, 5
+	// along Z axis, from negative to positive(front -> back) 6, 7, 8
+	// So the front-top-left corner cube's id is:
+	// layer_x_ = 0, layer_y_ = 5, layer_z_ = 6
+	int layer_id_x_;
+	int layer_id_y_;
+	int layer_id_z_;
+
+	// Cube center used to determine the layer id, the center was calculate by min point and max point.
+	D3DXVECTOR3 center_;
 
 	static LPDIRECT3DTEXTURE9 pTextures[kNumFaces_];
 	static LPDIRECT3DTEXTURE9 inner_texture_;	// Inner face texture.
