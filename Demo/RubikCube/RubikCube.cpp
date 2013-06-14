@@ -5,7 +5,6 @@
 RubikCube::RubikCube(void)
     : kNumCubes(27),
 	  kNumFaces(6),
-	  cube_length_(10.0f),
       gap_between_layers_(0.15f),
 	  total_rotate_angle_(0),
 	  rotate_speed_(1.5f),
@@ -37,8 +36,8 @@ RubikCube::RubikCube(void)
 	// Create 6 faces
 	faces = new Rect[kNumFaces];
 
-	// in order to short the code line, use short temp variables here
-	float length = cube_length_;
+	// in order to format codes, use short temp variables here
+	float length = cubes[0].GetLength();
 	float gap = gap_between_layers_;
 
 	// The Rubik cube was build in the following order
@@ -128,7 +127,7 @@ void RubikCube::Initialize(HWND hWnd)
 	InitTextures();
 
 	// To short the code line
-	float length = cube_length_;
+	float length = cubes[0].GetLength();
 	float gap = gap_between_layers_;
 
 	// Initialize the top-front-left corner of each unit cubes, we use 27 unit
@@ -281,21 +280,7 @@ void RubikCube::Shuffle()
 	// Set the random seed
 	srand((unsigned int)time(0));
 
-	// Generate direction
-	char dir = ' ' ;
-	if(rand() % 2 == 0)
-		dir = 'c' ;
-	else
-		dir = 'r' ;
-
-	// Rotate 20 times
-	for(int i = 0; i < 20; i++)
-	{
-		// Generate the layer
-		int layer = rand() % 9 ;
-		//RotationLayer(layer, dir, D3DX_PI / 2) ;
-		//UpdateLayerInfo(layer, dir, 1) ;
-	}
+	
 
 	rotate_finish_ = true ;
 }
@@ -687,7 +672,8 @@ y == 1.5 * length + gaps
 Face RubikCube::GetPickedFace(D3DXVECTOR3 hit_point) const
 {
 	float float_epsilon = 0.001f;
-	float face_length = 3 * cube_length_ + 2 * gap_between_layers_;
+	float cube_length = cubes[0].GetLength();
+	float face_length = 3 * cube_length + 2 * gap_between_layers_;
 	float half_face_length = face_length / 2;
 
 	if (fabs(hit_point.z + half_face_length) < float_epsilon) { return kFrontFace;  }
@@ -904,6 +890,17 @@ void RubikCube::Rotate(D3DXVECTOR3& axis, float angle)
 	for (int i = 0; i < kNumCubes; ++i)
 	{
 		if (cubes[i].GetIsSelected())
+		{
+			cubes[i].Rotate(axis, angle);
+		}
+	}
+}
+
+void RubikCube::RotateLayer(int layer, D3DXVECTOR3& axis, float angle)
+{
+	for(int i = 0; i < kNumCubes; ++i)
+	{
+		if (cubes[i].InLayer(layer))
 		{
 			cubes[i].Rotate(axis, angle);
 		}
