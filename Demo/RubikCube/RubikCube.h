@@ -58,12 +58,14 @@ private:
 	void RotateLayer(int layer, D3DXVECTOR3& axis, float angle);
 
 private:
+	const int kNumLayers;			// Number of layers in one direction, a 3 x 3 Rubik Cube has num_layers_ = 3.
 	const int kNumCubes;	// Number of unit cubes, 27 unit cubes build up a rubik cube.
 	Cube* cubes;			// Array to store 27 unit cubes
 
 	const int kNumFaces;	// Number of faces
 	Rect* faces;				// Store faces in rect
 
+	float face_length_;			// Face length of the Rubik Cube
 	float gap_between_layers_;	// the length between two layers.
 
 	bool is_hit_;				// The picking ray hit the RubikCube

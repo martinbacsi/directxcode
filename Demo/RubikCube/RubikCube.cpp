@@ -3,7 +3,8 @@
 #include <time.h>
 
 RubikCube::RubikCube(void)
-    : kNumCubes(27),
+	: kNumLayers(3),
+      kNumCubes(kNumLayers * kNumLayers * kNumLayers),
 	  kNumFaces(6),
       gap_between_layers_(0.15f),
 	  total_rotate_angle_(0),
@@ -126,7 +127,7 @@ void RubikCube::Initialize(HWND hWnd)
 
 	InitTextures();
 
-	// To short the code line
+	// Get unit cube length and gaps between layers
 	float length = cubes[0].GetLength();
 	float gap = gap_between_layers_;
 
