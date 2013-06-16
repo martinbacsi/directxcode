@@ -110,7 +110,7 @@ LPDIRECT3DTEXTURE9 D3D9::CreateTexture(int texWidth, int texHeight, D3DCOLOR col
 		D3DPOOL_MANAGED, 
 		&pTexture);
 
-	if(FAILED(hr))
+	if (FAILED(hr))
 	{
 		MessageBox(NULL, L"Create texture failed", L"Error", 0);
 	}
@@ -118,25 +118,28 @@ LPDIRECT3DTEXTURE9 D3D9::CreateTexture(int texWidth, int texHeight, D3DCOLOR col
 	// Lock the texture and fill in color
 	D3DLOCKED_RECT lockedRect;
 	hr = pTexture->LockRect(0, &lockedRect, NULL, 0);
-	if(FAILED(hr))
+	if (FAILED(hr))
 	{
 		MessageBox(NULL, L"Lock texture failed!", L"Error", 0);
 	}
 
 	DWORD sideColor = 0xff000000; // the side line color
 
+	int side_width = 7;
+
 	// Calculate number of rows in the locked Rect
 	int rowCount = (texWidth * texHeight * 4 ) / lockedRect.Pitch;
 
-	for(int i = 0; i < texWidth; ++i)
+	for (int i = 0; i < texWidth; ++i)
 	{
-		for(int j = 0; j < texHeight; ++j)
+		for (int j = 0; j < texHeight; ++j)
 		{
 			int index = i * rowCount + j;
 
 			int* pData = (int*)lockedRect.pBits;
 
-			if( i <= 10 || i >= 118 || j <= 10 || j >= 118)
+			if (i <= side_width || i >= texWidth - side_width 
+				|| j <= side_width || j >= texHeight - side_width)
 			{
 				memcpy(&pData[index], &sideColor, 4);
 			}
@@ -183,9 +186,9 @@ LPDIRECT3DTEXTURE9 D3D9::CreateInnerTexture(int texWidth, int texHeight, D3DCOLO
 	// Calculate number of rows in the locked Rect
 	int rowCount = (texWidth * texHeight * 4 ) / lockedRect.Pitch;
 
-	for(int i = 0; i < texWidth; ++i)
+	for (int i = 0; i < texWidth; ++i)
 	{
-		for(int j = 0; j < texHeight; ++j)
+		for (int j = 0; j < texHeight; ++j)
 		{
 			int index = i * rowCount + j;
 
