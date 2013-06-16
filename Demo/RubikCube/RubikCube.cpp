@@ -3,7 +3,7 @@
 #include <time.h>
 
 RubikCube::RubikCube(void)
-	: kNumLayers(3),
+	: kNumLayers(5),
       kNumCubes(kNumLayers * kNumLayers * kNumLayers),
 	  kNumFaces(6),
       gap_between_layers_(0.15f),
@@ -15,8 +15,8 @@ RubikCube::RubikCube(void)
 	  window_active_(false),
 	  init_window_x_(0),
 	  init_window_y_(0),
-	  init_window_width_(100),
-	  init_window_height_(100),
+	  init_window_width_(1000),
+	  init_window_height_(1000),
 	  current_window_width_(init_window_width_),
 	  current_window_height_(init_window_height_),
 	  last_window_width_(current_window_width_),
@@ -37,23 +37,27 @@ RubikCube::RubikCube(void)
 	// Create 6 faces
 	faces = new Rect[kNumFaces];
 
-	// in order to format codes, use short temp variables here
-	float length = cubes[0].GetLength();
+	// Calculate face length and half face length which will used later to determine unit cube layer.
+	float cube_length = cubes[0].GetLength();
+	face_length_ = kNumLayers * cube_length + (kNumLayers - 1) * gap_between_layers_;
+	float half_face_length = face_length_ / 2;
+
+	// in order to format codes, use short temp variables here.
+	float length = cube_length;
 	float gap = gap_between_layers_;
 
-	// The Rubik cube was build in the following order
-	// The center of the cube is the origin of the coordiantes system, so we can 
-	// Calulate the 8 corners of the Rubik cube with length and gaps
-	D3DXVECTOR3 A(-(1.5f * length + gap),   1.5f * length + gap , -(1.5f * length + gap)); // The front-top-left corner
-	D3DXVECTOR3 B(  1.5f * length + gap ,   1.5f * length + gap , -(1.5f * length + gap));
-	D3DXVECTOR3 C(  1.5f * length + gap , -(1.5f * length + gap), -(1.5f * length + gap));
-	D3DXVECTOR3 D(-(1.5f * length + gap), -(1.5f * length + gap), -(1.5f * length + gap));
+	// Calculate the coordinates of the 8 corner points on Rubik Cube, we use them to mark the Face coordinates later.
+	D3DXVECTOR3 A(-half_face_length,  half_face_length, -half_face_length); // The front-top-left corner
+	D3DXVECTOR3 B( half_face_length,  half_face_length, -half_face_length);
+	D3DXVECTOR3 C( half_face_length, -half_face_length, -half_face_length);
+	D3DXVECTOR3 D(-half_face_length, -half_face_length, -half_face_length);
 
-	D3DXVECTOR3 E(-(1.5f * length + gap),   1.5f * length + gap ,  (1.5f * length + gap)); // The back-top-left corner
-	D3DXVECTOR3 F(  1.5f * length + gap ,   1.5f * length + gap ,  (1.5f * length + gap));
-	D3DXVECTOR3 G(  1.5f * length + gap , -(1.5f * length + gap),  (1.5f * length + gap));
-	D3DXVECTOR3 H(-(1.5f * length + gap), -(1.5f * length + gap),  (1.5f * length + gap));
+	D3DXVECTOR3 E(-half_face_length,  half_face_length,  half_face_length); // The back-top-left corner
+	D3DXVECTOR3 F( half_face_length,  half_face_length,  half_face_length);
+	D3DXVECTOR3 G( half_face_length, -half_face_length,  half_face_length);
+	D3DXVECTOR3 H(-half_face_length, -half_face_length,  half_face_length);
 
+	// Initialize the 6 faces of Rubik Cube, faces used later in Ray-Cube hit test.
 	Rect  FrontFace(A, B, C, D) ; 
 	Rect   BackFace(E, F, G, H) ;
 	Rect   LeftFace(E, A, D, H) ;
@@ -129,98 +133,88 @@ void RubikCube::Initialize(HWND hWnd)
 
 	// Get unit cube length and gaps between layers
 	float length = cubes[0].GetLength();
+	float cube_length = cubes[0].GetLength();
 	float gap = gap_between_layers_;
 
-	// Initialize the top-front-left corner of each unit cubes, we use 27 unit
-	// cubes to build up a Rubik cube.
-	D3DXVECTOR3 initPos[] = 
+	// Initialize the top-front-left corner of each unit cubes, we use (kNumLayers)^3 unit cubes
+	// to build up a Rubik Cube
+
+	// Allocate an array to hold all the front-top-left coordinates of the unit cubes
+	D3DXVECTOR3* init_pos = new D3DXVECTOR3[kNumCubes];
+
+	// In order to simple the calculation, translate the Rubik Cube along the axis
+	// to make the Rubik Cube's front-bottom-left corner at the coordinate origin.
+	// X-axis, move to positive side by half_face_length
+	// Y-axis, move to positive side by half_face_length
+	// Z-axis, move to positive side by half_face_length
+	float half_face_length = face_length_ / 2;
+
+	for (int i = 0; i < kNumLayers; ++i)
 	{
-		// Front layer, from left to right, top to bottom. 9 cubes
-		D3DXVECTOR3( -(1.5f * length + gap),    1.5f * length + gap, -(1.5f * length + gap) ),
-		D3DXVECTOR3(         -0.5f * length,    1.5f * length + gap, -(1.5f * length + gap) ),
-		D3DXVECTOR3(    0.5f * length + gap,    1.5f * length + gap, -(1.5f * length + gap) ),
+		for (int j = 0; j < kNumLayers; ++j)
+		{
+			for (int k = 0; k < kNumLayers; ++k)
+			{
+				// calculate the front-top-left corner coodinates for current cube
+				float x = i * (cube_length + gap) - half_face_length;
+				float y = j * (cube_length + gap) - half_face_length;
+				float z = k * (cube_length + gap) - half_face_length;
 
-		D3DXVECTOR3( -(1.5f * length + gap),          0.5f * length, -(1.5f * length + gap) ),
-		D3DXVECTOR3(         -0.5f * length,          0.5f * length, -(1.5f * length + gap) ),
-		D3DXVECTOR3(    0.5f * length + gap,          0.5f * length, -(1.5f * length + gap) ),
-
-		D3DXVECTOR3( -(1.5f * length + gap), -(0.5f * length + gap), -(1.5f * length + gap) ),
-		D3DXVECTOR3(         -0.5f * length, -(0.5f * length + gap), -(1.5f * length + gap) ),
-		D3DXVECTOR3(    0.5f * length + gap, -(0.5f * length + gap), -(1.5f * length + gap) ),
-
-		// Middle layer, from left to right, top to bottom. 9 cubes
-		D3DXVECTOR3( -(1.5f * length + gap),    1.5f * length + gap,         -0.5f * length ),
-		D3DXVECTOR3(         -0.5f * length,    1.5f * length + gap,         -0.5f * length ),
-		D3DXVECTOR3(    0.5f * length + gap,    1.5f * length + gap,         -0.5f * length ),
-
-		D3DXVECTOR3( -(1.5f * length + gap),          0.5f * length,         -0.5f * length ),
-		D3DXVECTOR3(         -0.5f * length,          0.5f * length,         -0.5f * length ),
-		D3DXVECTOR3(    0.5f * length + gap,          0.5f * length,         -0.5f * length ),
-
-		D3DXVECTOR3( -(1.5f * length + gap), -(0.5f * length + gap),         -0.5f * length ),
-		D3DXVECTOR3(         -0.5f * length, -(0.5f * length + gap),         -0.5f * length ),
-		D3DXVECTOR3(    0.5f * length + gap, -(0.5f * length + gap),         -0.5f * length ),
-
-		// Back layer, from left to right, top to bottom. 9 cubes
-		D3DXVECTOR3( -(1.5f * length + gap),    1.5f * length + gap,    0.5f * length + gap ),
-		D3DXVECTOR3(         -0.5f * length,    1.5f * length + gap,    0.5f * length + gap ),
-		D3DXVECTOR3(    0.5f * length + gap,    1.5f * length + gap,    0.5f * length + gap ),
-
-		D3DXVECTOR3( -(1.5f * length + gap),          0.5f * length,    0.5f * length + gap ),
-		D3DXVECTOR3(         -0.5f * length,          0.5f * length,    0.5f * length + gap ),
-		D3DXVECTOR3(    0.5f * length + gap,          0.5f * length,    0.5f * length + gap ),
-
-		D3DXVECTOR3( -(1.5f * length + gap), -(0.5f * length + gap),    0.5f * length + gap ),
-		D3DXVECTOR3(         -0.5f * length, -(0.5f * length + gap),    0.5f * length + gap ),
-		D3DXVECTOR3(    0.5f * length + gap, -(0.5f * length + gap),    0.5f * length + gap ),
-	};
+				// calculate the unit cube index in inti_pos
+				int n = i + (j * kNumLayers) + (k * kNumLayers * kNumLayers);
+				init_pos[n] = D3DXVECTOR3(x, y, z);
+			}
+		}
+	}
 
 	// Initialize the 27 unit cubes
 	for(int i = 0; i < kNumCubes; i++)
 	{
 		cubes[i].SetDevice(d3d9->GetD3DDevice());
-		cubes[i].Init(initPos[i]);
+		cubes[i].Init(init_pos[i]);
 	}
 
-	// Set texture for each cube and each face
+	// Delte the dynamic array
+	delete [] init_pos;
+	init_pos = NULL;
 
-	// Front face
-	for(int i = 0; i <= 8; ++i)
-	{
-		cubes[i].SetTextureId(0, 0);
-	}
+	float float_epsilon = 0.0001f; 
 
-	// Back face
-	for(int i = 18; i <= 26; ++i)
+	// Set texture for each face of Rubik Cube
+	for (int i = 0; i < kNumCubes; ++i)
 	{
-		cubes[i].SetTextureId(1, 1);
-	}
+		//Front face
+		if (fabs(cubes[i].GetMinPoint().z + half_face_length) < float_epsilon)
+		{
+			cubes[i].SetTextureId(0, 0);
+		}
 
-	// Left face
-	for(int i = 0; i <= 24; i += 3)
-	{
-		cubes[i].SetTextureId(2, 2);
-	}
+		// Back face
+		if (fabs(cubes[i].GetMaxPoint().z - half_face_length) < float_epsilon)
+		{
+			cubes[i].SetTextureId(1, 1);
+		}
 
-	// Right face
-	for(int i = 2; i <= 26; i += 3)
-	{
-		cubes[i].SetTextureId(3, 3);
-	}
+		// Left face
+		if (fabs(cubes[i].GetMinPoint().x + half_face_length) < float_epsilon)
+		{
+			cubes[i].SetTextureId(2, 2);
+		}
 
-	// Top face
-	for(int i = 0; i <= 20; ++i)
-	{
-		if(i % 9 < 3)
+		// Right face
+		if (fabs(cubes[i].GetMaxPoint().x - half_face_length) < float_epsilon)
+		{
+			cubes[i].SetTextureId(3, 3);
+		}
+
+		// Top face
+		if (fabs(cubes[i].GetMaxPoint().y - half_face_length) < float_epsilon)
 		{
 			cubes[i].SetTextureId(4, 4);
 		}
-	}
 
-	// Bottom face
-	for(int i = 6; i <= 26; ++i)
-	{
-		if(i % 9 > 5)
+		// Bottom face
+		if (fabs(cubes[i].GetMinPoint().y + half_face_length) < float_epsilon)
 		{
 			cubes[i].SetTextureId(5, 5);
 		}
