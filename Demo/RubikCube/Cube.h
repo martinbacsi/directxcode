@@ -41,8 +41,8 @@ public:
 	bool InLayer(int layer_id);
 
 private:
-	void InitBuffers(D3DXVECTOR3 topleftfront);
-	void InitCornerPoints(D3DXVECTOR3 top_left_front_point);	// Initialize corner points.
+	void InitBuffers(D3DXVECTOR3 front_bottom_left);
+	void InitCornerPoints(D3DXVECTOR3 front_bottom_left_point);	// Initialize corner points.
 	void InitLayerIds();
 
 private:
