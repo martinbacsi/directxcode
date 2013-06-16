@@ -50,50 +50,64 @@ void Cube::Init(D3DXVECTOR3 top_left_front_point)
 }
 
 // Initialize vertex and index buffer
-void Cube::InitBuffers(D3DXVECTOR3 topleftfront)
+void Cube::InitBuffers(D3DXVECTOR3 front_bottom_left)
 {
-	float x = topleftfront.x;
-	float y = topleftfront.y;
-	float z = topleftfront.z;
+	float x = front_bottom_left.x;
+	float y = front_bottom_left.y;
+	float z = front_bottom_left.z;
+
+	/* Example of front face
+
+   1               2
+	---------------
+	|             |
+	|             |
+	|             |
+	|             |
+	|             |
+	---------------
+   0               3
+
+	*/
 
 	// Vertex buffer data
 	Vertex vertices[] =
 	{
 		// Front face
 		{          x,           y,           z,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f}, // 0
-		{x + length_,           y,           z,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f}, // 1
-		{x + length_, y - length_,           z,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f}, // 2
-		{          x, y - length_,           z,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f}, // 3
+		{          x, y + length_,           z,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f}, // 1
+		{x + length_, y + length_,           z,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f}, // 2
+		{x + length_,           y,           z,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f}, // 3
 
 		// Back face
 		{x + length_,           y, z + length_,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f}, // 4
-		{          x,           y, z + length_,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f}, // 5
-		{          x, y - length_, z + length_,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f}, // 6
-		{x + length_, y - length_, z + length_,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f}, // 7
+		{x + length_, y + length_, z + length_,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f}, // 5
+		{          x, y + length_, z + length_,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f}, // 6
+		{          x,           y, z + length_,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f}, // 7
 
 		// Left face
 		{          x,           y, z + length_, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f}, // 8
-		{          x,           y,           z, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f}, // 9
-		{          x, y - length_,           z, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f}, // 10
-		{          x, y - length_, z + length_, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f}, // 11
+		{          x, y + length_, z + length_, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f}, // 9
+		{          x, y + length_,           z, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f}, // 10
+		{          x,           y,           z, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f}, // 11
 
 		// Right face 
 		{x + length_,           y,           z,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f}, // 12
-		{x + length_,           y, z + length_,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f}, // 13
-		{x + length_, y - length_, z + length_,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f}, // 14
-		{x + length_, y - length_,           z,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f}, // 15
+		{x + length_, y + length_,           z,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f}, // 13
+		{x + length_, y + length_, z + length_,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f}, // 14
+		{x + length_,           y, z + length_,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f}, // 15
 
 		// Top face
-		{          x,           y, z + length_,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f}, // 16
-		{x + length_,           y, z + length_,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f}, // 17
-		{x + length_,           y,           z,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f}, // 18
-		{          x,           y,           z,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f}, // 19
+		{          x, y + length_,           z,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f}, // 16
+		{          x, y + length_, z + length_,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f}, // 17
+		{x + length_, y + length_, z + length_,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f}, // 18
+		{x + length_, y + length_,           z,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f}, // 19
 
 		// Bottom face
-		{x + length_, y - length_, z + length_,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f}, // 20
-		{          x, y - length_, z + length_,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f}, // 21
-		{          x, y - length_,           z,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f}, // 22
-		{x + length_, y - length_,           z,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f}, // 23
+		{x + length_,           y,           z,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f}, // 20
+		{x + length_,           y, z + length_,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f}, // 21
+		{          x,           y, z + length_,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f}, // 22
+		{          x,           y,           z,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f}, // 23
 	};
 
 	
@@ -115,7 +129,7 @@ void Cube::InitBuffers(D3DXVECTOR3 topleftfront)
 	memcpy( pVertices, vertices, sizeof(vertices) );
 	vertex_buffer_->Unlock();
 
-	// Triangle strips
+	// Indices for triangle strips
 	WORD indicesFront[]  = { 0,  1,  3,  2};
 	WORD indicesBack[]   = { 4,  5,  7,  6};
 	WORD indicesLeft[]   = { 8,  9, 11, 10};
@@ -147,36 +161,42 @@ void Cube::InitBuffers(D3DXVECTOR3 topleftfront)
 	}
 }
 
-void Cube::InitCornerPoints(D3DXVECTOR3 top_left_front_point)
+void Cube::InitCornerPoints(D3DXVECTOR3 front_bottom_left)
 {
-	/* The 8 points were count first on the front side from the top-left corner in clock-wise order
+	// Calculate the min/max pint of the cube
+	// min point is the front bottom left corner of the cube
+	D3DXVECTOR3 min_point(front_bottom_left.x, front_bottom_left.y, front_bottom_left.z);
+
+	// max point is the back top right corner of the cube
+	D3DXVECTOR3 max_point(front_bottom_left.x + length_, front_bottom_left.y + length_, front_bottom_left.z + length_);
+
+	/* The 8 points were count first on the front side from the bottom-left corner in clock-wise order
 	 Then on the back side, with the same order
+
+	 // Front face
 		1-----------2
 		|  front    |
 		|  side     |
 		|           |
 		|           |
-		4-----------3
+		0-----------3
 	*/
+	corner_points_[0] = D3DXVECTOR3(min_point.x, min_point.y, min_point.z);
+	corner_points_[1] = D3DXVECTOR3(min_point.x, max_point.y, min_point.z);
+	corner_points_[2] = D3DXVECTOR3(max_point.x, max_point.y, min_point.z);
+	corner_points_[3] = D3DXVECTOR3(max_point.x, min_point.y, min_point.z);
 
-	// Calculate the min/max pint of the cube
-	// min point is the front bottom left corner of the cube
-	D3DXVECTOR3 min_point(top_left_front_point.x, top_left_front_point.y - length_, top_left_front_point.z);
-
-	// max point is the back top right corner of the cube
-	D3DXVECTOR3 max_point(top_left_front_point.x +length_, top_left_front_point.y, top_left_front_point.z + length_);
-
-
-	// Front face
-	corner_points_[0] = D3DXVECTOR3(min_point.x, max_point.y, min_point.z);
-	corner_points_[1] = D3DXVECTOR3(max_point.x, max_point.y, min_point.z);
-	corner_points_[2] = D3DXVECTOR3(max_point.x, min_point.y, min_point.z);
-	corner_points_[3] = min_point;
-
-	// Back face
-	corner_points_[4] = D3DXVECTOR3(min_point.x, max_point.y, max_point.z);
-	corner_points_[5] = max_point;
-	corner_points_[6] = D3DXVECTOR3(max_point.x, min_point.y, max_point.z);
+	/* Back face
+	    5-----------6
+		|  front    |
+		|  side     |
+		|           |
+		|           |
+		4-----------7
+	*/
+	corner_points_[4] = D3DXVECTOR3(max_point.x, min_point.y, max_point.z);
+	corner_points_[5] = D3DXVECTOR3(max_point.x, max_point.y, max_point.z);
+	corner_points_[6] = D3DXVECTOR3(min_point.x, max_point.y, max_point.z);
 	corner_points_[7] = D3DXVECTOR3(min_point.x, min_point.y, max_point.z);
 
 	// Initilize min_point and max_point
