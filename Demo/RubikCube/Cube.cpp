@@ -6,6 +6,9 @@ LPDIRECT3DTEXTURE9 Cube::pTextures[kNumFaces_] = { NULL };
 Cube::Cube(void)
 	 : kNumCornerPoints_(8),
 	   length_(10.0f),
+	   layer_id_x_(-1),
+	   layer_id_y_(-1),
+	   layer_id_z_(-1),
 	   is_selected_(false),
 	   vertex_buffer_(NULL)
 {
@@ -43,14 +46,15 @@ Cube::~Cube(void)
 	}
 }
 
-void Cube::Init(D3DXVECTOR3 top_left_front_point)
+void Cube::Init(D3DXVECTOR3& top_left_front_point)
 {
 	InitBuffers(top_left_front_point);
 	InitCornerPoints(top_left_front_point);
+	UpdateCenter();
 }
 
 // Initialize vertex and index buffer
-void Cube::InitBuffers(D3DXVECTOR3 front_bottom_left)
+void Cube::InitBuffers(D3DXVECTOR3& front_bottom_left)
 {
 	float x = front_bottom_left.x;
 	float y = front_bottom_left.y;
@@ -161,7 +165,7 @@ void Cube::InitBuffers(D3DXVECTOR3 front_bottom_left)
 	}
 }
 
-void Cube::InitCornerPoints(D3DXVECTOR3 front_bottom_left)
+void Cube::InitCornerPoints(D3DXVECTOR3& front_bottom_left)
 {
 	// Calculate the min/max pint of the cube
 	// min point is the front bottom left corner of the cube
@@ -204,6 +208,11 @@ void Cube::InitCornerPoints(D3DXVECTOR3 front_bottom_left)
 	max_point_ = max_point;
 }
 
+D3DXVECTOR3 Cube::CalculateCenter(D3DXVECTOR3& min_point, D3DXVECTOR3& max_point)
+{
+	return (min_point + max_point) / 2;
+}
+
 void Cube::SetTextureId(int faceId, int texId)
 {
 	textureId[faceId] = texId;
@@ -227,7 +236,7 @@ void Cube::SetDevice(LPDIRECT3DDEVICE9 pDevice)
 	d3d_device_ = pDevice;
 }
 
-void Cube::UpdateMinMaxPoints(D3DXVECTOR3 rotate_axis, int num_half_PI)
+void Cube::UpdateMinMaxPoints(D3DXVECTOR3& rotate_axis, int num_half_PI)
 {
 	// Build up the rotation matrix with the overall angle
 	// This angle is times of D3DX_PI / 2.
@@ -266,6 +275,11 @@ void Cube::UpdateMinMaxPoints(D3DXVECTOR3 rotate_axis, int num_half_PI)
 	max_point_.x = max(min_point.x, max_point.x);
 	max_point_.y = max(min_point.y, max_point.y);
 	max_point_.z = max(min_point.z, max_point.z);
+}
+
+void Cube::UpdateCenter()
+{
+	center_ = (min_point_ + max_point_) / 2;
 }
 
 void Cube::Rotate(D3DXVECTOR3& axis, float angle)
@@ -318,6 +332,11 @@ D3DXVECTOR3 Cube::GetMaxPoint() const
 	return max_point_;
 }
 
+D3DXVECTOR3 Cube::GetCenter() const
+{
+	return center_;
+}
+
 void Cube::SetIsSelected(bool is_selected)
 {
 	is_selected_ = is_selected;
@@ -333,4 +352,19 @@ bool Cube::InLayer(int layer_id)
 	return ( layer_id_x_ == layer_id 
 		  || layer_id_y_ == layer_id
 		  || layer_id_z_ == layer_id );
+}
+
+void Cube::SetLayerIdX(int layer_id_x)
+{
+	layer_id_x_ = layer_id_x;
+}
+
+void Cube::SetLayerIdY(int layer_id_y)
+{
+	layer_id_y_ = layer_id_y;
+}
+
+void Cube::SetLayerIdZ(int layer_id_z)
+{
+	layer_id_z_ = layer_id_z;
 }

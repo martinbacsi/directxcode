@@ -3,13 +3,14 @@
 #include <time.h>
 
 RubikCube::RubikCube(void)
-	: kNumLayers(5),
+	: kNumLayers(2),
       kNumCubes(kNumLayers * kNumLayers * kNumLayers),
 	  kNumFaces(6),
       gap_between_layers_(0.15f),
 	  total_rotate_angle_(0),
 	  rotate_speed_(1.5f),
 	  is_hit_(false),
+	  hit_layer_(-1),
 	  is_cubes_selected_(false),
 	  rotate_finish_(true),
 	  window_active_(false),
@@ -219,6 +220,48 @@ void RubikCube::Initialize(HWND hWnd)
 			cubes[i].SetTextureId(5, 5);
 		}
 	}
+
+	SetLayerIds();
+}
+
+/*
+The layer id was count from X-axis first, from left to right, 0, 1, 2, ...
+Then from Y-axis, kNumLayers, kNumLayers + 1, ...
+Then from Z-axis, 2 * kNumLayers, 2 * kNumLayers + 1, ....
+*/
+void RubikCube::SetLayerIds()
+{
+	float length = cubes[0].GetLength();
+	float gap    = gap_between_layers_;
+	float half_face_length = face_length_ / 2;
+
+	for (int i = 0; i < kNumCubes; ++i)
+	{
+		float center_x = cubes[i].GetCenter().x + half_face_length;
+		float center_y = cubes[i].GetCenter().y + half_face_length;
+		float center_z = cubes[i].GetCenter().z + half_face_length;
+
+		for (int j = 0; j < kNumLayers; ++j)
+		{
+			if (center_x >= j * (length + gap) 
+				&& center_x <= (j + 1) * (length + gap) - gap)
+			{
+				cubes[i].SetLayerIdX(j);
+			}
+
+			if (center_y >= j * (length + gap)
+				&& center_y <= (j + 1) * (length + gap) - gap)
+			{
+				cubes[i].SetLayerIdY(j + kNumLayers);
+			}
+
+			if (center_z >= j * (length + gap)
+				&& center_z <= (j + 1) * (length + gap) - gap)
+			{
+				cubes[i].SetLayerIdZ(j + 2 * kNumLayers);
+			}
+		}
+	}
 }
 
 void RubikCube::Render()
@@ -376,6 +419,8 @@ void RubikCube::OnMouseMove(int x, int y)
 	RayRectIntersection(picking_ray, faces[face], current_hitpoint_);
 
 	D3DXPLANE plane;
+	
+	int layer = -1;
 
 	if (!is_cubes_selected_)
 	{
@@ -383,9 +428,10 @@ void RubikCube::OnMouseMove(int x, int y)
 
 		// Calculate picking plane.
 		plane = GeneratePlane(face, previous_hitpoint_, current_hitpoint_);
-		MarkRotateCubes(plane);
+		//MarkRotateCubes(plane);
 	
 		rotate_axis_ = GetRotateAxis(face, previous_hitpoint_, current_hitpoint_);
+		hit_layer_ = GetHitLayer(face, rotate_axis_, previous_hitpoint_);
 	}
 
 	float angle = CalculateRotateAngle();
@@ -399,7 +445,7 @@ void RubikCube::OnMouseMove(int x, int y)
 	total_rotate_angle_ += angle;
 
 	// Rotate
-	Rotate(rotate_axis_, angle);
+	RotateLayer(hit_layer_, rotate_axis_, angle);
 
 	// Update previous_hitpoint_
 	previous_vector_ = current_vector_;
@@ -455,7 +501,7 @@ void RubikCube::OnLeftButtonUp()
 		}
 	}
 
-	Rotate(rotate_axis_, left_angle);
+	RotateLayer(hit_layer_, rotate_axis_, left_angle);
 
 	// Make num_rotate_half_PI > 0, since we will mode 4 later
 	// so add it 4 each time, -1 = 3, -2 = 2, -3 = 1
@@ -467,17 +513,14 @@ void RubikCube::OnLeftButtonUp()
 
 	for (int i = 0; i < kNumCubes; ++i)
 	{
-		if (cubes[i].GetIsSelected())
+		if (cubes[i].InLayer(hit_layer_))
 		{
 			cubes[i].UpdateMinMaxPoints(rotate_axis_, num_half_PI);
+			cubes[i].UpdateCenter();
 		}
 	}
 
-	// Restore all selected flags of cubes
-	for (int i = 0; i < kNumCubes; ++i)
-	{
-		cubes[i].SetIsSelected(false);
-	}
+	SetLayerIds();
 
 	// When mouse up, one rotation was finished, no cube was selected
 	is_cubes_selected_ = false;
@@ -509,10 +552,10 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		}
 		break ;
 
-	case WM_CAPTURECHANGED:
+	/*case WM_CAPTURECHANGED:
 		OnLeftButtonUp();
 		ReleaseCapture();
-		break;
+		break;*/
 
 	case WM_LBUTTONUP:
 		{
@@ -887,6 +930,78 @@ void RubikCube::Rotate(D3DXVECTOR3& axis, float angle)
 		if (cubes[i].GetIsSelected())
 		{
 			cubes[i].Rotate(axis, angle);
+		}
+	}
+}
+
+int  RubikCube::GetHitLayer(Face face, D3DXVECTOR3& rotate_axis, D3DXVECTOR3& hit_point)
+{
+	float length = cubes[0].GetLength();
+	float gap    = gap_between_layers_;
+
+	float half_face_length = face_length_ / 2;
+	float float_epsilon = 0.0001f; 
+
+	// X-Axis 
+	if (rotate_axis.x != 0)
+	{
+		switch (face)
+		{
+		case kFrontFace:
+		case kBackFace:
+		case kTopFace:
+		case kBottomFace:
+			{
+				for (int i = 0; i < kNumLayers; ++i)
+				{
+					if (hit_point.x + half_face_length >= i * (length + gap) 
+					    && hit_point.x + half_face_length <= (i + 1) * (length + gap) - gap)
+						return i;
+				}
+			}
+		break;
+		}
+	}
+
+	// Y-Axis
+	else if (rotate_axis.y != 0)
+	{
+		switch (face)
+		{
+		case kLeftFace:
+		case kRightFace:
+		case kFrontFace:
+		case kBackFace:
+			{
+				for (int i = 0; i < kNumLayers; ++i)
+				{
+					if (hit_point.y + half_face_length >= i * (length + gap)
+						&& hit_point.y + half_face_length <= (i + 1) * (length + gap) - gap)
+						return i + kNumLayers;
+				}
+			}
+		break;
+		}
+	}
+
+	// Z-Axis
+	else 
+	{
+		switch (face)
+		{
+		case kLeftFace:
+		case kRightFace:
+		case kTopFace:
+		case kBottomFace:
+			{
+				for (int i = 0; i < kNumLayers; ++i)
+				{
+					if (hit_point.z + half_face_length >= i * (length + gap)
+						&& hit_point.z + half_face_length <= (i + 1) * (length + gap) - gap)
+						return i + 2 * kNumLayers;
+				}
+			}
+			break;
 		}
 	}
 }

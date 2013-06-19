@@ -18,13 +18,14 @@ public:
 	Cube(void);
 	~Cube(void);
 
-	void Init(D3DXVECTOR3 top_left_front_point);
+	void Init(D3DXVECTOR3& top_left_front_point);
 	void SetDevice(LPDIRECT3DDEVICE9 pDevice);
 	void SetTextureId(int faceId, int textureId);
 	static void SetFaceTexture(LPDIRECT3DTEXTURE9* faceTextures, int numTextures);
 	static void SetInnerTexture(LPDIRECT3DTEXTURE9 innerTexture);
 	//void UpdateMatrix(D3DXVECTOR3 rotate_axis, int num_half_PI);
-	void UpdateMinMaxPoints(D3DXVECTOR3 rotate_axis, int num_half_PI);
+	void UpdateMinMaxPoints(D3DXVECTOR3& rotate_axis, int num_half_PI);
+	void UpdateCenter();
 	void UpdateLayerId();
 	void Rotate(D3DXVECTOR3& axis, float angle);
 	void Draw();
@@ -33,6 +34,7 @@ public:
 
 	D3DXVECTOR3 GetMinPoint() const;
 	D3DXVECTOR3 GetMaxPoint() const;
+	D3DXVECTOR3 GetCenter() const;
 
 	void SetIsSelected(bool is_selected);
 	bool GetIsSelected() const;
@@ -40,15 +42,22 @@ public:
 	// Determine whether cube in a given layer
 	bool InLayer(int layer_id);
 
+	// Set layer id
+	void SetLayerIdX(int layer_id_x);
+	void SetLayerIdY(int layer_id_y);
+	void SetLayerIdZ(int layer_id_z);
+
 private:
-	void InitBuffers(D3DXVECTOR3 front_bottom_left);
-	void InitCornerPoints(D3DXVECTOR3 front_bottom_left_point);	// Initialize corner points.
+	void InitBuffers(D3DXVECTOR3& front_bottom_left);
+	void InitCornerPoints(D3DXVECTOR3& front_bottom_left_point);	// Initialize corner points.
+	D3DXVECTOR3 CalculateCenter(D3DXVECTOR3& min_point, D3DXVECTOR3& max_point);
 	void InitLayerIds();
 
 private:
 	float length_;								// side length_ of the cube.
 	D3DXVECTOR3 max_point_;						// The max corner point of the cube(back-top-right corner)
 	D3DXVECTOR3 min_point_;						// The min corner point of the cube(front-bottom-left corner)
+	D3DXVECTOR3 center_;						// Cube center
 	static const int kNumFaces_ = 6;			// The number of faces in a cube, this is always 6.
 	const int kNumCornerPoints_;				// Number of corner points of the cube
 	int textureId[kNumFaces_];					// the index is the faceId, the value is the textureId.
@@ -64,9 +73,6 @@ private:
 	int layer_id_x_;
 	int layer_id_y_;
 	int layer_id_z_;
-
-	// Cube center used to determine the layer id, the center was calculate by min point and max point.
-	D3DXVECTOR3 center_;
 
 	static LPDIRECT3DTEXTURE9 pTextures[kNumFaces_];
 	static LPDIRECT3DTEXTURE9 inner_texture_;	// Inner face texture.

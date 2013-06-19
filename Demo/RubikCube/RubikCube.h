@@ -34,6 +34,7 @@ public:
 	~RubikCube(void);
 
 	void Initialize(HWND hWnd);
+	void SetLayerIds();
 	void Render();
 	LRESULT HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	int GetWindowPosX() const;
@@ -55,6 +56,7 @@ private:
 	float CalculateRotateAngle();
 	RotateDirection GetRotateDirection(Face face, D3DXVECTOR3& axis, D3DXVECTOR3& previous_vector, D3DXVECTOR3& current_vector);
 	void Rotate(D3DXVECTOR3& axis, float angle);	// Rotate a layer
+	int  GetHitLayer(Face face, D3DXVECTOR3& rotate_axis, D3DXVECTOR3& hit_point);
 	void RotateLayer(int layer, D3DXVECTOR3& axis, float angle);
 
 private:
@@ -62,13 +64,14 @@ private:
 	const int kNumCubes;	// Number of unit cubes, 27 unit cubes build up a rubik cube.
 	Cube* cubes;			// Array to store 27 unit cubes
 
-	const int kNumFaces;	// Number of faces
+	const int kNumFaces;		// Number of faces
 	Rect* faces;				// Store faces in rect
 
 	float face_length_;			// Face length of the Rubik Cube
 	float gap_between_layers_;	// the length between two layers.
 
 	bool is_hit_;				// The picking ray hit the RubikCube
+	int  hit_layer_;			// The layer hit by the picking Ray
 	bool rotate_finish_;		// A rotaton action was finished.
 	bool is_cubes_selected_;	// Does cubes selected in current rotation?
 	bool window_active_;		// Window was inactive? turn when device lost, window minimized...
