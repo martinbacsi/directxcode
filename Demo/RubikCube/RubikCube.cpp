@@ -3,7 +3,7 @@
 #include <time.h>
 
 RubikCube::RubikCube(void)
-	: kNumLayers(2),
+	: kNumLayers(3),
       kNumCubes(kNumLayers * kNumLayers * kNumLayers),
 	  kNumFaces(6),
       gap_between_layers_(0.15f),
