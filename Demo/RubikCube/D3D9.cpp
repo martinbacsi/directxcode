@@ -125,7 +125,7 @@ LPDIRECT3DTEXTURE9 D3D9::CreateTexture(int texWidth, int texHeight, D3DCOLOR col
 
 	DWORD sideColor = 0xff000000; // the side line color
 
-	int side_width = 7;
+	int side_width = 10;
 
 	// Calculate number of rows in the locked Rect
 	int rowCount = (texWidth * texHeight * 4 ) / lockedRect.Pitch;
