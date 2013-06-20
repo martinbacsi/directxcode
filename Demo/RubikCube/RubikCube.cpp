@@ -711,7 +711,7 @@ Face RubikCube::GetPickedFace(D3DXVECTOR3 hit_point) const
 {
 	float float_epsilon = 0.001f;
 	float cube_length = cubes[0].GetLength();
-	float face_length = 3 * cube_length + 2 * gap_between_layers_;
+	float face_length = kNumLayers * cube_length + (kNumLayers - 1) * gap_between_layers_;
 	float half_face_length = face_length / 2;
 
 	if (fabs(hit_point.z + half_face_length) < float_epsilon) { return kFrontFace;  }
