@@ -128,7 +128,7 @@ RubikCube::~RubikCube(void)
 void RubikCube::Initialize(HWND hWnd)
 {
 	d3d9->InitD3D9(hWnd);
-	this->hWnd = hWnd;
+	hWnd_ = hWnd;
 
 	InitTextures();
 
@@ -179,6 +179,54 @@ void RubikCube::Initialize(HWND hWnd)
 	delete [] init_pos;
 	init_pos = NULL;
 
+	ResetTextures();
+
+	ResetLayerIds();
+}
+
+/*
+The layer id was count from X-axis first, from left to right, 0, 1, 2, ...
+Then from Y-axis, kNumLayers, kNumLayers + 1, ...
+Then from Z-axis, 2 * kNumLayers, 2 * kNumLayers + 1, ....
+*/
+void RubikCube::ResetLayerIds()
+{
+	float length = cubes[0].GetLength();
+	float gap    = gap_between_layers_;
+	float half_face_length = face_length_ / 2;
+
+	for (int i = 0; i < kNumCubes; ++i)
+	{
+		float center_x = cubes[i].GetCenter().x + half_face_length;
+		float center_y = cubes[i].GetCenter().y + half_face_length;
+		float center_z = cubes[i].GetCenter().z + half_face_length;
+
+		for (int j = 0; j < kNumLayers; ++j)
+		{
+			if (center_x >= j * (length + gap) 
+				&& center_x <= (j + 1) * (length + gap) - gap)
+			{
+				cubes[i].SetLayerIdX(j);
+			}
+
+			if (center_y >= j * (length + gap)
+				&& center_y <= (j + 1) * (length + gap) - gap)
+			{
+				cubes[i].SetLayerIdY(j + kNumLayers);
+			}
+
+			if (center_z >= j * (length + gap)
+				&& center_z <= (j + 1) * (length + gap) - gap)
+			{
+				cubes[i].SetLayerIdZ(j + 2 * kNumLayers);
+			}
+		}
+	}
+}
+
+void RubikCube::ResetTextures()
+{
+	float half_face_length = face_length_ / 2;
 	float float_epsilon = 0.0001f; 
 
 	// Set texture for each face of Rubik Cube
@@ -218,48 +266,6 @@ void RubikCube::Initialize(HWND hWnd)
 		if (fabs(cubes[i].GetMinPoint().y + half_face_length) < float_epsilon)
 		{
 			cubes[i].SetTextureId(5, 5);
-		}
-	}
-
-	SetLayerIds();
-}
-
-/*
-The layer id was count from X-axis first, from left to right, 0, 1, 2, ...
-Then from Y-axis, kNumLayers, kNumLayers + 1, ...
-Then from Z-axis, 2 * kNumLayers, 2 * kNumLayers + 1, ....
-*/
-void RubikCube::SetLayerIds()
-{
-	float length = cubes[0].GetLength();
-	float gap    = gap_between_layers_;
-	float half_face_length = face_length_ / 2;
-
-	for (int i = 0; i < kNumCubes; ++i)
-	{
-		float center_x = cubes[i].GetCenter().x + half_face_length;
-		float center_y = cubes[i].GetCenter().y + half_face_length;
-		float center_z = cubes[i].GetCenter().z + half_face_length;
-
-		for (int j = 0; j < kNumLayers; ++j)
-		{
-			if (center_x >= j * (length + gap) 
-				&& center_x <= (j + 1) * (length + gap) - gap)
-			{
-				cubes[i].SetLayerIdX(j);
-			}
-
-			if (center_y >= j * (length + gap)
-				&& center_y <= (j + 1) * (length + gap) - gap)
-			{
-				cubes[i].SetLayerIdY(j + kNumLayers);
-			}
-
-			if (center_z >= j * (length + gap)
-				&& center_z <= (j + 1) * (length + gap) - gap)
-			{
-				cubes[i].SetLayerIdZ(j + 2 * kNumLayers);
-			}
 		}
 	}
 }
@@ -311,16 +317,59 @@ void RubikCube::Render()
 
 void RubikCube::Shuffle()
 {
+	// If another rotatioin was in progress, return.
+	// This prevent the Rubik Cube from being distort when user drag the left button while pressing the S key.
 	if(!rotate_finish_)
 		return ;
+
+	// Block other rotations 
 	rotate_finish_ = false ;
 
 	// Set the random seed
 	srand((unsigned int)time(0));
 
-	
+	// Calculate total layers, a n x n x n Rubik Cube has 3 x n layers totally.
+	int total_layers = kNumLayers * 3;
 
+	// Rotate 20 times
+	for (int i = 0; i < 20; ++i)
+	{
+		// Generate a random layer
+		int layer_id = rand() % total_layers;
+
+		// Generate rotate axis based on rotate layer
+		D3DXVECTOR3 axis;
+
+		if (layer_id >= 0 && layer_id <= kNumLayers - 1)
+			axis = D3DXVECTOR3(1, 0, 0);
+		else if (layer_id >= kNumLayers && layer_id <= 2 * kNumLayers - 1)
+			axis = D3DXVECTOR3(0, 1, 0);
+		else // layer_id >= 2 * kNumLayers && layer_id <= 3 * kNumLayers - 1
+			axis = D3DXVECTOR3(0, 0, 1);
+
+		RotateLayer(layer_id, axis, D3DX_PI / 2);
+
+		for (int i = 0; i < kNumCubes; ++i)
+		{
+			if (cubes[i].InLayer(layer_id))
+			{
+				cubes[i].UpdateMinMaxPoints(axis, 1);
+				cubes[i].UpdateCenter();
+			}
+		}
+
+		ResetLayerIds();
+	}
+
+	// Release other rotations
 	rotate_finish_ = true ;
+}
+
+// Restore Rubik Cube,make it in complete state
+void RubikCube::Restore()
+{
+	//Initialize(hWnd_);
+	ResetTextures();
 }
 
 // Switch from window mode and full-screen mode
@@ -334,7 +383,7 @@ void RubikCube::ToggleFullScreen()
 		d3d9->SetIsFullScreen(true);
 
 		// Get and save window placement
-		GetWindowPlacement(hWnd, &wp) ;
+		GetWindowPlacement(hWnd_, &wp) ;
 
 		// Update back buffer to desktop resolution
 		d3d9->SetBackBufferWidth(d3d9->GetScreenWidth());
@@ -354,7 +403,7 @@ void RubikCube::ToggleFullScreen()
 		//
 
 		// Restore window placement
-		SetWindowPlacement(hWnd, &wp) ;
+		SetWindowPlacement(hWnd_, &wp) ;
 	}
 
 	// Display mode changed, we need to reset device
@@ -520,7 +569,7 @@ void RubikCube::OnLeftButtonUp()
 		}
 	}
 
-	SetLayerIds();
+	ResetLayerIds();
 
 	// When mouse up, one rotation was finished, no cube was selected
 	is_cubes_selected_ = false;
@@ -580,6 +629,12 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		{
 			switch( wParam )
 			{
+			case 'R':
+				Restore();
+				break;
+			case 'S':
+				Shuffle();
+				break;
 			case 'F':
 				ToggleFullScreen() ;
 				break;

@@ -34,7 +34,8 @@ public:
 	~RubikCube(void);
 
 	void Initialize(HWND hWnd);
-	void SetLayerIds();
+	void ResetLayerIds();
+	void ResetTextures();
 	void Render();
 	LRESULT HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	int GetWindowPosX() const;
@@ -44,6 +45,7 @@ public:
 
 private:
 	void Shuffle();
+	void Restore(); 
 	void ToggleFullScreen();
 	void OnLeftButtonDown(int x, int y);
 	void OnMouseMove(int x, int y);
@@ -91,7 +93,7 @@ private:
 	ArcBall* world_arcball_ ;
 	Camera*	camera_;			// Model view camera
 
-	HWND hWnd;
+	HWND hWnd_;
 	WINDOWPLACEMENT wp ;		// Window position and size
 
 	// Initial window position and size
