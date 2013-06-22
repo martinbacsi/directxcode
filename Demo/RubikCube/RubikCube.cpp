@@ -324,7 +324,6 @@ void RubikCube::Shuffle()
 void RubikCube::Restore()
 {
 	InitCubes();
-	//ResetTextures();
 	ResetLayerIds();
 }
 
