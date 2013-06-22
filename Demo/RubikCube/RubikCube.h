@@ -34,8 +34,6 @@ public:
 	~RubikCube(void);
 
 	void Initialize(HWND hWnd);
-	void ResetLayerIds();
-	void ResetTextures();
 	void Render();
 	LRESULT HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	int GetWindowPosX() const;
@@ -51,13 +49,14 @@ private:
 	void OnMouseMove(int x, int y);
 	void OnLeftButtonUp();
 	void InitTextures();
+	void InitCubes();
+	void ResetLayerIds();
+	void ResetTextures();
 	Face GetPickedFace(D3DXVECTOR3 hit_point) const;	// Get the face picking by mouse 
 	D3DXPLANE GeneratePlane(Face face, D3DXVECTOR3& previous_point, D3DXVECTOR3& current_point);
-	void MarkRotateCubes(D3DXPLANE& plane);			// Mark which cube to rotate, set is_selected = true
 	D3DXVECTOR3 GetRotateAxis(Face face, D3DXVECTOR3& previous_point, D3DXVECTOR3& current_point);
 	float CalculateRotateAngle();
 	RotateDirection GetRotateDirection(Face face, D3DXVECTOR3& axis, D3DXVECTOR3& previous_vector, D3DXVECTOR3& current_vector);
-	void Rotate(D3DXVECTOR3& axis, float angle);	// Rotate a layer
 	int  GetHitLayer(Face face, D3DXVECTOR3& rotate_axis, D3DXVECTOR3& hit_point);
 	void RotateLayer(int layer, D3DXVECTOR3& axis, float angle);
 

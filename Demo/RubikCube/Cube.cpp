@@ -9,7 +9,6 @@ Cube::Cube(void)
 	   layer_id_x_(-1),
 	   layer_id_y_(-1),
 	   layer_id_z_(-1),
-	   is_selected_(false),
 	   vertex_buffer_(NULL)
 {
 	for (int i = 0; i < kNumFaces_; ++i)
@@ -337,14 +336,9 @@ D3DXVECTOR3 Cube::GetCenter() const
 	return center_;
 }
 
-void Cube::SetIsSelected(bool is_selected)
+void Cube::SetWorldMatrix(D3DXMATRIX& world_matrix)
 {
-	is_selected_ = is_selected;
-}
-
-bool Cube::GetIsSelected() const
-{
-	return is_selected_;
+	world_matrix_ = world_matrix;
 }
 
 bool Cube::InLayer(int layer_id)

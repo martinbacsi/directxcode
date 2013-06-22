@@ -132,52 +132,7 @@ void RubikCube::Initialize(HWND hWnd)
 
 	InitTextures();
 
-	// Get unit cube length and gaps between layers
-	float length = cubes[0].GetLength();
-	float cube_length = cubes[0].GetLength();
-	float gap = gap_between_layers_;
-
-	// Initialize the top-front-left corner of each unit cubes, we use (kNumLayers)^3 unit cubes
-	// to build up a Rubik Cube
-
-	// Allocate an array to hold all the front-top-left coordinates of the unit cubes
-	D3DXVECTOR3* init_pos = new D3DXVECTOR3[kNumCubes];
-
-	// In order to simple the calculation, translate the Rubik Cube along the axis
-	// to make the Rubik Cube's front-bottom-left corner at the coordinate origin.
-	// X-axis, move to positive side by half_face_length
-	// Y-axis, move to positive side by half_face_length
-	// Z-axis, move to positive side by half_face_length
-	float half_face_length = face_length_ / 2;
-
-	for (int i = 0; i < kNumLayers; ++i)
-	{
-		for (int j = 0; j < kNumLayers; ++j)
-		{
-			for (int k = 0; k < kNumLayers; ++k)
-			{
-				// calculate the front-top-left corner coodinates for current cube
-				float x = i * (cube_length + gap) - half_face_length;
-				float y = j * (cube_length + gap) - half_face_length;
-				float z = k * (cube_length + gap) - half_face_length;
-
-				// calculate the unit cube index in inti_pos
-				int n = i + (j * kNumLayers) + (k * kNumLayers * kNumLayers);
-				init_pos[n] = D3DXVECTOR3(x, y, z);
-			}
-		}
-	}
-
-	// Initialize the 27 unit cubes
-	for(int i = 0; i < kNumCubes; i++)
-	{
-		cubes[i].SetDevice(d3d9->GetD3DDevice());
-		cubes[i].Init(init_pos[i]);
-	}
-
-	// Delte the dynamic array
-	delete [] init_pos;
-	init_pos = NULL;
+	InitCubes();
 
 	ResetTextures();
 
@@ -368,8 +323,9 @@ void RubikCube::Shuffle()
 // Restore Rubik Cube,make it in complete state
 void RubikCube::Restore()
 {
-	//Initialize(hWnd_);
-	ResetTextures();
+	InitCubes();
+	//ResetTextures();
+	ResetLayerIds();
 }
 
 // Switch from window mode and full-screen mode
@@ -477,7 +433,6 @@ void RubikCube::OnMouseMove(int x, int y)
 
 		// Calculate picking plane.
 		plane = GeneratePlane(face, previous_hitpoint_, current_hitpoint_);
-		//MarkRotateCubes(plane);
 	
 		rotate_axis_ = GetRotateAxis(face, previous_hitpoint_, current_hitpoint_);
 		hit_layer_ = GetHitLayer(face, rotate_axis_, previous_hitpoint_);
@@ -736,6 +691,63 @@ void RubikCube::InitTextures()
 	Cube::SetInnerTexture(inner_textures_);
 }
 
+void RubikCube::InitCubes()
+{
+	// Set device for unit cubes
+	for (int i = 0; i < kNumCubes; ++i)
+	{
+		cubes[i].SetDevice(d3d9->GetD3DDevice());
+	}
+
+	// Get unit cube length and gaps between layers
+	float length = cubes[0].GetLength();
+	float cube_length = cubes[0].GetLength();
+	float gap = gap_between_layers_;
+
+	// Calculate half face length
+	float half_face_length = face_length_ / 2;
+
+	/* Initialize the top-front-left corner of each unit cubes, we use (kNumLayers)^3 unit cubes
+	   to build up a Rubik Cube
+
+	   The Cube was labeled by the following rule, suppose a 3 x 3 x 3 Rubik Cube
+	   front layer		middle layer      back layer
+	   6   7   8		15  16  17		  24  25  26
+	   3   4   5 		12  13  14		  21  22  23
+	   0   1   2		 9  10  11		  18  19  20
+	*/
+	for (int i = 0; i < kNumLayers; ++i)
+	{
+		for (int j = 0; j < kNumLayers; ++j)
+		{
+			for (int k = 0; k < kNumLayers; ++k)
+			{
+				// calculate the front-bottom-left corner coodinates for current cube
+				// The Rubik Cube's center was the coordinate center, but the calculation assume the front-bottom-left corner
+				// of the Rubik Cube was in the coodinates center, so move half_face_length for each coordinates component.
+				float x = i * (cube_length + gap) - half_face_length;
+				float y = j * (cube_length + gap) - half_face_length;
+				float z = k * (cube_length + gap) - half_face_length;
+
+				// calculate the unit cube index in inti_pos
+				int n = i + (j * kNumLayers) + (k * kNumLayers * kNumLayers);
+
+				// Initiliaze cube n
+				cubes[n].Init(D3DXVECTOR3(x, y, z));
+			}
+		}
+	}
+
+	// Reset world matrix to Identity matrix for each unit cube
+	D3DXMATRIX world_matrix;
+	D3DXMatrixIdentity(&world_matrix);
+
+	for (int i = 0; i < kNumCubes; ++i)
+	{
+		cubes[i].SetWorldMatrix(world_matrix);
+	}
+}
+
 int RubikCube::GetWindowPosX() const
 {
 	return init_window_x_;
@@ -813,24 +825,6 @@ D3DXPLANE RubikCube::GeneratePlane(Face face, D3DXVECTOR3& previous_point, D3DXV
 
 	default:
 		return D3DXPLANE(0, 0, 0, 0);
-	}
-}
-
-void RubikCube::MarkRotateCubes(D3DXPLANE& plane)
-{
-	for (int i = 0; i < kNumCubes; ++i)
-	{
-		// Build a box with the cube's min/max points
-		D3DXVECTOR3 min_point = cubes[i].GetMinPoint();
-		D3DXVECTOR3 max_point = cubes[i].GetMaxPoint();
-		Box box(min_point, max_point);
-
-		// Test whether box intersection with the plane
-		// if true, set the cube as selected, the selected cube will be rotated 
-		if (PlaneBoxIntersection(plane, box))
-		{
-			cubes[i].SetIsSelected(true);
-		}
 	}
 }
 
@@ -976,17 +970,6 @@ float RubikCube::CalculateRotateAngle()
 	float angle = 2.0f * acosf(quat.w) * rotate_speed_ ;
 
 	return angle;
-}
-
-void RubikCube::Rotate(D3DXVECTOR3& axis, float angle)
-{
-	for (int i = 0; i < kNumCubes; ++i)
-	{
-		if (cubes[i].GetIsSelected())
-		{
-			cubes[i].Rotate(axis, angle);
-		}
-	}
 }
 
 int  RubikCube::GetHitLayer(Face face, D3DXVECTOR3& rotate_axis, D3DXVECTOR3& hit_point)
