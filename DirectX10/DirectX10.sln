@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DrawTriangle", "DrawTriangl
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Basic", "Basic\Basic.vcxproj", "{1561CB10-E409-47D7-B7EA-B59A28AC537C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Triangle_EffectsSystem", "Triangle_EffectsSystem\Triangle_EffectsSystem.vcxproj", "{88BFFF62-0531-413E-8FCE-7481AFD07007}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +21,10 @@ Global
 		{1561CB10-E409-47D7-B7EA-B59A28AC537C}.Debug|Win32.Build.0 = Debug|Win32
 		{1561CB10-E409-47D7-B7EA-B59A28AC537C}.Release|Win32.ActiveCfg = Release|Win32
 		{1561CB10-E409-47D7-B7EA-B59A28AC537C}.Release|Win32.Build.0 = Release|Win32
+		{88BFFF62-0531-413E-8FCE-7481AFD07007}.Debug|Win32.ActiveCfg = Debug|Win32
+		{88BFFF62-0531-413E-8FCE-7481AFD07007}.Debug|Win32.Build.0 = Debug|Win32
+		{88BFFF62-0531-413E-8FCE-7481AFD07007}.Release|Win32.ActiveCfg = Release|Win32
+		{88BFFF62-0531-413E-8FCE-7481AFD07007}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
