@@ -1,13 +1,13 @@
 /*
-Description:  This demo show you how to draw a simple triangle in D3D10
+Description:  This demo show you how to draw a simple triangle in D3D10, we use a pure hlsl shader file without effect system here.
 Date: 2013-06-30
 Author: zdd
 */
 
 #include <windows.h>
 #include <d3d10.h>
+#include <d3dx10.h>
 #include <d3dcompiler.h>
-#include <DirectXMath.h>
 
 // DirectX Globals
 ID3D10Device*			g_pd3dDevice		= NULL;
@@ -24,7 +24,7 @@ bool					g_bActive			= true ;
 // The vertex format
 struct SimpleVertex
 {
-	DirectX::XMFLOAT3 Pos;
+	D3DXVECTOR3 Pos;
 };
 
 // Safe release a COM object
@@ -104,9 +104,9 @@ VOID InitVertexBuffer()
 	// Create the vertex buffer
 	SimpleVertex vertices[] = 
 	{
-		DirectX::XMFLOAT3(0.0f, 0.5f, 0.5f),
-        DirectX::XMFLOAT3(0.5f, -0.5f, 0.5f),
-        DirectX::XMFLOAT3(-0.5f, -0.5f, 0.5f),
+		D3DXVECTOR3(0.0f, 0.5f, 0.5f),
+		D3DXVECTOR3(0.5f, -0.5f, 0.5f),
+		D3DXVECTOR3(-0.5f, -0.5f, 0.5f),
 	};
 
 	// Vertex Buffer
@@ -210,13 +210,13 @@ VOID Render(float timeDelta)
 	float color[4] = { 0.0f, 0.125f, 0.3f, 1.0f };
 	g_pd3dDevice->ClearRenderTargetView(g_pRenderTargetView, color);
 
-	// Set the input layout
-	g_pd3dDevice->IASetInputLayout(g_pVertexLayout);
-
 	// Set vertex buffer
 	UINT stride = sizeof(SimpleVertex);
 	UINT offset = 0;
 	g_pd3dDevice->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
+
+	// Set the input layout
+	g_pd3dDevice->IASetInputLayout(g_pVertexLayout);
 
 	// Set geometry type
 	g_pd3dDevice->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
