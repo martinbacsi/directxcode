@@ -33,8 +33,8 @@ HRESULT InitD3D( HWND hWnd )
 	ZeroMemory( &sd, sizeof( sd ) );
 
 	sd.BufferCount = 1; // number of buffer
-	sd.BufferDesc.Width = 640; // buffer width, can we set it to the screen width?
-	sd.BufferDesc.Height = 480; // buffer height, can we set it to the screen height?
+	sd.BufferDesc.Width = 600; // buffer width, can we set it to the screen width?
+	sd.BufferDesc.Height = 600; // buffer height, can we set it to the screen height?
 	sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // buffer format, 32 bit color with alpha(RGBA)
 	sd.BufferDesc.RefreshRate.Numerator = 60; // refresh rate?
 	sd.BufferDesc.RefreshRate.Denominator = 1; // WHAT'S THIS?
@@ -62,15 +62,15 @@ HRESULT InitD3D( HWND hWnd )
 	ID3D10Texture2D* pBackBuffer;
 
 	// Get a pointer to the back buffer
-	hr = g_pSwapChain->GetBuffer( 0, __uuidof( ID3D10Texture2D ), ( LPVOID* )&pBackBuffer );
+	hr = g_pSwapChain->GetBuffer(0, __uuidof(ID3D10Texture2D), (LPVOID* )&pBackBuffer);
 	if (FAILED(hr))
 		return hr;
 
 	// Create a render-target view
-	g_pd3dDevice->CreateRenderTargetView( pBackBuffer, NULL, &g_pRenderTargetView);
+	g_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &g_pRenderTargetView);
 
 	// Bind the view
-	g_pd3dDevice->OMSetRenderTargets( 1, &g_pRenderTargetView, NULL ); // WHAT'S OM here mean?
+	g_pd3dDevice->OMSetRenderTargets(1, &g_pRenderTargetView, NULL); // WHAT'S OM here mean?
 
 	// Setup the viewport
 	D3D10_VIEWPORT vp;
@@ -80,7 +80,7 @@ HRESULT InitD3D( HWND hWnd )
 	vp.MaxDepth = 1.0f;
 	vp.TopLeftX = 0;
 	vp.TopLeftY = 0;
-	g_pd3dDevice->RSSetViewports( 1, &vp );
+	g_pd3dDevice->RSSetViewports(1, &vp);
 
 	InitVertexShader();
 	InitPixelShader();
@@ -100,9 +100,9 @@ VOID InitVertexBuffer()
 	// Create the vertex buffer
 	SimpleVertex vertices[] = 
 	{
-		DirectX::XMFLOAT3( 0.0f, 0.5f, 0.5f ),
-        DirectX::XMFLOAT3( 0.5f, -0.5f, 0.5f ),
-        DirectX::XMFLOAT3( -0.5f, -0.5f, 0.5f ),
+		DirectX::XMFLOAT3(0.0f, 0.5f, 0.5f),
+        DirectX::XMFLOAT3(0.5f, -0.5f, 0.5f),
+        DirectX::XMFLOAT3(-0.5f, -0.5f, 0.5f),
 	};
 
 	// Vertex Buffer
