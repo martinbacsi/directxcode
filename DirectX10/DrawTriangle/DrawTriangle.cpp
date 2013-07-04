@@ -9,6 +9,7 @@ Author: zdd
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 
+// DirectX Globals
 ID3D10Device*			g_pd3dDevice		= NULL;
 IDXGISwapChain*			g_pSwapChain		= NULL;
 ID3D10RenderTargetView* g_pRenderTargetView = NULL;
@@ -17,10 +18,19 @@ ID3D10Buffer*			g_pVertexBuffer     = NULL;
 ID3D10VertexShader*		g_pVertexShader		= NULL;
 ID3D10PixelShader*		g_pPixelShader		= NULL;
 
-bool					g_bActive			= true ; // Is window active?
+// Is window active?
+bool					g_bActive			= true ; 
 
+// The vertex format
+struct SimpleVertex
+{
+	DirectX::XMFLOAT3 Pos;
+};
+
+// Safe release a COM object
 #define SAFE_RELEASE(P) if(P){ P->Release(); P = NULL;}
 
+// Forward declaration
 VOID CompileShaderFromFile(WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);
 VOID InitVertexBuffer();
 VOID InitVertexShader();
@@ -91,12 +101,6 @@ HRESULT InitD3D( HWND hWnd )
 
 VOID InitVertexBuffer()
 {
-	// The vertex format
-	struct SimpleVertex
-	{
-		DirectX::XMFLOAT3 Pos;	// Position
-	};
-
 	// Create the vertex buffer
 	SimpleVertex vertices[] = 
 	{
@@ -122,21 +126,13 @@ VOID InitVertexBuffer()
 	{
 		MessageBox(NULL, L"Create vertex buffer failed", L"Error", 0);
 	}
-
-	// Set vertex buffer
-	UINT stride = sizeof(SimpleVertex);
-	UINT offset = 0;
-	g_pd3dDevice->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
-
-	// Set geometry type
-	g_pd3dDevice->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 VOID InitVertexShader()
 {
 	// Compile the vertex shader from file
 	ID3DBlob*	pVSBlob = NULL;
-	CompileShaderFromFile(L"triangle_shader.fx", "VS", "vs_4_0", &pVSBlob);
+	CompileShaderFromFile(L"triangle_shader.hlsl", "VS", "vs_4_0", &pVSBlob);
 
 	// Create vertex shader
 	HRESULT hr = g_pd3dDevice->CreateVertexShader(pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize(), &g_pVertexShader);
@@ -157,16 +153,13 @@ VOID InitVertexShader()
 	hr = g_pd3dDevice->CreateInputLayout(layout, numElements, pVSBlob->GetBufferPointer(), 
 													pVSBlob->GetBufferSize(), &g_pVertexLayout);
 	pVSBlob->Release();
-
-	// Set the input layout
-	g_pd3dDevice->IASetInputLayout(g_pVertexLayout);
 }
 
 VOID InitPixelShader()
 {
 	// Compile the pixel shader
 	ID3DBlob*	pPSBlob = NULL;
-	CompileShaderFromFile(L"triangle_shader.fx", "PS", "ps_4_0", &pPSBlob);
+	CompileShaderFromFile(L"triangle_shader.hlsl", "PS", "ps_4_0", &pPSBlob);
 
 	// Create the pixel shader
 	HRESULT hr = g_pd3dDevice->CreatePixelShader(pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), &g_pPixelShader);
@@ -216,6 +209,17 @@ VOID Render(float timeDelta)
 	// Clear the back-buffer to a BLUE color
 	float color[4] = { 0.0f, 0.125f, 0.3f, 1.0f };
 	g_pd3dDevice->ClearRenderTargetView(g_pRenderTargetView, color);
+
+	// Set the input layout
+	g_pd3dDevice->IASetInputLayout(g_pVertexLayout);
+
+	// Set vertex buffer
+	UINT stride = sizeof(SimpleVertex);
+	UINT offset = 0;
+	g_pd3dDevice->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
+
+	// Set geometry type
+	g_pd3dDevice->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// Render the triangle
 	g_pd3dDevice->VSSetShader(g_pVertexShader);
