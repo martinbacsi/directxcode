@@ -90,8 +90,11 @@ D3DXQUATERNION ArcBall::QuatFromBallPoints(D3DXVECTOR3& start_point, D3DXVECTOR3
 	D3DXVECTOR3 axis;
 	D3DXVec3Cross(&axis, &start_point, &end_point);		
 
-	// Build and return the Quaternion
-	return D3DXQUATERNION(axis.x, axis.y, axis.z, angle);
+	// Build and Normalize the Quaternion
+	D3DXQUATERNION quat(axis.x, axis.y, axis.z, angle);
+	D3DXQuaternionNormalize(&quat, &quat);
+
+	return quat;
 }
 
 D3DXVECTOR3 ArcBall::ScreenToVector(int screen_x, int screen_y)
