@@ -8,7 +8,7 @@ RubikCube::RubikCube(void)
 	  kNumFaces(6),
       gap_between_layers_(0.15f),
 	  total_rotate_angle_(0),
-	  rotate_speed_(1.5f),
+	  rotate_speed_(1.0f),
 	  is_hit_(false),
 	  hit_layer_(-1),
 	  is_cubes_selected_(false),
