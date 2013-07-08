@@ -699,7 +699,6 @@ void RubikCube::InitCubes()
 	}
 
 	// Get unit cube length and gaps between layers
-	float length = cubes[0].GetLength();
 	float cube_length = cubes[0].GetLength();
 	float gap = gap_between_layers_;
 

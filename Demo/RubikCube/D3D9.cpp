@@ -99,8 +99,6 @@ LPDIRECT3DTEXTURE9 D3D9::CreateTexture(int texWidth, int texHeight, D3DCOLOR col
 {
 	LPDIRECT3DTEXTURE9 pTexture;
 
-	//LPDIRECT3DDEVICE9 pDevice = d3d9->getD3DDevice();
-
 	HRESULT hr = D3DXCreateTexture(d3ddevice_, 
 		texWidth, 
 		texHeight, 
