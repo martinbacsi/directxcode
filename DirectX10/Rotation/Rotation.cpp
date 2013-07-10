@@ -24,6 +24,9 @@ ID3D10EffectMatrixVariable* g_pWorldVariable = NULL;
 ID3D10EffectMatrixVariable* g_pViewVariable = NULL;
 ID3D10EffectMatrixVariable* g_pProjectionVariable = NULL;
 
+D3D10_RASTERIZER_DESC rasterDesc;
+ID3D10RasterizerState*	g_pRasterizerState	= NULL;
+
 // Is window active?
 bool g_bActive = true ; 
 
@@ -54,16 +57,22 @@ VOID InitVertexBuffer();
 VOID InitIndexBuffer();
 //VOID InitConstantBuffer();
 VOID InitEffects();
+VOID InitRasterState();
 
 HRESULT InitD3D( HWND hWnd )
 {
+	RECT rc;
+    GetClientRect(hWnd, &rc);
+    UINT width = rc.right - rc.left;
+    UINT height = rc.bottom - rc.top;
+
 	// Setup a DXGI swap chain descriptor
 	DXGI_SWAP_CHAIN_DESC sd;
 	ZeroMemory( &sd, sizeof( sd ) );
 
 	sd.BufferCount = 1; // number of buffer
-	sd.BufferDesc.Width = 600; // buffer width, can we set it to the screen width?
-	sd.BufferDesc.Height = 600; // buffer height, can we set it to the screen height?
+	sd.BufferDesc.Width = width; // buffer width, can we set it to the screen width?
+	sd.BufferDesc.Height = height; // buffer height, can we set it to the screen height?
 	sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // buffer format, 32 bit color with alpha(RGBA)
 	sd.BufferDesc.RefreshRate.Numerator = 60; // refresh rate?
 	sd.BufferDesc.RefreshRate.Denominator = 1; // WHAT'S THIS?
@@ -103,8 +112,8 @@ HRESULT InitD3D( HWND hWnd )
 
 	// Setup the viewport
 	D3D10_VIEWPORT vp;
-	vp.Width = 640; // this should be similar with the back-buffer width, global it!
-	vp.Height = 480;
+	vp.Width = width; // this should be similar with the back-buffer width, global it!
+	vp.Height = height;
 	vp.MinDepth = 0.0f;
 	vp.MaxDepth = 1.0f;
 	vp.TopLeftX = 0;
@@ -116,6 +125,7 @@ HRESULT InitD3D( HWND hWnd )
 	InitIndexBuffer();
 	//InitConstantBuffer();
 	InitEffects();
+	InitRasterState();
 		                       
 	return S_OK;
 }
@@ -126,7 +136,7 @@ VOID InitWorldViewProjMatrix(HWND hwnd)
 	D3DXMatrixIdentity(&g_mWorld);
 
 	// Initialize view matrix
-	D3DXVECTOR3 eyePoint(1.0f, 0.0f, -15.0f);
+	D3DXVECTOR3 eyePoint(5.0f, 3.0f, -5.0f);
 	D3DXVECTOR3 lookAt(0.0f, 0.0f, 0.0f);
 	D3DXVECTOR3 Up(0.0f, 1.0f, 0.0f);
 	D3DXMatrixLookAtLH(&g_mView, &eyePoint, &lookAt, &Up);
@@ -144,6 +154,21 @@ VOID InitWorldViewProjMatrix(HWND hwnd)
 	D3DXMatrixPerspectiveFovLH(&g_mProj, fov, aspectRatio, 1.0f, 1000.0f);
 }
 
+VOID InitRasterState()
+{
+	rasterDesc.AntialiasedLineEnable = true;
+	rasterDesc.CullMode = D3D10_CULL_BACK;
+	rasterDesc.DepthBias = 0;
+	rasterDesc.DepthBiasClamp = 0.0f;
+	rasterDesc.DepthClipEnable = true;
+	rasterDesc.FillMode = D3D10_FILL_WIREFRAME;
+	rasterDesc.FrontCounterClockwise = false;
+	rasterDesc.MultisampleEnable = false;
+	rasterDesc.ScissorEnable = false;
+	rasterDesc.SlopeScaledDepthBias = 0.0f;
+
+	g_pd3dDevice->CreateRasterizerState(&rasterDesc, &g_pRasterizerState);
+}
 
 VOID InitVertexBuffer()
 {
@@ -204,6 +229,8 @@ VOID InitIndexBuffer()
 	D3D10_SUBRESOURCE_DATA initData;
 	ZeroMemory(&initData, sizeof(initData));
 	initData.pSysMem = indices;
+	initData.SysMemPitch = 0;
+	initData.SysMemSlicePitch = 0;
 	HRESULT hr = g_pd3dDevice->CreateBuffer(&bd, &initData, &g_pIndexBuffer);
 	if (FAILED(hr))
 	{
@@ -297,13 +324,18 @@ VOID Cleanup()
 	SAFE_RELEASE( g_pd3dDevice ) ;
 }
 
-VOID SetupMatrix()
+VOID SetupMatrix(float timeDelta)
 {
 	/*ConstantBuffer cb;
 	cb.World = g_mWorld;
 	cb.View  = g_mView;
 	cb.Projection = g_mProj;
 	g_pd3dDevice->UpdateSubresource(g_pConstantBuffer, 0, NULL, &cb, 0, 0);*/
+
+	static float timeElapsed = 0.0f;
+	timeElapsed += timeDelta;
+
+	D3DXMatrixRotationY(&g_mWorld, timeElapsed);
 
 	g_pWorldVariable->SetMatrix((float*)&g_mWorld);
     g_pViewVariable->SetMatrix((float*)&g_mView);
@@ -315,7 +347,7 @@ VOID Render(float timeDelta)
 	if (!g_bActive)
 		Sleep(50) ;
 
-	SetupMatrix();
+	SetupMatrix(timeDelta);
 
 	// Clear the back-buffer to a BLUE color
 	float color[4] = { 0.0f, 0.125f, 0.3f, 1.0f };
@@ -325,13 +357,16 @@ VOID Render(float timeDelta)
 	UINT stride = sizeof(SimpleVertex);
 	UINT offset = 0;
 	g_pd3dDevice->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
-	g_pd3dDevice->IASetIndexBuffer(g_pIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
+	g_pd3dDevice->IASetIndexBuffer(g_pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
 	// Set the input layout
 	g_pd3dDevice->IASetInputLayout(g_pVertexLayout);
 
 	// Set geometry type
 	g_pd3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// Set rasterazition state
+	g_pd3dDevice->RSSetState(g_pRasterizerState);
 
 	// Apply each pass in technique and draw triangle.
 	D3D10_TECHNIQUE_DESC techDesc;
@@ -411,7 +446,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 		WS_OVERLAPPEDWINDOW, 		// window style
 		32,							// initial x position
 		32,							// initial y position
-		600,						// initial window width
+		800,						// initial window width
 		600,						// initial window height
 		NULL,						// parent window handle
 		NULL,						// window menu handle
