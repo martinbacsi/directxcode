@@ -16,7 +16,6 @@ ID3D10RenderTargetView* g_pRenderTargetView = NULL;
 ID3D10InputLayout*		g_pVertexLayout		= NULL;
 ID3D10Buffer*			g_pVertexBuffer     = NULL;
 ID3D10Buffer*			g_pIndexBuffer      = NULL;
-ID3D10Buffer*			g_pConstantBuffer	= NULL;
 ID3D10Effect*           g_pEffect			= NULL;
 ID3D10EffectTechnique*  g_pTechnique		= NULL;
 
@@ -36,13 +35,6 @@ struct SimpleVertex
 	D3DXVECTOR3 Pos;
 };
 
-//struct ConstantBuffer
-//{
-//	D3DXMATRIX World;
-//	D3DXMATRIX View;
-//	D3DXMATRIX Projection;
-//};
-
 D3DXMATRIX g_mWorld;
 D3DXMATRIX g_mView;
 D3DXMATRIX g_mProj;
@@ -55,7 +47,6 @@ VOID CompileShaderFromFile(WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShad
 VOID InitWorldViewProjMatrix(HWND hwnd);
 VOID InitVertexBuffer();
 VOID InitIndexBuffer();
-//VOID InitConstantBuffer();
 VOID InitEffects();
 VOID InitRasterState();
 
@@ -238,23 +229,6 @@ VOID InitIndexBuffer()
 	}
 }
 
-//VOID InitConstantBuffer()
-//{
-//	// Create constant buffer
-//	CD3D10_BUFFER_DESC bd;
-//	ZeroMemory(&bd, sizeof(bd));
-//	bd.Usage = D3D10_USAGE_DEFAULT;
-//	bd.ByteWidth = sizeof(ConstantBuffer);
-//	bd.BindFlags = D3D10_BIND_CONSTANT_BUFFER;
-//	bd.CPUAccessFlags = 0;
-//
-//	HRESULT hr = g_pd3dDevice->CreateBuffer(&bd, NULL, &g_pConstantBuffer);
-//	if(FAILED(hr))
-//	{
-//		MessageBox(NULL, L"Create constant buffer failed", L"Error", 0);
-//	}
-//}
-
 VOID InitEffects()
 {
 	ID3DBlob* pErrorBlob;
@@ -315,9 +289,9 @@ VOID InitEffects()
 
 VOID Cleanup()
 {
+	SAFE_RELEASE( g_pRasterizerState);
 	SAFE_RELEASE( g_pVertexBuffer);
 	SAFE_RELEASE( g_pIndexBuffer);
-	SAFE_RELEASE( g_pConstantBuffer);
 	SAFE_RELEASE( g_pVertexLayout);
 	SAFE_RELEASE( g_pRenderTargetView );
 	SAFE_RELEASE( g_pSwapChain ) ;
@@ -326,12 +300,6 @@ VOID Cleanup()
 
 VOID SetupMatrix(float timeDelta)
 {
-	/*ConstantBuffer cb;
-	cb.World = g_mWorld;
-	cb.View  = g_mView;
-	cb.Projection = g_mProj;
-	g_pd3dDevice->UpdateSubresource(g_pConstantBuffer, 0, NULL, &cb, 0, 0);*/
-
 	static float timeElapsed = 0.0f;
 	timeElapsed += timeDelta;
 
@@ -375,8 +343,8 @@ VOID Render(float timeDelta)
 	{
 		g_pTechnique->GetPassByIndex(i)->Apply(0);
 		g_pd3dDevice->DrawIndexed(36, 0, 0);
-
 	}
+
 	// Present the sence from back buffer to front buffer
 	g_pSwapChain->Present(0, 0);
 }
