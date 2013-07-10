@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Triangle_EffectsSystem", "T
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Rotation", "Rotation\Rotation.vcxproj", "{3C33FCC7-70F3-46C8-8D2E-94F1E3556BCE}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DrawCube", "DrawCube\DrawCube.vcxproj", "{1C168C09-D693-4838-8857-476A855E67B3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -25,6 +27,10 @@ Global
 		{3C33FCC7-70F3-46C8-8D2E-94F1E3556BCE}.Debug|Win32.Build.0 = Debug|Win32
 		{3C33FCC7-70F3-46C8-8D2E-94F1E3556BCE}.Release|Win32.ActiveCfg = Release|Win32
 		{3C33FCC7-70F3-46C8-8D2E-94F1E3556BCE}.Release|Win32.Build.0 = Release|Win32
+		{1C168C09-D693-4838-8857-476A855E67B3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1C168C09-D693-4838-8857-476A855E67B3}.Debug|Win32.Build.0 = Debug|Win32
+		{1C168C09-D693-4838-8857-476A855E67B3}.Release|Win32.ActiveCfg = Release|Win32
+		{1C168C09-D693-4838-8857-476A855E67B3}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
