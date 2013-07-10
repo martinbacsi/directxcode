@@ -300,12 +300,6 @@ VOID Cleanup()
 
 VOID SetupMatrix()
 {
-	/*ConstantBuffer cb;
-	cb.World = g_mWorld;
-	cb.View  = g_mView;
-	cb.Projection = g_mProj;
-	g_pd3dDevice->UpdateSubresource(g_pConstantBuffer, 0, NULL, &cb, 0, 0);*/
-
 	g_pWorldVariable->SetMatrix((float*)&g_mWorld);
     g_pViewVariable->SetMatrix((float*)&g_mView);
     g_pProjectionVariable->SetMatrix((float*)&g_mProj);
@@ -394,7 +388,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 {
 	WNDCLASSEX winClass ;
 
-	winClass.lpszClassName = L"Rotation";
+	winClass.lpszClassName = L"Cube";
 	winClass.cbSize        = sizeof(WNDCLASSEX);
 	winClass.style         = CS_HREDRAW | CS_VREDRAW;
 	winClass.lpfnWndProc   = MsgProc;
@@ -411,7 +405,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR szCmdLi
 
 	HWND hWnd = CreateWindowEx(NULL,  
 		winClass.lpszClassName,		// window class name
-		L"Rotation",				// window caption
+		L"Cube",				// window caption
 		WS_OVERLAPPEDWINDOW, 		// window style
 		32,							// initial x position
 		32,							// initial y position
