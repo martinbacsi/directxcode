@@ -47,20 +47,19 @@ Cube::~Cube(void)
 
 void Cube::Init(D3DXVECTOR3& top_left_front_point)
 {
-	InitBuffers(top_left_front_point);
+	InitVertexBuffer(top_left_front_point);
+	InitIndexBuffer();
 	InitCornerPoints(top_left_front_point);
 	UpdateCenter();
 }
 
-// Initialize vertex and index buffer
-void Cube::InitBuffers(D3DXVECTOR3& front_bottom_left)
+void Cube::InitVertexBuffer(D3DXVECTOR3& front_bottom_left)
 {
 	float x = front_bottom_left.x;
 	float y = front_bottom_left.y;
 	float z = front_bottom_left.z;
 
 	/* Example of front face
-
    1               2
 	---------------
 	|             |
@@ -70,7 +69,6 @@ void Cube::InitBuffers(D3DXVECTOR3& front_bottom_left)
 	|             |
 	---------------
    0               3
-
 	*/
 
 	// Vertex buffer data
@@ -112,17 +110,22 @@ void Cube::InitBuffers(D3DXVECTOR3& front_bottom_left)
 		{          x,           y, z + length_,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f}, // 22
 		{          x,           y,           z,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f}, // 23
 	};
-
 	
-	// Create vertex buffer
-	if( FAILED( d3d_device_->CreateVertexBuffer( sizeof(vertices) * sizeof(Vertex),
-		D3DUSAGE_WRITEONLY, 
-		VERTEX_FVF,
-		D3DPOOL_MANAGED, 
-		&vertex_buffer_, 
-		NULL ) ) )
+	// This function will also used to restore the Rubik Cube, but the CreateVertexBuffer function will cost and hold the memory if vertex_buffer_ not released
+	// When user press the 'R' frequently, memory usage increase time and time. so it's better to add a if branch to determine whether the buffer was created, if
+	// that's true, we didn't create it again, we only lock it and copy the data, so the buffer will  only created once the app starts.
+	if (vertex_buffer_ == NULL)
 	{
-		MessageBox(NULL, L"Create vertex buffer failed", L"Error", 0);
+		// Create vertex buffer
+		if( FAILED( d3d_device_->CreateVertexBuffer( sizeof(vertices) * sizeof(Vertex),
+			D3DUSAGE_WRITEONLY, 
+			VERTEX_FVF,
+			D3DPOOL_MANAGED, 
+			&vertex_buffer_, 
+			NULL ) ) )
+		{
+			MessageBox(NULL, L"Create vertex buffer failed", L"Error", 0);
+		}
 	}
 
 	// Copy vertex data
@@ -131,7 +134,10 @@ void Cube::InitBuffers(D3DXVECTOR3& front_bottom_left)
 		MessageBox(NULL, L"Copy vertex buffer failed", L"Error", 0);
 	memcpy( pVertices, vertices, sizeof(vertices) );
 	vertex_buffer_->Unlock();
+}
 
+void Cube::InitIndexBuffer()
+{
 	// Indices for triangle strips
 	WORD indicesFront[]  = { 0,  1,  3,  2};
 	WORD indicesBack[]   = { 4,  5,  7,  6};
@@ -144,22 +150,25 @@ void Cube::InitBuffers(D3DXVECTOR3& front_bottom_left)
 
 	for(int i = 0; i < kNumFaces_; ++i)
 	{
-		// Create index buffer
-		if( FAILED( d3d_device_->CreateIndexBuffer( sizeof(indicesFront) * sizeof(WORD), 
-			D3DUSAGE_WRITEONLY, 
-			D3DFMT_INDEX16, 
-			D3DPOOL_MANAGED, 
-			&pIB[i], 
-			0) ) )
+		// Only create index buffer once, prevent high memory usage when user press 'R' frequently, see comments in InitVertexBuffer.
+		if (pIB[i] == NULL)
 		{
-			MessageBox(NULL, L"Create index buffer failed", L"Error", 0);
+			if(FAILED(d3d_device_->CreateIndexBuffer( sizeof(indicesFront) * sizeof(WORD), 
+				D3DUSAGE_WRITEONLY, 
+				D3DFMT_INDEX16, 
+				D3DPOOL_MANAGED, 
+				&pIB[i], 
+				0)))
+			{
+				MessageBox(NULL, L"Create index buffer failed", L"Error", 0);
+			}
 		}
 
 		// Copy index data
 		VOID *pIndices;
-		if( FAILED( pIB[i]->Lock( 0, sizeof(indicesFront), (void **)&pIndices, 0) ) )
+		if(FAILED(pIB[i]->Lock(0, sizeof(indicesFront), (void **)&pIndices, 0)))
 			MessageBox(NULL, L"Copy index buffer data failed", L"Error", 0);
-		memcpy(pIndices, indices[i], sizeof(indicesFront) );
+		memcpy(pIndices, indices[i], sizeof(indicesFront));
 		pIB[i]->Unlock() ;
 	}
 }

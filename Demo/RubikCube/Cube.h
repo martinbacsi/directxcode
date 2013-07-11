@@ -47,6 +47,8 @@ public:
 
 private:
 	void InitBuffers(D3DXVECTOR3& front_bottom_left);
+	void InitVertexBuffer(D3DXVECTOR3& front_bottom_left);
+	void InitIndexBuffer();
 	void InitCornerPoints(D3DXVECTOR3& front_bottom_left_point);	// Initialize corner points.
 	D3DXVECTOR3 CalculateCenter(D3DXVECTOR3& min_point, D3DXVECTOR3& max_point);
 	void InitLayerIds();
