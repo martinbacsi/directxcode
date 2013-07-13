@@ -19,6 +19,7 @@ struct ConstantBuffer
 	XMMATRIX mWorld;
 	XMMATRIX mView;
 	XMMATRIX mProjection;
+
 };
 
 ID3D11Device*			g_pd3dDevice		= NULL;
