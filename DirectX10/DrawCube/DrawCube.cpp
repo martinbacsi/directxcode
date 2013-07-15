@@ -44,7 +44,6 @@ D3DXMATRIX g_mProj;
 #define SAFE_RELEASE(P) if(P){ P->Release(); P = NULL;}
 
 // Forward declaration
-VOID CompileShaderFromFile(WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut);
 VOID InitWorldViewProjMatrix(HWND hwnd);
 VOID InitVertexBuffer();
 VOID InitIndexBuffer();
