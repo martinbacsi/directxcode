@@ -23,12 +23,15 @@ ID3D10EffectTechnique*		g_pTechnique		= NULL;
 ID3D10ShaderResourceView*	g_pTextureRV		= NULL;
 ID3D10EffectShaderResourceVariable* g_pDiffuseVariable = NULL;
 
-ID3D10EffectMatrixVariable* g_pWorldVariable = NULL;
-ID3D10EffectMatrixVariable* g_pViewVariable = NULL;
+ID3D10EffectMatrixVariable* g_pWorldVariable	= NULL;
+ID3D10EffectMatrixVariable* g_pViewVariable		= NULL;
 ID3D10EffectMatrixVariable* g_pProjectionVariable = NULL;
 
 D3D10_RASTERIZER_DESC rasterDesc;
-ID3D10RasterizerState*	g_pRasterizerState	= NULL;
+ID3D10RasterizerState*	g_pRasterizerState		= NULL;
+
+// To create texture in memory
+ID3D10Texture2D*			g_pTexture			= NULL;
 
 // Is window active?
 bool g_bActive = true ; 
@@ -54,6 +57,7 @@ VOID InitIndexBuffer();
 VOID InitTexture();
 VOID InitEffects();
 VOID InitRasterState();
+VOID CreateTextureInMemory(int texWidth, int texHeight, DWORD color);
 
 HRESULT InitD3D( HWND hWnd )
 {
@@ -80,10 +84,16 @@ HRESULT InitD3D( HWND hWnd )
 
 	// Create device and swap chain
 	HRESULT hr;
+	UINT flags = D3D10_CREATE_DEVICE_BGRA_SUPPORT;
+
+#if defined( DEBUG ) || defined( _DEBUG )
+	flags |= D3D10_CREATE_DEVICE_DEBUG;
+#endif 
+
 	if (FAILED (hr = D3D10CreateDeviceAndSwapChain( NULL, 
 	    D3D10_DRIVER_TYPE_HARDWARE,
 		NULL,
-		0,
+		flags,
 		D3D10_SDK_VERSION,
 		&sd, 
 		&g_pSwapChain,
@@ -122,6 +132,7 @@ HRESULT InitD3D( HWND hWnd )
 	InitEffects();
 	InitTexture();
 	InitRasterState();
+	CreateTextureInMemory(128, 128, 0xff0000ff);
 		                       
 	return S_OK;
 }
@@ -260,6 +271,70 @@ VOID InitIndexBuffer()
 	}
 }
 
+// Create texture in memory
+VOID CreateTextureInMemory(int texWidth, int texHeight, DWORD color)
+{
+	// Create a texture Description and fill it.
+	D3D10_TEXTURE2D_DESC texDesc;
+	ZeroMemory(&texDesc, sizeof(texDesc));
+
+	texDesc.ArraySize		= 1;				// Number of textures
+	texDesc.Usage			= D3D10_USAGE_DYNAMIC; 
+	texDesc.BindFlags		= D3D10_BIND_SHADER_RESOURCE;
+	texDesc.CPUAccessFlags	= D3D10_CPU_ACCESS_WRITE;	// CPU will write this resource
+	texDesc.Format			= DXGI_FORMAT_R8G8B8A8_UINT;
+	texDesc.Width			= texWidth;
+	texDesc.Height			= texHeight;
+	texDesc.MipLevels		= 1;
+	texDesc.MiscFlags		= 0;
+
+	DXGI_SAMPLE_DESC sampleDes;
+	ZeroMemory(&sampleDes, sizeof(sampleDes));
+	sampleDes.Count = 1;
+	sampleDes.Quality = 0;
+	texDesc.SampleDesc		= sampleDes;
+
+	// Create sub resource
+	D3D10_SUBRESOURCE_DATA texData;
+	ZeroMemory(&texData, sizeof(texData));
+	texData.pSysMem = 0;
+	texData.SysMemPitch = 0;
+	texData.SysMemSlicePitch = 0;
+
+	HRESULT hr = g_pd3dDevice->CreateTexture2D(&texDesc, NULL, &g_pTexture);
+	if (FAILED(hr))
+	{
+		MessageBox(NULL, L"Create texture in memory failed", L"Error", 0);
+	}
+
+	// Lock texture and fill in colors
+	D3D10_MAPPED_TEXTURE2D mappedTex;
+	ZeroMemory(&mappedTex, sizeof(mappedTex));
+
+	g_pTexture->Map(0, D3D10_MAP_WRITE_DISCARD, 0, &mappedTex);
+
+	// Fill in colors
+	//============================= BE CAREFUL OF THE COLOR ORDER R8G8B8A8=====================
+
+	// Calculate number of rows
+	// total bytes = texture_width * texture_height * bytes_in_texel
+	// We use DXGI_FORMAT_R8G8B8A8_UINT, so each texel is 4 bytes
+	// RowPitch is number of bytes in one row.
+	int numRows = texWidth * texHeight * 4 / mappedTex.RowPitch;
+	for (int i = 0; i < texWidth; ++i)
+	{
+		for (int j = 0; j < texHeight; ++j)
+		{
+			int index = i * numRows + j;
+			int* pData = (int*)mappedTex.pData;
+			memcpy(&pData[index], &color, 4);
+		}
+	}
+
+	// Unlock texture
+	g_pTexture->Unmap(0);
+}
+
 VOID InitTexture()
 {
 	// Load the Texture
@@ -285,7 +360,7 @@ VOID InitEffects()
     // the shaders to be optimized and to run exactly the way they will run in 
     // the release configuration of this program.
     dwShaderFlags |= D3D10_SHADER_DEBUG;
-    #endif
+#endif
 
 	// Compile the effects file
     HRESULT hr = D3DX10CreateEffectFromFile( L"texture_cube.fx", NULL, NULL, "fx_4_0", dwShaderFlags, 0,
@@ -335,6 +410,7 @@ VOID InitEffects()
 
 VOID Cleanup()
 {
+	SAFE_RELEASE( g_pTexture );
 	SAFE_RELEASE( g_pTextureRV );
 	SAFE_RELEASE( g_pVertexBuffer);
 	SAFE_RELEASE( g_pIndexBuffer);
