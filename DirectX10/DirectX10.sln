@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DrawCube", "DrawCube\DrawCu
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConstantBuffer", "ConstantBuffer\ConstantBuffer.vcxproj", "{AC9108CB-5927-4554-9D1F-A8A3D75AA621}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TextureCube", "TextureCube\TextureCube.vcxproj", "{DF4530A7-093A-4AC6-8663-D70E5BE1A2D1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -37,6 +39,10 @@ Global
 		{AC9108CB-5927-4554-9D1F-A8A3D75AA621}.Debug|Win32.Build.0 = Debug|Win32
 		{AC9108CB-5927-4554-9D1F-A8A3D75AA621}.Release|Win32.ActiveCfg = Release|Win32
 		{AC9108CB-5927-4554-9D1F-A8A3D75AA621}.Release|Win32.Build.0 = Release|Win32
+		{DF4530A7-093A-4AC6-8663-D70E5BE1A2D1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DF4530A7-093A-4AC6-8663-D70E5BE1A2D1}.Debug|Win32.Build.0 = Debug|Win32
+		{DF4530A7-093A-4AC6-8663-D70E5BE1A2D1}.Release|Win32.ActiveCfg = Release|Win32
+		{DF4530A7-093A-4AC6-8663-D70E5BE1A2D1}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
