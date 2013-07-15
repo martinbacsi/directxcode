@@ -117,12 +117,12 @@ void Cube::InitVertexBuffer(D3DXVECTOR3& front_bottom_left)
 	if (vertex_buffer_ == NULL)
 	{
 		// Create vertex buffer
-		if( FAILED( d3d_device_->CreateVertexBuffer( sizeof(vertices) * sizeof(Vertex),
+		if (FAILED(d3d_device_->CreateVertexBuffer(sizeof(vertices) * sizeof(Vertex),
 			D3DUSAGE_WRITEONLY, 
 			VERTEX_FVF,
 			D3DPOOL_MANAGED, 
 			&vertex_buffer_, 
-			NULL ) ) )
+			NULL)))
 		{
 			MessageBox(NULL, L"Create vertex buffer failed", L"Error", 0);
 		}
@@ -130,9 +130,9 @@ void Cube::InitVertexBuffer(D3DXVECTOR3& front_bottom_left)
 
 	// Copy vertex data
 	VOID* pVertices;
-	if( FAILED( vertex_buffer_->Lock( 0, sizeof(vertices), (void**)&pVertices, 0 ) ) )
+	if (FAILED(vertex_buffer_->Lock(0, sizeof(vertices), (void**)&pVertices, 0)))
 		MessageBox(NULL, L"Copy vertex buffer failed", L"Error", 0);
-	memcpy( pVertices, vertices, sizeof(vertices) );
+	memcpy(pVertices, vertices, sizeof(vertices));
 	vertex_buffer_->Unlock();
 }
 
@@ -153,7 +153,7 @@ void Cube::InitIndexBuffer()
 		// Only create index buffer once, prevent high memory usage when user press 'R' frequently, see comments in InitVertexBuffer.
 		if (pIB[i] == NULL)
 		{
-			if(FAILED(d3d_device_->CreateIndexBuffer( sizeof(indicesFront) * sizeof(WORD), 
+			if (FAILED(d3d_device_->CreateIndexBuffer(sizeof(indicesFront) * sizeof(WORD), 
 				D3DUSAGE_WRITEONLY, 
 				D3DFMT_INDEX16, 
 				D3DPOOL_MANAGED, 
@@ -166,7 +166,7 @@ void Cube::InitIndexBuffer()
 
 		// Copy index data
 		VOID *pIndices;
-		if(FAILED(pIB[i]->Lock(0, sizeof(indicesFront), (void **)&pIndices, 0)))
+		if (FAILED(pIB[i]->Lock(0, sizeof(indicesFront), (void **)&pIndices, 0)))
 			MessageBox(NULL, L"Copy index buffer data failed", L"Error", 0);
 		memcpy(pIndices, indices[i], sizeof(indicesFront));
 		pIB[i]->Unlock() ;
