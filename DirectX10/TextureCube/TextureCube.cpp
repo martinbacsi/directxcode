@@ -132,7 +132,7 @@ VOID InitWorldViewProjMatrix(HWND hwnd)
 	D3DXMatrixIdentity(&g_mWorld);
 
 	// Initialize view matrix
-	D3DXVECTOR3 eyePoint(5.0f, 3.0f, -5.0f);
+	D3DXVECTOR3 eyePoint(0.0f, 3.0f, -5.0f);
 	D3DXVECTOR3 lookAt(0.0f, 0.0f, 0.0f);
 	D3DXVECTOR3 Up(0.0f, 1.0f, 0.0f);
 	D3DXMatrixLookAtLH(&g_mView, &eyePoint, &lookAt, &Up);
@@ -232,12 +232,12 @@ VOID InitIndexBuffer()
 	// Indices array
 	DWORD indices[] =
 	{
-		0, 1, 2, 0, 2, 3, // front face
-		4, 5, 6, 4, 6, 7, // back face
-		7, 6, 1, 7, 1, 0, // left face
-		3, 2, 5, 3, 5, 4, // right face
-		1, 6, 5, 1, 5, 2, // top face
-		3, 4, 7, 3, 7, 0, // bottom face
+		 0,  1,  2,  0,  2,  3, // front face
+		 4,  5,  6,  4,  6,  7, // back face
+		 8,  9, 10,  8, 10, 11, // left face
+		12, 13, 14, 12, 14, 15, // right face
+		16, 17, 18, 16, 18, 19, // top face
+		20, 21, 22, 20, 22, 23, // bottom face
 	};
 
 	D3D10_BUFFER_DESC bd;
@@ -347,6 +347,12 @@ VOID Cleanup()
 
 VOID SetupMatrix()
 {
+	static float lastTime = timeGetTime();
+	float currentTime = timeGetTime();
+	float timeElapsed = (currentTime - lastTime) * 0.001f;
+
+	D3DXMatrixRotationY(&g_mWorld, timeElapsed);
+
 	g_pWorldVariable->SetMatrix((float*)&g_mWorld);
     g_pViewVariable->SetMatrix((float*)&g_mView);
     g_pProjectionVariable->SetMatrix((float*)&g_mProj);
