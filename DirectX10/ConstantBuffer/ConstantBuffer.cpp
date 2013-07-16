@@ -1,5 +1,13 @@
 /*
-Description:  This demo show you how to use constant buffer in DirectX 10
+Description:  This demo show you how to use constant buffer in DirectX 10, we only use constant buffer in shader file
+but not in program, it seems direct3d 10 does not support to update shader variables as DirectX 11 did as below
+	// Set up matrix
+	ConstantBuffer cb;
+	cb.mWorld      = XMMatrixTranspose(g_mWorld);
+	cb.mView       = XMMatrixTranspose(g_mView);
+	cb.mProjection = XMMatrixTranspose(g_mProj);
+	g_pImmediateContext->UpdateSubresource(g_pConstantBuffer, 0, NULL, &cb, 0, 0);
+
 Date: 2013-07-10
 Author: zdd
 */
@@ -20,6 +28,11 @@ ID3D10Buffer*			g_pConstantBuffer	= NULL;
 ID3D10Effect*           g_pEffect			= NULL;
 ID3D10EffectTechnique*  g_pTechnique		= NULL;
 
+// Effect variables
+ID3D10EffectMatrixVariable* g_pWorldVariable = NULL;
+ID3D10EffectMatrixVariable* g_pViewVariable = NULL;
+ID3D10EffectMatrixVariable* g_pProjVariable = NULL;
+
 D3D10_RASTERIZER_DESC rasterDesc;
 ID3D10RasterizerState*	g_pRasterizerState	= NULL;
 
@@ -30,13 +43,6 @@ bool g_bActive = true ;
 struct SimpleVertex
 {
 	D3DXVECTOR3 Pos;
-};
-
-struct ConstantBuffer
-{
-	D3DXMATRIX World;
-	D3DXMATRIX View;
-	D3DXMATRIX Projection;
 };
 
 D3DXMATRIX g_mWorld;
@@ -51,7 +57,6 @@ VOID CompileShaderFromFile(WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShad
 VOID InitWorldViewProjMatrix(HWND hwnd);
 VOID InitVertexBuffer();
 VOID InitIndexBuffer();
-VOID InitConstantBuffer();
 VOID InitEffects();
 VOID InitRasterState();
 
@@ -78,12 +83,18 @@ HRESULT InitD3D( HWND hWnd )
 	sd.SampleDesc.Quality = 0; // WHAT'S THIS?
 	sd.Windowed = TRUE; // full-screen mode
 
-	// Create device and swap chain
+		// Create device and swap chain
 	HRESULT hr;
+	UINT flags = D3D10_CREATE_DEVICE_BGRA_SUPPORT;
+
+#if defined( DEBUG ) || defined( _DEBUG )
+	flags |= D3D10_CREATE_DEVICE_DEBUG;
+#endif 
+
 	if (FAILED (hr = D3D10CreateDeviceAndSwapChain( NULL, 
 	    D3D10_DRIVER_TYPE_HARDWARE,
 		NULL,
-		0,
+		flags,
 		D3D10_SDK_VERSION,
 		&sd, 
 		&g_pSwapChain,
@@ -119,7 +130,6 @@ HRESULT InitD3D( HWND hWnd )
 	InitWorldViewProjMatrix(hWnd);
 	InitVertexBuffer();
 	InitIndexBuffer();
-	InitConstantBuffer();
 	InitEffects();
 	InitRasterState();
 		                       
@@ -234,22 +244,6 @@ VOID InitIndexBuffer()
 	}
 }
 
-VOID InitConstantBuffer()
-{
-	// Create constant buffer
-	CD3D10_BUFFER_DESC bd;
-	ZeroMemory(&bd, sizeof(bd));
-	bd.Usage = D3D10_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof(ConstantBuffer);
-	bd.BindFlags = D3D10_BIND_CONSTANT_BUFFER;
-	bd.CPUAccessFlags = 0;
-
-	HRESULT hr = g_pd3dDevice->CreateBuffer(&bd, NULL, &g_pConstantBuffer);
-	if(FAILED(hr))
-	{
-		MessageBox(NULL, L"Create constant buffer failed", L"Error", 0);
-	}
-}
 
 VOID InitEffects()
 {
@@ -265,7 +259,7 @@ VOID InitEffects()
     dwShaderFlags |= D3D10_SHADER_DEBUG;
     #endif
 
-	// Compile the effects file
+	//// Compile the effects file
     HRESULT hr = D3DX10CreateEffectFromFile( L"constant_buffer.fx", NULL, NULL, "fx_4_0", dwShaderFlags, 0,
                                          g_pd3dDevice, NULL, NULL, &g_pEffect, &pErrorBlob, NULL);
 
@@ -286,6 +280,11 @@ VOID InitEffects()
     // Obtain the technique
     g_pTechnique = g_pEffect->GetTechniqueByName("Render");
 
+	// Obtain the variables
+	g_pWorldVariable = g_pEffect->GetVariableByName("World")->AsMatrix();
+	g_pViewVariable  = g_pEffect->GetVariableByName("View")->AsMatrix();
+	g_pProjVariable  = g_pEffect->GetVariableByName("Projection")->AsMatrix();
+
     // Define the input layout
     D3D10_INPUT_ELEMENT_DESC layout[] =
     {
@@ -295,7 +294,7 @@ VOID InitEffects()
 
     // Create the input layout
     D3D10_PASS_DESC PassDesc;
-    g_pTechnique->GetPassByIndex( 0 )->GetDesc( &PassDesc );
+    g_pTechnique->GetPassByIndex(0)->GetDesc(&PassDesc);
     hr = g_pd3dDevice->CreateInputLayout(layout, numElements, PassDesc.pIAInputSignature,
                                           PassDesc.IAInputSignatureSize, &g_pVertexLayout);
     if(FAILED(hr))
@@ -317,17 +316,9 @@ VOID Cleanup()
 
 VOID SetupMatrix(float timeDelta)
 {
-	// Update shader variables
-	ConstantBuffer cb;
-	cb.World = g_mWorld;
-	cb.View  = g_mView;
-	cb.Projection = g_mProj;
-	g_pd3dDevice->UpdateSubresource(g_pConstantBuffer, 0, NULL, &cb, 0, 0);
-
-	static float timeElapsed = 0.0f;
-	timeElapsed += timeDelta;
-
-	D3DXMatrixRotationY(&g_mWorld, timeElapsed);
+	g_pWorldVariable->SetMatrix(g_mWorld);
+	g_pViewVariable->SetMatrix(g_mView);
+	g_pProjVariable->SetMatrix(g_mProj);
 }
 
 VOID Render(float timeDelta)
