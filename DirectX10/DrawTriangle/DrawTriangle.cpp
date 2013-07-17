@@ -54,12 +54,19 @@ HRESULT InitD3D( HWND hWnd )
 	sd.SampleDesc.Quality = 0; // WHAT'S THIS?
 	sd.Windowed = TRUE; // full-screen mode
 
+    // Create device and swap chain
+	UINT flags = D3D10_CREATE_DEVICE_BGRA_SUPPORT;
+
+#if defined( DEBUG ) || defined( _DEBUG )
+	flags |= D3D10_CREATE_DEVICE_DEBUG;
+#endif 
+
 	// Create device and swap chain
 	HRESULT hr;
 	if (FAILED (hr = D3D10CreateDeviceAndSwapChain( NULL, 
 	    D3D10_DRIVER_TYPE_HARDWARE,
 		NULL,
-		0,
+		flags,
 		D3D10_SDK_VERSION,
 		&sd, 
 		&g_pSwapChain,
@@ -173,9 +180,14 @@ VOID InitPixelShader()
 VOID CompileShaderFromFile(WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut)
 {
 	HRESULT hr = S_OK;
-	DWORD dwShaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;
 	ID3DBlob*	pErrorBlob;
 
+	// Create the effect
+    DWORD dwShaderFlags = D3D10_SHADER_ENABLE_STRICTNESS;
+#if defined( DEBUG ) || defined( _DEBUG )
+    dwShaderFlags |= D3D10_SHADER_DEBUG;
+#endif
+	
 	hr = D3DCompileFromFile(szFileName, NULL, NULL, szEntryPoint, szShaderModel, dwShaderFlags, 0, ppBlobOut, &pErrorBlob);
 	if(FAILED(hr))
 	{
