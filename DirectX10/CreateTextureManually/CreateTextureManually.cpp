@@ -1,6 +1,5 @@
 /*
-Bug need fix, the top face sitll displayed incorrect.
-Description:  This demo show you how to use texture in Direct3D 10
+Description:  This demo show you how to create texture manually in Direct3D 10
 Date: 2013-07-10
 Author: zdd
 */
@@ -428,8 +427,8 @@ VOID Cleanup()
 
 VOID SetupMatrix()
 {
-	static float lastTime = timeGetTime();
-	float currentTime = timeGetTime();
+	static DWORD lastTime = timeGetTime();
+	DWORD currentTime = timeGetTime();
 	float timeElapsed = (currentTime - lastTime) * 0.001f;
 
 	D3DXMatrixRotationY(&g_mWorld, timeElapsed);
