@@ -244,7 +244,6 @@ VOID InitIndexBuffer()
 	}
 }
 
-
 VOID InitEffects()
 {
 	ID3DBlob* pErrorBlob;
