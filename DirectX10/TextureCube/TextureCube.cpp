@@ -1,5 +1,4 @@
 /*
-Bug need fix, the top face sitll displayed incorrect.
 Description:  This demo show you how to use texture in Direct3D 10
 Date: 2013-07-10
 Author: zdd
@@ -30,9 +29,6 @@ ID3D10EffectMatrixVariable* g_pProjectionVariable = NULL;
 D3D10_RASTERIZER_DESC rasterDesc;
 ID3D10RasterizerState*	g_pRasterizerState		= NULL;
 
-// To create texture in memory
-ID3D10Texture2D*			g_pTexture			= NULL;
-
 // Is window active?
 bool g_bActive = true ; 
 
@@ -57,7 +53,6 @@ VOID InitIndexBuffer();
 VOID InitTexture();
 VOID InitEffects();
 VOID InitRasterState();
-VOID CreateTextureInMemory(int texWidth, int texHeight, DWORD color);
 
 HRESULT InitD3D( HWND hWnd )
 {
@@ -132,7 +127,6 @@ HRESULT InitD3D( HWND hWnd )
 	InitEffects();
 	InitTexture();
 	InitRasterState();
-	CreateTextureInMemory(128, 128, 0xff0000ff);
 		                       
 	return S_OK;
 }
@@ -271,70 +265,6 @@ VOID InitIndexBuffer()
 	}
 }
 
-// Create texture in memory
-VOID CreateTextureInMemory(int texWidth, int texHeight, DWORD color)
-{
-	// Create a texture Description and fill it.
-	D3D10_TEXTURE2D_DESC texDesc;
-	ZeroMemory(&texDesc, sizeof(texDesc));
-
-	texDesc.ArraySize		= 1;				// Number of textures
-	texDesc.Usage			= D3D10_USAGE_DYNAMIC; 
-	texDesc.BindFlags		= D3D10_BIND_SHADER_RESOURCE;
-	texDesc.CPUAccessFlags	= D3D10_CPU_ACCESS_WRITE;	// CPU will write this resource
-	texDesc.Format			= DXGI_FORMAT_R8G8B8A8_UINT;
-	texDesc.Width			= texWidth;
-	texDesc.Height			= texHeight;
-	texDesc.MipLevels		= 1;
-	texDesc.MiscFlags		= 0;
-
-	DXGI_SAMPLE_DESC sampleDes;
-	ZeroMemory(&sampleDes, sizeof(sampleDes));
-	sampleDes.Count = 1;
-	sampleDes.Quality = 0;
-	texDesc.SampleDesc		= sampleDes;
-
-	// Create sub resource
-	D3D10_SUBRESOURCE_DATA texData;
-	ZeroMemory(&texData, sizeof(texData));
-	texData.pSysMem = 0;
-	texData.SysMemPitch = 0;
-	texData.SysMemSlicePitch = 0;
-
-	HRESULT hr = g_pd3dDevice->CreateTexture2D(&texDesc, NULL, &g_pTexture);
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"Create texture in memory failed", L"Error", 0);
-	}
-
-	// Lock texture and fill in colors
-	D3D10_MAPPED_TEXTURE2D mappedTex;
-	ZeroMemory(&mappedTex, sizeof(mappedTex));
-
-	g_pTexture->Map(0, D3D10_MAP_WRITE_DISCARD, 0, &mappedTex);
-
-	// Fill in colors
-	//============================= BE CAREFUL OF THE COLOR ORDER R8G8B8A8=====================
-
-	// Calculate number of rows
-	// total bytes = texture_width * texture_height * bytes_in_texel
-	// We use DXGI_FORMAT_R8G8B8A8_UINT, so each texel is 4 bytes
-	// RowPitch is number of bytes in one row.
-	int numRows = texWidth * texHeight * 4 / mappedTex.RowPitch;
-	for (int i = 0; i < texWidth; ++i)
-	{
-		for (int j = 0; j < texHeight; ++j)
-		{
-			int index = i * numRows + j;
-			int* pData = (int*)mappedTex.pData;
-			memcpy(&pData[index], &color, 4);
-		}
-	}
-
-	// Unlock texture
-	g_pTexture->Unmap(0);
-}
-
 VOID InitTexture()
 {
 	// Load the Texture
@@ -355,10 +285,6 @@ VOID InitEffects()
 	// Create the effect
     DWORD dwShaderFlags = D3D10_SHADER_ENABLE_STRICTNESS;
 #if defined( DEBUG ) || defined( _DEBUG )
-    // Set the D3D10_SHADER_DEBUG flag to embed debug information in the shaders.
-    // Setting this flag improves the shader debugging experience, but still allows 
-    // the shaders to be optimized and to run exactly the way they will run in 
-    // the release configuration of this program.
     dwShaderFlags |= D3D10_SHADER_DEBUG;
 #endif
 
@@ -410,7 +336,6 @@ VOID InitEffects()
 
 VOID Cleanup()
 {
-	SAFE_RELEASE( g_pTexture );
 	SAFE_RELEASE( g_pTextureRV );
 	SAFE_RELEASE( g_pVertexBuffer);
 	SAFE_RELEASE( g_pIndexBuffer);
@@ -423,8 +348,8 @@ VOID Cleanup()
 
 VOID SetupMatrix()
 {
-	static float lastTime = timeGetTime();
-	float currentTime = timeGetTime();
+	static DWORD lastTime = timeGetTime();
+	DWORD currentTime = timeGetTime();
 	float timeElapsed = (currentTime - lastTime) * 0.001f;
 
 	D3DXMatrixRotationY(&g_mWorld, timeElapsed);
