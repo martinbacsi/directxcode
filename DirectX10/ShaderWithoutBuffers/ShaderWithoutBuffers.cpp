@@ -2,6 +2,9 @@
 Description: This Demo show you how to draw triangle witout vertex buffer and index buffer 
 Date: 2013-07-16
 Author: zdd
+links:
+http://msdn.microsoft.com/en-us/library/windows/desktop/bb205118(v=vs.85).aspx
+http://msdn.microsoft.com/en-us/library/windows/desktop/bb509647(v=vs.85).aspx
 */
 
 #include <windows.h>
