@@ -137,7 +137,7 @@ VOID InitWorldViewProjMatrix(HWND hwnd)
 	D3DXMatrixIdentity(&g_mWorld);
 
 	// Initialize view matrix
-	D3DXVECTOR3 eyePoint(0.0f, 3.0f, -5.0f);
+	D3DXVECTOR3 eyePoint(0.0f, 1.0f, -4.0f);
 	D3DXVECTOR3 lookAt(0.0f, 0.0f, 0.0f);
 	D3DXVECTOR3 Up(0.0f, 1.0f, 0.0f);
 	D3DXMatrixLookAtLH(&g_mView, &eyePoint, &lookAt, &Up);
@@ -268,7 +268,7 @@ VOID InitIndexBuffer()
 VOID InitTexture()
 {
 	// Load the Texture
-    HRESULT hr = D3DX10CreateShaderResourceViewFromFile( g_pd3dDevice, L"seafloor.dds", NULL, NULL, &g_pTextureRV, NULL );
+    HRESULT hr = D3DX10CreateShaderResourceViewFromFile( g_pd3dDevice, L"guoguo.png", NULL, NULL, &g_pTextureRV, NULL );
     if( FAILED( hr ) )
 	{
 		MessageBox(NULL, L"Create texture failed", L"Error", 0);
