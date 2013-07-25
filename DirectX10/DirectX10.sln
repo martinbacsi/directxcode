@@ -17,6 +17,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CreateTextureManually", "Cr
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ShaderWithoutBuffers", "ShaderWithoutBuffers\ShaderWithoutBuffers.vcxproj", "{D5701866-9CD3-4DDA-8F67-F98AFB7A57CF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lighting", "Lighting", "{AFC9EA40-7AFA-4FB5-8FB6-2B558205E7B0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirectionalLight", "DirectionalLight\DirectionalLight.vcxproj", "{E84CEEA8-B309-4896-8B0E-6EB55F3AD083}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Geometry", "Geometry", "{F25C79F2-0EF7-4B56-8D78-92587133341F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sphere", "Sphere\Sphere.vcxproj", "{719295ED-A253-4767-A5DF-568EF663F807}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PointLight", "PointLight\PointLight.vcxproj", "{DF37AA2D-08F2-45F2-A65D-95D6C1592315}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SpotLight", "SpotLight\SpotLight.vcxproj", "{C82A8872-E53C-4092-8252-E0AECF847277}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -55,8 +67,30 @@ Global
 		{D5701866-9CD3-4DDA-8F67-F98AFB7A57CF}.Debug|Win32.Build.0 = Debug|Win32
 		{D5701866-9CD3-4DDA-8F67-F98AFB7A57CF}.Release|Win32.ActiveCfg = Release|Win32
 		{D5701866-9CD3-4DDA-8F67-F98AFB7A57CF}.Release|Win32.Build.0 = Release|Win32
+		{E84CEEA8-B309-4896-8B0E-6EB55F3AD083}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E84CEEA8-B309-4896-8B0E-6EB55F3AD083}.Debug|Win32.Build.0 = Debug|Win32
+		{E84CEEA8-B309-4896-8B0E-6EB55F3AD083}.Release|Win32.ActiveCfg = Release|Win32
+		{E84CEEA8-B309-4896-8B0E-6EB55F3AD083}.Release|Win32.Build.0 = Release|Win32
+		{719295ED-A253-4767-A5DF-568EF663F807}.Debug|Win32.ActiveCfg = Debug|Win32
+		{719295ED-A253-4767-A5DF-568EF663F807}.Debug|Win32.Build.0 = Debug|Win32
+		{719295ED-A253-4767-A5DF-568EF663F807}.Release|Win32.ActiveCfg = Release|Win32
+		{719295ED-A253-4767-A5DF-568EF663F807}.Release|Win32.Build.0 = Release|Win32
+		{DF37AA2D-08F2-45F2-A65D-95D6C1592315}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DF37AA2D-08F2-45F2-A65D-95D6C1592315}.Debug|Win32.Build.0 = Debug|Win32
+		{DF37AA2D-08F2-45F2-A65D-95D6C1592315}.Release|Win32.ActiveCfg = Release|Win32
+		{DF37AA2D-08F2-45F2-A65D-95D6C1592315}.Release|Win32.Build.0 = Release|Win32
+		{C82A8872-E53C-4092-8252-E0AECF847277}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C82A8872-E53C-4092-8252-E0AECF847277}.Debug|Win32.Build.0 = Debug|Win32
+		{C82A8872-E53C-4092-8252-E0AECF847277}.Release|Win32.ActiveCfg = Release|Win32
+		{C82A8872-E53C-4092-8252-E0AECF847277}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E84CEEA8-B309-4896-8B0E-6EB55F3AD083} = {AFC9EA40-7AFA-4FB5-8FB6-2B558205E7B0}
+		{DF37AA2D-08F2-45F2-A65D-95D6C1592315} = {AFC9EA40-7AFA-4FB5-8FB6-2B558205E7B0}
+		{C82A8872-E53C-4092-8252-E0AECF847277} = {AFC9EA40-7AFA-4FB5-8FB6-2B558205E7B0}
+		{719295ED-A253-4767-A5DF-568EF663F807} = {F25C79F2-0EF7-4B56-8D78-92587133341F}
 	EndGlobalSection
 EndGlobal

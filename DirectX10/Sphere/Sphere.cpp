@@ -8,7 +8,7 @@ Author: zdd
 #include <d3d10_1.h>
 #include <d3dx10.h>
 #include <d3dcompiler.h>
-#include "DXUT\Optional\DXUTShapes.h"
+#include "DXUTShapes.h"
 
 // DirectX Globals
 ID3D10Device*			g_pd3dDevice		= NULL;
