@@ -248,8 +248,8 @@ void D3D9::SetupLight()
 	d3ddevice_->SetMaterial(&material) ;
 
 	// Enable light
-	d3ddevice_->SetLight(0, &pointLight) ;		// Set light ;
-	d3ddevice_->LightEnable(0, true) ;			// Enable light
+	d3ddevice_->SetLight(0, &pointLight) ;		
+	d3ddevice_->LightEnable(0, true) ;		
 }
 
 void D3D9::ResizeD3DScene(int width, int height)
