@@ -289,7 +289,7 @@ VOID CreateTextureInMemory(int texWidth, int texHeight, DWORD color)
 	ZeroMemory(&sampleDes, sizeof(sampleDes));
 	sampleDes.Count = 1;
 	sampleDes.Quality = 0;
-	texDesc.SampleDesc		= sampleDes;
+	texDesc.SampleDesc = sampleDes;
 
 	// Create sub resource
 	D3D10_SUBRESOURCE_DATA texData;
@@ -298,6 +298,7 @@ VOID CreateTextureInMemory(int texWidth, int texHeight, DWORD color)
 	texData.SysMemPitch = 0;
 	texData.SysMemSlicePitch = 0;
 
+	// Create texture
 	HRESULT hr = g_pd3dDevice->CreateTexture2D(&texDesc, NULL, &g_pTexture);
 	if (FAILED(hr))
 	{
