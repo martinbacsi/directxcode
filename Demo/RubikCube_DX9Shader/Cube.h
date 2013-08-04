@@ -27,7 +27,7 @@ public:
 	void UpdateCenter();
 	void UpdateLayerId();
 	void Rotate(D3DXVECTOR3& axis, float angle);
-	void Draw();
+	void Draw(D3DXMATRIX view_matrix, D3DXMATRIX proj_matrix);
 
 	float GetLength() const;
 
@@ -50,6 +50,7 @@ private:
 	void InitVertexBuffer(D3DXVECTOR3& front_bottom_left);
 	void InitIndexBuffer();
 	void InitCornerPoints(D3DXVECTOR3& front_bottom_left_point);	// Initialize corner points.
+	void InitEffect();
 	D3DXVECTOR3 CalculateCenter(D3DXVECTOR3& min_point, D3DXVECTOR3& max_point);
 	void InitLayerIds();
 
@@ -79,6 +80,12 @@ private:
 	LPDIRECT3DVERTEXBUFFER9 vertex_buffer_ ;
 	LPDIRECT3DDEVICE9		d3d_device_ ;
 	D3DXMATRIX				world_matrix_ ;		// world matrix for unit cube, for rotation.
+
+	ID3DXEffect*			effects_;
+	D3DXHANDLE				technique_;
+	D3DXHANDLE				handle_wvp_matrix_;
+	D3DXHANDLE				handle_face_texture_;
+	D3DXHANDLE				handle_inner_texture_;
 };
 
 #endif // end __CUBE_H__

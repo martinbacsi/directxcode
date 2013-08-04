@@ -48,10 +48,19 @@ private:
 	void OnLeftButtonDown(int x, int y);
 	void OnMouseMove(int x, int y);
 	void OnLeftButtonUp();
+	void InitD3D9(HWND hWnd);
+	HRESULT ResetDevice();
+	void ResizeD3D9Scene(int width, int height);
+	void SetupLight();
+	void SetupMatrix();
+	LPDIRECT3DTEXTURE9 CreateTexture(int texWidth, int texHeight, D3DCOLOR color);
+	LPDIRECT3DTEXTURE9 CreateInnerTexture(int texWidth, int texHeight, D3DCOLOR color);
 	void InitTextures();
 	void InitCubes();
 	void ResetLayerIds();
 	void ResetTextures();
+	D3DXVECTOR3 ScreenToVector3(int x, int y);
+	Ray CalculatePickingRay(int x, int y);
 	Face GetPickedFace(D3DXVECTOR3 hit_point) const;	// Get the face picking by mouse 
 	D3DXPLANE GeneratePlane(Face face, D3DXVECTOR3& previous_point, D3DXVECTOR3& current_point);
 	D3DXVECTOR3 GetRotateAxis(Face face, D3DXVECTOR3& previous_point, D3DXVECTOR3& current_point);
@@ -113,10 +122,17 @@ private:
 	int texture_width_;						// Texture width in pixel.
 	int texture_height_;					// Texture height in pixel.
 	int* texture_id_;						// The index is the faceId, the value is the texture_id_.
+
+	LPDIRECT3D9				d3d_;			// Direct3D object
+	LPDIRECT3DDEVICE9		d3ddevice_;		// D3D9 Device
+	D3DPRESENT_PARAMETERS	d3dpp_;			// D3D presentation parameters
+	bool					is_fullscreen_;	// Is Game in Full-Screen mode?
+
+	HWND hWnd;				// Handle of game window
+	int screen_width_;	// The maximum resolution width
+	int screen_height_;	// The maximum resolution height
 	IDirect3DTexture9**	face_textures_;		// Face textures
 	IDirect3DTexture9*	inner_textures_;	// Inner face texture.
-
-	D3D9* d3d9;								// Objects from other classes
 };
 
 #endif // end __RUBIK_CUBE_H__

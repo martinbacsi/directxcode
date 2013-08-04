@@ -9,7 +9,8 @@ Cube::Cube(void)
 	   layer_id_x_(-1),
 	   layer_id_y_(-1),
 	   layer_id_z_(-1),
-	   vertex_buffer_(NULL)
+	   vertex_buffer_(NULL),
+	   effects_(NULL)
 {
 	for (int i = 0; i < kNumFaces_; ++i)
 	{
@@ -28,20 +29,27 @@ Cube::~Cube(void)
 	corner_points_ = NULL;
 
 	// Release vertex buffer
-	if(vertex_buffer_ != NULL)
+	if (vertex_buffer_ != NULL)
 	{
 		vertex_buffer_->Release();
 		vertex_buffer_ = NULL;
 	}
 
 	// Release index buffer
-	for(int i = 0; i < kNumFaces_; ++i)
+	for (int i = 0; i < kNumFaces_; ++i)
 	{
-		if(pIB[i] != NULL)
+		if (pIB[i] != NULL)
 		{
 			pIB[i]->Release();
 			pIB[i] = NULL;
 		}
+	}
+
+	// Release effects
+	if (effects_)
+	{
+		effects_->Release();
+		effects_ = NULL;
 	}
 }
 
@@ -49,6 +57,7 @@ void Cube::Init(D3DXVECTOR3& top_left_front_point)
 {
 	InitVertexBuffer(top_left_front_point);
 	InitIndexBuffer();
+	InitEffect();
 	InitCornerPoints(top_left_front_point);
 	UpdateCenter();
 }
@@ -216,6 +225,33 @@ void Cube::InitCornerPoints(D3DXVECTOR3& front_bottom_left)
 	max_point_ = max_point;
 }
 
+void Cube::InitEffect()
+{
+	WCHAR* effectFile = L"./rubik_cube.fx";
+
+	ID3DXBuffer* errors = 0;
+
+	// Create Effect from file
+	HRESULT hr = D3DXCreateEffectFromFile(
+		d3d_device_,
+		effectFile, 
+		NULL,
+		NULL,
+		D3DXSHADER_DEBUG,
+		NULL,
+		&effects_,
+		&errors);
+
+	if( errors ) {
+		MessageBoxA(0, (char*)errors->GetBufferPointer(), 0, 0);
+	}
+
+	handle_wvp_matrix_ = effects_->GetParameterByName(0, "gWVP");
+	technique_         = effects_->GetTechniqueByName("Tech1");
+	handle_face_texture_ = effects_->GetParameterByName(0, "FaceTexture");
+	handle_inner_texture_ = effects_->GetAnnotationByName(0, "InnerTexture");
+}
+
 D3DXVECTOR3 Cube::CalculateCenter(D3DXVECTOR3& min_point, D3DXVECTOR3& max_point)
 {
 	return (min_point + max_point) / 2;
@@ -300,29 +336,48 @@ void Cube::Rotate(D3DXVECTOR3& axis, float angle)
 	world_matrix_ *= rotate_matrix;
 }
 
-void Cube::Draw()
+void Cube::Draw(D3DXMATRIX view_matrix, D3DXMATRIX proj_matrix)
 {
-	// Setup world matrix for current cube
-	d3d_device_->SetTransform(D3DTS_WORLD, &world_matrix_) ;
+	// Set world view projection matrix
+	D3DXMATRIX wvp_matrix = world_matrix_ * view_matrix * proj_matrix;
+	effects_->SetMatrix(handle_face_texture_, &wvp_matrix);
 
-	// Draw cube by draw every face of the cube
-	for(int i = 0; i < kNumFaces_; ++i)
+	// Set technique 
+	effects_->SetTechnique(technique_);
+
+	// Begin render 
+	unsigned int numPass = 0;
+	effects_->Begin(&numPass, 0);
+
+	for (unsigned int i = 0; i < numPass; ++i)
 	{
-		if(textureId[i] >= 0)
+		effects_->BeginPass(i);
+
+		// Draw cube by draw every face of the cube
+		for(int i = 0; i < kNumFaces_; ++i)
 		{
-			d3d_device_->SetTexture(0, pTextures[textureId[i]]);
-		}
-		else
-		{
-			d3d_device_->SetTexture(0, inner_texture_);
+			if(textureId[i] >= 0)
+			{
+				effects_->SetTexture(handle_face_texture_, pTextures[textureId[i]]);
+			}
+			else
+			{
+				effects_->SetTexture(handle_inner_texture_, inner_texture_);
+			}
+
+			effects_->CommitChanges();
+
+			d3d_device_->SetStreamSource(0, vertex_buffer_, 0, sizeof(Vertex));
+			d3d_device_->SetIndices(pIB[i]) ;
+			d3d_device_->SetFVF(VERTEX_FVF);
+
+			d3d_device_->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, 0, 0, 24, 0, 2);
 		}
 
-		d3d_device_->SetStreamSource(0, vertex_buffer_, 0, sizeof(Vertex));
-		d3d_device_->SetIndices(pIB[i]) ;
-		d3d_device_->SetFVF(VERTEX_FVF);
-
-		d3d_device_->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, 0, 0, 24, 0, 2);
+		effects_->EndPass();
 	}
+
+	effects_->End();
 }
 
 float Cube::GetLength() const

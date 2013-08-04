@@ -28,8 +28,6 @@ technique Tech1
 {
 	pass p0
     {
-		FillMode = WireFrame;
-		
 		vertexShader = compile vs_2_0 BasicVS();
 		pixelShader  = compile ps_2_0 BasicPS();
     }
