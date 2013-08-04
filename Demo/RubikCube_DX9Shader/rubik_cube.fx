@@ -1,13 +1,28 @@
 // World, View and Projection Matrix
 uniform extern float4x4 gWVP; 
 
+// Face texture
+texture FaceTexture;
+
+// Inner texture
+texture InnerTexture;
+
+sampler CubeTextureSampler = sampler_state
+{
+	Texture = <FaceTexture>;
+	MipFilter = LINEAR;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+};
+
 // Output Vertex structure
 struct OutputVS
 {
       float4 posH : POSITION0;
+	  float2 TextureUV : TEXCOORD0;
 };
 
-OutputVS BasicVS(float4 posL : POSITION0)
+OutputVS BasicVS(float4 posL : POSITION0, float2 vTexture : TEXCOORD0)
 {
       // Zero out our output.
       OutputVS outVS = (OutputVS)0;
@@ -15,13 +30,17 @@ OutputVS BasicVS(float4 posL : POSITION0)
       // Transform to homogeneous clip space.
       outVS.posH = mul(posL, gWVP);
 
+	  // texture coordinate
+	  outVS.TextureUV = vTexture;
+
       // Done--return the output.
       return outVS;
 }
 
-float4 BasicPS() : COLOR
+float4 BasicPS(OutputVS In) : COLOR
 {
-    return float4(1.0f, 0.0f, 0.0f, 1.0f);
+	float4 Output = tex2D(CubeTextureSampler, In.TextureUV);
+	return Output;
 }
 
 technique Tech1

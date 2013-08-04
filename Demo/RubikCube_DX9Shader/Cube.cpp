@@ -340,7 +340,7 @@ void Cube::Draw(D3DXMATRIX view_matrix, D3DXMATRIX proj_matrix)
 {
 	// Set world view projection matrix
 	D3DXMATRIX wvp_matrix = world_matrix_ * view_matrix * proj_matrix;
-	effects_->SetMatrix(handle_face_texture_, &wvp_matrix);
+	effects_->SetMatrix(handle_wvp_matrix_, &wvp_matrix);
 
 	// Set technique 
 	effects_->SetTechnique(technique_);
