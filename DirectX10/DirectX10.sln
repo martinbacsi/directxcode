@@ -29,6 +29,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PointLight", "PointLight\Po
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SpotLight", "SpotLight\SpotLight.vcxproj", "{C82A8872-E53C-4092-8252-E0AECF847277}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DrawText", "DrawText\DrawText.vcxproj", "{FA941674-3624-4826-9054-7E54BC1F23A5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -83,6 +85,10 @@ Global
 		{C82A8872-E53C-4092-8252-E0AECF847277}.Debug|Win32.Build.0 = Debug|Win32
 		{C82A8872-E53C-4092-8252-E0AECF847277}.Release|Win32.ActiveCfg = Release|Win32
 		{C82A8872-E53C-4092-8252-E0AECF847277}.Release|Win32.Build.0 = Release|Win32
+		{FA941674-3624-4826-9054-7E54BC1F23A5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FA941674-3624-4826-9054-7E54BC1F23A5}.Debug|Win32.Build.0 = Debug|Win32
+		{FA941674-3624-4826-9054-7E54BC1F23A5}.Release|Win32.ActiveCfg = Release|Win32
+		{FA941674-3624-4826-9054-7E54BC1F23A5}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
