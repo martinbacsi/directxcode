@@ -3,7 +3,6 @@
 
 #include "Cube.h"
 #include "Camera.h"
-#include "D3D9.h"
 #include "Math.h"
 
 // The 6 faces of the Rubik Cube
@@ -53,8 +52,8 @@ private:
 	void ResizeD3D9Scene(int width, int height);
 	void SetupLight();
 	void SetupMatrix();
-	ID3D10Texture2D* CreateTexture(int texWidth, int texHeight, D3DCOLOR color);
-	ID3D10Texture2D* CreateInnerTexture(int texWidth, int texHeight, D3DCOLOR color);
+	ID3D10ShaderResourceView* CreateTexture(int texWidth, int texHeight, D3DXCOLOR color);
+	ID3D10ShaderResourceView* CreateInnerTexture(int texWidth, int texHeight, D3DXCOLOR color);
 	void InitTextures();
 	void InitCubes();
 	void ResetLayerIds();
@@ -134,8 +133,8 @@ private:
 	HWND hWnd;				// Handle of game window
 	int screen_width_;	// The maximum resolution width
 	int screen_height_;	// The maximum resolution height
-	ID3D10Texture2D**	face_textures_;		// Face textures
-	ID3D10Texture2D*	inner_textures_;	// Inner face texture.
+	ID3D10ShaderResourceView**	face_textures_;		// Face textures
+	ID3D10ShaderResourceView*	inner_textures_;	// Inner face texture.
 };
 
 #endif // end __RUBIK_CUBE_H__

@@ -13,6 +13,7 @@ public:
 	void Reset() ;
 	void OnFrameMove() ;
 	LRESULT HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) ;
+	void SetWorldMatrix(const D3DXMATRIX& world_matrix);
 	void SetViewParams(const D3DXVECTOR3& eye_point, const D3DXVECTOR3& lookat_point, const D3DXVECTOR3& up_vector);
 	void SetProjParams(float field_of_view, float aspect_ratio, float near_plane, float far_plane) ;
 	void SetWindow(int window_width, int window_height, float arcball_radius = 1.0f) ;

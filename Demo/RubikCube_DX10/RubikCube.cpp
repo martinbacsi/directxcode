@@ -74,7 +74,7 @@ RubikCube::RubikCube(void)
 	faces[5] = BottomFace;
 
 	texture_id_ = new int[kNumFaces];
-	face_textures_ = new ID3D10Texture2D*[kNumFaces];
+	face_textures_ = new ID3D10ShaderResourceView*[kNumFaces];
 
 	for(int i = 0; i < kNumFaces; ++i)
 	{
@@ -126,13 +126,6 @@ RubikCube::~RubikCube(void)
 	{
 		d3ddevice_->Release();
 		d3ddevice_ = NULL;
-	}
-
-	// Release Direct3D object
-	if(d3d_ != NULL)
-	{
-		d3d_->Release();
-		d3d_ = NULL;
 	}
 }
 
@@ -257,6 +250,9 @@ void RubikCube::Render()
 	float color[4] = { 0.0f, 0.125f, 0.3f, 1.0f };
 	d3ddevice_->ClearRenderTargetView(rendertarget_view_, color);
 
+	// Store old world matrix
+	D3DXMATRIX world_matrix = camera_->GetWorldMatrix() ;
+
 	//draw all unit cubes to build the Rubik cube
 	for(int i = 0; i < kNumCubes; i++)
 	{
@@ -264,8 +260,7 @@ void RubikCube::Render()
 	}
 
 	// Restore world matrix since the Draw function in class Cube has set the world matrix for each cube
-	D3DXMATRIX matWorld = camera_->GetWorldMatrix() ;
-	d3ddevice_->SetTransform(D3DTS_WORLD, &matWorld) ;
+	// camera_->SetWorldMatrix(world_matrix);
 
 	// Present the sence from back buffer to front buffer
 	swap_chain_->Present(0, 0);
@@ -364,7 +359,7 @@ void RubikCube::ToggleFullScreen()
 	}
 
 	// Display mode changed, we need to reset device
-	ResetDevice() ;
+	ResizeD3D9Scene(sd_.BufferDesc.Width, sd_.BufferDesc.Height);
 }
 
 void RubikCube::OnLeftButtonDown(int x, int y)
@@ -623,7 +618,7 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					// Update back buffer to desktop resolution
 					sd_.BufferDesc.Width = current_window_width_;
 					sd_.BufferDesc.Height = current_window_height_;
-					ResetDevice();
+					ResizeD3D9Scene(current_window_width_, current_window_height_);
 
 					last_window_width_ = current_window_width_ ;
 					last_window_height_ = current_window_height_ ;
@@ -642,7 +637,7 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					sd_.BufferDesc.Height = current_window_height_;
 
 					// Reset device
-					ResetDevice();
+					ResizeD3D9Scene(current_window_width_, current_window_height_);
 				}
 				else
 				{
@@ -653,7 +648,7 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					// Reset device
 					sd_.BufferDesc.Width = current_window_width_;
 					sd_.BufferDesc.Height = current_window_height_;
-					ResetDevice();
+					ResizeD3D9Scene(current_window_width_, current_window_height_);
 
 					last_window_width_ = current_window_width_ ;
 					last_window_height_ = current_window_height_ ;
@@ -753,7 +748,7 @@ void RubikCube::InitD3D10(HWND hWnd)
 	vp_.MaxDepth = 1.0f;
 	vp_.TopLeftX = 0;
 	vp_.TopLeftY = 0;
-	d3ddevice_->RSSetViewports(1, &vp);
+	d3ddevice_->RSSetViewports(1, &vp_);
 
 	// Setup view matrix
 	D3DXVECTOR3 vecEye(0.0f, 0.0f, -10.0f);
@@ -805,65 +800,7 @@ void RubikCube::InitTextures()
 	Cube::SetInnerTexture(inner_textures_);
 }
 
-LPDIRECT3DTEXTURE9 RubikCube::CreateTexture(int texWidth, int texHeight, D3DCOLOR color)
-{
-	LPDIRECT3DTEXTURE9 pTexture;
-
-	HRESULT hr = D3DXCreateTexture(d3ddevice_, 
-		texWidth, 
-		texHeight, 
-		0, 
-		0, 
-		D3DFMT_A8R8G8B8,  // 4 bytes for a pixel 
-		D3DPOOL_MANAGED, 
-		&pTexture);
-
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"Create texture failed", L"Error", 0);
-	}
-
-	// Lock the texture and fill in color
-	D3DLOCKED_RECT lockedRect;
-	hr = pTexture->LockRect(0, &lockedRect, NULL, 0);
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"Lock texture failed!", L"Error", 0);
-	}
-
-	DWORD sideColor = 0xff000000; // the side line color
-
-	int side_width = 10;
-
-	// Calculate number of rows in the locked Rect
-	int rowCount = (texWidth * texHeight * 4 ) / lockedRect.Pitch;
-
-	for (int i = 0; i < texWidth; ++i)
-	{
-		for (int j = 0; j < texHeight; ++j)
-		{
-			int index = i * rowCount + j;
-
-			int* pData = (int*)lockedRect.pBits;
-
-			if (i <= side_width || i >= texWidth - side_width 
-				|| j <= side_width || j >= texHeight - side_width)
-			{
-				memcpy(&pData[index], &sideColor, 4);
-			}
-			else
-			{
-				memcpy(&pData[index], &color, 4);
-			}
-		}
-	}
-
-	pTexture->UnlockRect(0);
-
-	return pTexture;
-}
-
-ID3D10Texture2D* RubikCube::CreateInnerTexture(int texWidth, int texHeight, D3DCOLOR color)
+ID3D10ShaderResourceView* RubikCube::CreateTexture(int texWidth, int texHeight, D3DXCOLOR color)
 {
 	// Create a texture Description and fill it.
 	D3D10_TEXTURE2D_DESC texDesc;
@@ -892,8 +829,8 @@ ID3D10Texture2D* RubikCube::CreateInnerTexture(int texWidth, int texHeight, D3DC
 	texData.SysMemPitch = 0;
 	texData.SysMemSlicePitch = 0;
 
-	ID3D10Texture2D* pTexture = NULL;
 	// Create texture
+	ID3D10Texture2D* pTexture = NULL;
 	HRESULT hr = d3ddevice_->CreateTexture2D(&texDesc, NULL, &pTexture);
 	if (FAILED(hr))
 	{
@@ -904,15 +841,18 @@ ID3D10Texture2D* RubikCube::CreateInnerTexture(int texWidth, int texHeight, D3DC
 	D3D10_MAPPED_TEXTURE2D mappedTex;
 	ZeroMemory(&mappedTex, sizeof(mappedTex));
 
-	pTexture->Map(0, D3D10_MAP_WRITE_DISCARD, 0, &mappedTex);
+	hr = pTexture->Map(0, D3D10_MAP_WRITE_DISCARD, 0, &mappedTex);
+	if (FAILED(hr))
+	{
+		MessageBox(NULL, L"Map texture failed", L"Error", 0);
+	}
 
-	// Fill in colors
-	//============================= BE CAREFUL OF THE COLOR ORDER R8G8B8A8=====================
+	DWORD sideColor = 0xff000000; // the side line color
 
-	DWORD sideColor = 0xff121212; // the side line color
+	int side_width = 10;
 
 	// Calculate number of rows in the locked Rect
-	int rowCount = (texWidth * texHeight * 4 ) / lockedRect.Pitch;
+	int rowCount = (texWidth * texHeight * 4 ) / mappedTex.RowPitch;
 
 	for (int i = 0; i < texWidth; ++i)
 	{
@@ -920,7 +860,103 @@ ID3D10Texture2D* RubikCube::CreateInnerTexture(int texWidth, int texHeight, D3DC
 		{
 			int index = i * rowCount + j;
 
-			int* pData = (int*)lockedRect.pBits;
+			int* pData = (int*)mappedTex.pData;
+
+			if (i <= side_width || i >= texWidth - side_width 
+				|| j <= side_width || j >= texHeight - side_width)
+			{
+				memcpy(&pData[index], &sideColor, 4);
+			}
+			else
+			{
+				memcpy(&pData[index], &color, 4);
+			}
+		}
+	}
+
+	// Unlock texture
+	pTexture->Unmap(0);
+
+	// Create shader resource view to bind the texture
+	D3D10_SHADER_RESOURCE_VIEW_DESC srvDesc;
+
+	D3D10_TEXTURE2D_DESC desc;
+	pTexture->GetDesc(&desc);
+	srvDesc.Format = desc.Format;
+	srvDesc.ViewDimension = D3D10_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = desc.MipLevels;
+	srvDesc.Texture2D.MostDetailedMip = desc.MipLevels - 1;
+
+	ID3D10ShaderResourceView* texture_view;
+	hr = d3ddevice_->CreateShaderResourceView(pTexture, &srvDesc, &texture_view);
+	if (FAILED(hr))
+	{
+		MessageBox(NULL, L"Create shader resource view failed", L"Error", 0);
+	}
+
+	return texture_view;
+}
+
+ID3D10ShaderResourceView* RubikCube::CreateInnerTexture(int texWidth, int texHeight, D3DXCOLOR color)
+{
+	// Create a texture Description and fill it.
+	D3D10_TEXTURE2D_DESC texDesc;
+	ZeroMemory(&texDesc, sizeof(texDesc));
+
+	texDesc.ArraySize		= 1;				// Number of textures
+	texDesc.Usage			= D3D10_USAGE_DYNAMIC; 
+	texDesc.BindFlags		= D3D10_BIND_SHADER_RESOURCE;
+	texDesc.CPUAccessFlags	= D3D10_CPU_ACCESS_WRITE;	// CPU will write this resource
+	texDesc.Format			= DXGI_FORMAT_R8G8B8A8_UNORM;
+	texDesc.Width			= texWidth;
+	texDesc.Height			= texHeight;
+	texDesc.MipLevels		= 1;
+	texDesc.MiscFlags		= 0;
+
+	DXGI_SAMPLE_DESC sampleDes;
+	ZeroMemory(&sampleDes, sizeof(sampleDes));
+	sampleDes.Count = 1;
+	sampleDes.Quality = 0;
+	texDesc.SampleDesc = sampleDes;
+
+	// Create sub resource
+	D3D10_SUBRESOURCE_DATA texData;
+	ZeroMemory(&texData, sizeof(texData));
+	texData.pSysMem = 0;
+	texData.SysMemPitch = 0;
+	texData.SysMemSlicePitch = 0;
+
+	// Create texture
+	ID3D10Texture2D* pTexture = NULL;
+	HRESULT hr = d3ddevice_->CreateTexture2D(&texDesc, NULL, &pTexture);
+	if (FAILED(hr))
+	{
+		MessageBox(NULL, L"Create texture in memory failed", L"Error", 0);
+	}
+
+	// Lock texture and fill in colors
+	D3D10_MAPPED_TEXTURE2D mappedTex;
+	ZeroMemory(&mappedTex, sizeof(mappedTex));
+
+	hr = pTexture->Map(0, D3D10_MAP_WRITE_DISCARD, 0, &mappedTex);
+	if (FAILED(hr))
+	{
+		MessageBox(NULL, L"Map texture failed", L"Error", 0);
+	}
+
+	// Fill in colors
+	DWORD sideColor = 0xff121212; // the side line color
+
+	// Calculate number of rows in the locked Rect
+	int rowCount = (texWidth * texHeight * 4 ) / mappedTex.RowPitch;
+
+	for (int i = 0; i < texWidth; ++i)
+	{
+		for (int j = 0; j < texHeight; ++j)
+		{
+			int index = i * rowCount + j;
+
+			int* pData = (int*)mappedTex.pData;
 		
 			memcpy(&pData[index], &color, 4);
 		}
@@ -931,7 +967,6 @@ ID3D10Texture2D* RubikCube::CreateInnerTexture(int texWidth, int texHeight, D3DC
 
 	// Create shader resource view to bind the texture
 	D3D10_SHADER_RESOURCE_VIEW_DESC srvDesc;
-	ID3D10Texture2D* pTexture2D = pTexture;
 
 	D3D10_TEXTURE2D_DESC desc;
 	pTexture->GetDesc(&desc);
@@ -940,14 +975,14 @@ ID3D10Texture2D* RubikCube::CreateInnerTexture(int texWidth, int texHeight, D3DC
 	srvDesc.Texture2D.MipLevels = desc.MipLevels;
 	srvDesc.Texture2D.MostDetailedMip = desc.MipLevels - 1;
 
-	hr = d3ddevice_->CreateShaderResourceView(pTexture, &srvDesc, &g_pTextureRV);
+	ID3D10ShaderResourceView* texture_view;
+	hr = d3ddevice_->CreateShaderResourceView(pTexture, &srvDesc, &texture_view);
 	if (FAILED(hr))
 	{
 		MessageBox(NULL, L"Create shader resource view failed", L"Error", 0);
 	}
 
-	// Bind to shader variables
-	g_pDiffuseVariable->SetResource(g_pTextureRV);
+	return texture_view;
 }
 
 void RubikCube::InitCubes()

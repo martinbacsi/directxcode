@@ -1,7 +1,7 @@
 #ifndef __MATH_H__
 #define __MATH_H__
 
-#include <d3dx9.h>
+#include <D3DX10.h>
 
 const float float_epsilon = 0.00001f;
 

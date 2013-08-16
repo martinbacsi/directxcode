@@ -1,7 +1,7 @@
 #include "Cube.h"
 
-ID3D10Texture2D* Cube::inner_texture_ = NULL;
-ID3D10Texture2D* Cube::pTextures[kNumFaces_] = { NULL };
+ID3D10ShaderResourceView* Cube::inner_texture_ = NULL;
+ID3D10ShaderResourceView* Cube::pTextures[kNumFaces_] = { NULL };
 
 Cube::Cube(void)
 	 : kNumCornerPoints_(8),
@@ -13,9 +13,12 @@ Cube::Cube(void)
 	   input_layout_(NULL),
 	   effects_(NULL),
 	   technique_(NULL),
-	   shader_world_matrix_(NULL),
-	   shader_texture_(NULL),
-	   diffuse_variable_(NULL),
+	   handle_world_matrix_(NULL),
+	   handle_wvp_matrix_(NULL),
+	   handle_face_texture_(NULL),
+	   handle_inner_texture_(NULL),
+	   handle_is_face_texture_(NULL),
+	   handle_eye_position_(NULL),
 	   rasterization_state_(NULL)
 {
 	for (int i = 0; i < kNumFaces_; ++i)
@@ -64,13 +67,6 @@ Cube::~Cube(void)
 		effects_->Release();
 		effects_ = NULL;
 	}
-
-	// Release shader textures
-	if (shader_texture_)
-	{
-		shader_texture_->Release();
-		shader_texture_ = NULL;
-	}
 }
 
 void Cube::Init(D3DXVECTOR3& top_left_front_point)
@@ -78,6 +74,7 @@ void Cube::Init(D3DXVECTOR3& top_left_front_point)
 	InitVertexBuffer(top_left_front_point);
 	InitIndexBuffer();
 	InitCornerPoints(top_left_front_point);
+	InitEffects();
 	UpdateCenter();
 }
 
@@ -142,10 +139,10 @@ void Cube::InitVertexBuffer(D3DXVECTOR3& front_bottom_left)
 	// Fill in  vertex buffer description
 	D3D10_BUFFER_DESC bd;
 	ZeroMemory(&bd, sizeof(bd));
-	bd.Usage = D3D10_USAGE_DEFAULT;
+	bd.Usage = D3D10_USAGE_DYNAMIC; // Enable CPU access
 	bd.ByteWidth = sizeof(vertices);
 	bd.BindFlags = D3D10_BIND_VERTEX_BUFFER;
-	bd.CPUAccessFlags = 0; // CPU does not read/write to this vertex buffer
+	bd.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE; // CPU can write this buffer.
 	
 	// This function will also used to restore the Rubik Cube, but the CreateVertexBuffer function will cost and hold the memory if vertex_buffer_ not released
 	// When user press the 'R' frequently, memory usage increase time and time. so it's better to add a if branch to determine whether the buffer was created, if
@@ -164,7 +161,7 @@ void Cube::InitVertexBuffer(D3DXVECTOR3& front_bottom_left)
 
 	// Copy vertex data
 	/*
-	For DirectX10, we need to update the code here, since Direct3D10 Creaste and init Data for vertex buffer
+	For DirectX10, we need to update the code here, since Direct3D10 create and init Data for vertex buffer
 	at the same time while Direct3D9 separate the process of createing vertex buffer and init data.
 	*/
 	void* pVertices;
@@ -291,7 +288,7 @@ void Cube::InitEffects()
 #endif
 
 	// Compile the effects file
-    HRESULT hr = D3DX10CreateEffectFromFile( L"cube.fx", NULL, NULL, "fx_4_0", dwShaderFlags, 0,
+    HRESULT hr = D3DX10CreateEffectFromFile( L"rubik_cube.fx", NULL, NULL, "fx_4_0", dwShaderFlags, 0,
                                          d3d_device_, NULL, NULL, &effects_, &pErrorBlob, NULL);
 
     // Output the error message if compile failed
@@ -311,9 +308,13 @@ void Cube::InitEffects()
     // Obtain the technique
     technique_ = effects_->GetTechniqueByName("Render");
 
-	 // Obtain the variables
-	shader_world_matrix_ = effects_->GetVariableByName("World")->AsMatrix();
-	diffuse_variable_	 = effects_->GetVariableByName("txDiffuse")->AsShaderResource();
+	 // Obtain shader variables
+	handle_world_matrix_	= effects_->GetVariableByName("World")->AsMatrix();
+	handle_wvp_matrix_      = effects_->GetVariableByName("gWVP")->AsMatrix();
+	handle_is_face_texture_ = effects_->GetVariableByName("Is_Face_Texture")->AsScalar();
+	handle_face_texture_	= effects_->GetVariableByName("FaceTexture")->AsShaderResource();
+	handle_inner_texture_   = effects_->GetVariableByName("InnerTexture")->AsShaderResource();
+
 
     // Define the input layout
     D3D10_INPUT_ELEMENT_DESC layout[] =
@@ -334,176 +335,6 @@ void Cube::InitEffects()
 	}
 }
 
-ID3D10Texture2D* Cube::CreateTexture(int texWidth, int texHeight, DWORD color)
-{
-	// Create a texture Description and fill it.
-	D3D10_TEXTURE2D_DESC texDesc;
-	ZeroMemory(&texDesc, sizeof(texDesc));
-
-	texDesc.ArraySize		= 1;				// Number of textures
-	texDesc.Usage			= D3D10_USAGE_DYNAMIC; 
-	texDesc.BindFlags		= D3D10_BIND_SHADER_RESOURCE;
-	texDesc.CPUAccessFlags	= D3D10_CPU_ACCESS_WRITE;	// CPU will write this resource
-	texDesc.Format			= DXGI_FORMAT_R8G8B8A8_UNORM;
-	texDesc.Width			= texWidth;
-	texDesc.Height			= texHeight;
-	texDesc.MipLevels		= 1;
-	texDesc.MiscFlags		= 0;
-
-	DXGI_SAMPLE_DESC sampleDes;
-	ZeroMemory(&sampleDes, sizeof(sampleDes));
-	sampleDes.Count = 1;
-	sampleDes.Quality = 0;
-	texDesc.SampleDesc = sampleDes;
-
-	// Create sub resource
-	D3D10_SUBRESOURCE_DATA texData;
-	ZeroMemory(&texData, sizeof(texData));
-	texData.pSysMem = 0;
-	texData.SysMemPitch = 0;
-	texData.SysMemSlicePitch = 0;
-
-	// Create texture
-	ID3D10Texture2D* texture2d = NULL;
-	HRESULT hr = d3d_device_->CreateTexture2D(&texDesc, NULL, &texture2d);
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"Create texture in memory failed", L"Error", 0);
-	}
-
-	// Lock texture and fill in colors
-	D3D10_MAPPED_TEXTURE2D mappedTex;
-	ZeroMemory(&mappedTex, sizeof(mappedTex));
-
-	texture2d->Map(0, D3D10_MAP_WRITE_DISCARD, 0, &mappedTex);
-
-	// Fill in colors
-	//============================= BE CAREFUL OF THE COLOR ORDER R8G8B8A8=====================
-
-	// Calculate number of rows
-	// total bytes = texture_width * texture_height * bytes_in_texel
-	// We use DXGI_FORMAT_R8G8B8A8_UINT, so each texel is 4 bytes
-	// RowPitch is number of bytes in one row.
-	int numRows = texWidth * texHeight * 4 / mappedTex.RowPitch;
-	for (int i = 0; i < texWidth; ++i)
-	{
-		for (int j = 0; j < texHeight; ++j)
-		{
-			int index = i * numRows + j;
-			int* pData = (int*)mappedTex.pData;
-			memcpy(&pData[index], &color, 4);
-		}
-	}
-
-	// Unlock texture
-	texture2d->Unmap(0);
-
-	// Create shader resource view to bind the texture
-	D3D10_SHADER_RESOURCE_VIEW_DESC srvDesc;
-
-	D3D10_TEXTURE2D_DESC desc;
-	texture2d->GetDesc(&desc);
-	srvDesc.Format = desc.Format;
-	srvDesc.ViewDimension = D3D10_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = desc.MipLevels;
-	srvDesc.Texture2D.MostDetailedMip = desc.MipLevels - 1;
-
-	ID3D10ShaderResourceView* textureRV = NULL;
-	hr = d3d_device_->CreateShaderResourceView(texture2d, &srvDesc, &textureRV);
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"Create shader resource view failed", L"Error", 0);
-	}
-
-	// Bind to shader variables
-	diffuse_variable_->SetResource(textureRV);
-}
-
-ID3D10Texture2D* Cube::CreateInnerTexture(int texWidth, int texHeight, DWORD color)
-{
-	// Create a texture Description and fill it.
-	D3D10_TEXTURE2D_DESC texDesc;
-	ZeroMemory(&texDesc, sizeof(texDesc));
-
-	texDesc.ArraySize		= 1;				// Number of textures
-	texDesc.Usage			= D3D10_USAGE_DYNAMIC; 
-	texDesc.BindFlags		= D3D10_BIND_SHADER_RESOURCE;
-	texDesc.CPUAccessFlags	= D3D10_CPU_ACCESS_WRITE;	// CPU will write this resource
-	texDesc.Format			= DXGI_FORMAT_R8G8B8A8_UNORM;
-	texDesc.Width			= texWidth;
-	texDesc.Height			= texHeight;
-	texDesc.MipLevels		= 1;
-	texDesc.MiscFlags		= 0;
-
-	DXGI_SAMPLE_DESC sampleDes;
-	ZeroMemory(&sampleDes, sizeof(sampleDes));
-	sampleDes.Count = 1;
-	sampleDes.Quality = 0;
-	texDesc.SampleDesc = sampleDes;
-
-	// Create sub resource
-	D3D10_SUBRESOURCE_DATA texData;
-	ZeroMemory(&texData, sizeof(texData));
-	texData.pSysMem = 0;
-	texData.SysMemPitch = 0;
-	texData.SysMemSlicePitch = 0;
-
-	// Create texture
-	ID3D10Texture2D* texture2d = NULL;
-	HRESULT hr = d3d_device_->CreateTexture2D(&texDesc, NULL, &texture2d);
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"Create texture in memory failed", L"Error", 0);
-	}
-
-	// Lock texture and fill in colors
-	D3D10_MAPPED_TEXTURE2D mappedTex;
-	ZeroMemory(&mappedTex, sizeof(mappedTex));
-
-	texture2d->Map(0, D3D10_MAP_WRITE_DISCARD, 0, &mappedTex);
-
-	// Fill in colors
-	//============================= BE CAREFUL OF THE COLOR ORDER R8G8B8A8=====================
-
-	// Calculate number of rows
-	// total bytes = texture_width * texture_height * bytes_in_texel
-	// We use DXGI_FORMAT_R8G8B8A8_UINT, so each texel is 4 bytes
-	// RowPitch is number of bytes in one row.
-	int numRows = texWidth * texHeight * 4 / mappedTex.RowPitch;
-	for (int i = 0; i < texWidth; ++i)
-	{
-		for (int j = 0; j < texHeight; ++j)
-		{
-			int index = i * numRows + j;
-			int* pData = (int*)mappedTex.pData;
-			memcpy(&pData[index], &color, 4);
-		}
-	}
-
-	// Unlock texture
-	texture2d->Unmap(0);
-
-	// Create shader resource view to bind the texture
-	D3D10_SHADER_RESOURCE_VIEW_DESC srvDesc;
-
-	D3D10_TEXTURE2D_DESC desc;
-	texture2d->GetDesc(&desc);
-	srvDesc.Format = desc.Format;
-	srvDesc.ViewDimension = D3D10_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = desc.MipLevels;
-	srvDesc.Texture2D.MostDetailedMip = desc.MipLevels - 1;
-
-	ID3D10ShaderResourceView* textureRV = NULL;
-	hr = d3d_device_->CreateShaderResourceView(texture2d, &srvDesc, &textureRV);
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"Create shader resource view failed", L"Error", 0);
-	}
-
-	// Bind to shader variables
-	diffuse_variable_->SetResource(textureRV);
-}
-
 D3DXVECTOR3 Cube::CalculateCenter(D3DXVECTOR3& min_point, D3DXVECTOR3& max_point)
 {
 	return (min_point + max_point) / 2;
@@ -514,7 +345,7 @@ void Cube::SetTextureId(int faceId, int texId)
 	textureId[faceId] = texId;
 }
 
-void Cube::SetFaceTexture(ID3D10Texture2D* faceTextures, int numTextures)
+void Cube::SetFaceTexture(ID3D10ShaderResourceView** faceTextures, int numTextures)
 {
 	for(int i = 0; i < numTextures; ++i)
 	{
@@ -522,7 +353,7 @@ void Cube::SetFaceTexture(ID3D10Texture2D* faceTextures, int numTextures)
 	}
 }
 
-void Cube::SetInnerTexture(ID3D10Texture2D* innerTexture)
+void Cube::SetInnerTexture(ID3D10ShaderResourceView* innerTexture)
 {
 	inner_texture_ = innerTexture;
 }
@@ -545,15 +376,15 @@ void Cube::UpdateMinMaxPoints(D3DXVECTOR3& rotate_axis, int num_half_PI)
 	}
 	else if (num_half_PI == 1)
 	{
-		D3DXMatrixRotationAxis(&rotate_matrix, &rotate_axis, D3DX_PI / 2);
+		D3DXMatrixRotationAxis(&rotate_matrix, &rotate_axis, (float)D3DX_PI / 2);
 	}
 	else if (num_half_PI == 2)
 	{
-		D3DXMatrixRotationAxis(&rotate_matrix, &rotate_axis, D3DX_PI);
+		D3DXMatrixRotationAxis(&rotate_matrix, &rotate_axis, (float)D3DX_PI);
 	}
 	else // (num_half_PI == 3)
 	{
-		D3DXMatrixRotationAxis(&rotate_matrix, &rotate_axis, 1.5f * D3DX_PI);
+		D3DXMatrixRotationAxis(&rotate_matrix, &rotate_axis, 1.5f * (float)D3DX_PI);
 	}
 
 	// Translate the min_point_ and max_point_ of the cube, after rotation, the two points 
@@ -591,57 +422,56 @@ void Cube::Rotate(D3DXVECTOR3& axis, float angle)
 void Cube::Draw(D3DXMATRIX& view_matrix, D3DXMATRIX& proj_matrix, D3DXVECTOR3& eye_pos)
 {
 	// Setup world matrix for current cube
-	shader_world_matrix_->SetMatrix((float*)&world_matrix_);
-
-	// Set world matrix
-	effects_->SetMatrix(handle_world_matrix, &world_matrix_);
+	handle_world_matrix_->SetMatrix((float*)world_matrix_);
 
 	// Set world view projection matrix
 	D3DXMATRIX wvp_matrix = world_matrix_ * view_matrix * proj_matrix;
-	effects_->SetMatrix(handle_wvp_matrix_, &wvp_matrix);
+	handle_wvp_matrix_->SetMatrix((float*)wvp_matrix);
 
+	// Set eye position
 	D3DXVECTOR4 eye_position(eye_pos.x, eye_pos.y, eye_pos.z, 1.0f);
+	handle_eye_position_->SetFloatVector((float*)eye_position);
 
-	// Get eye position
-	effects_->SetVector(handle_eye_position_, &eye_position);
+	// Set vertex buffer
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	d3d_device_->IASetVertexBuffers(0, 1, &vertex_buffer_, &stride, &offset);
 
-	// Set technique 
-	effects_->SetTechnique(technique_);
+	// Set the input layout
+	d3d_device_->IASetInputLayout(input_layout_);
 
-	// Begin render 
-	unsigned int numPass = 0;
-	effects_->Begin(&numPass, D3DXFX_DONOTSAVESTATE);
+	// Set geometry type
+	d3d_device_->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	for (unsigned int i = 0; i < numPass; ++i)
+	// Set rasterazition state
+	d3d_device_->RSSetState(rasterization_state_);
+
+	// Apply each pass in technique and draw triangle.
+	D3D10_TECHNIQUE_DESC techDesc;
+	technique_->GetDesc(&techDesc);
+	for (unsigned int i = 0; i < techDesc.Passes; ++i)
 	{
-		effects_->BeginPass(i);
+		technique_->GetPassByIndex(i)->Apply(0);
 
 		// Draw cube by draw every face of the cube
 		for(int i = 0; i < kNumFaces_; ++i)
 		{
 			if(textureId[i] >= 0)
 			{
-				effects_->SetBool(handle_is_face_texture_, true);
-				effects_->SetTexture(handle_face_texture_, pTextures[textureId[i]]);
+				handle_is_face_texture_->SetBool(true);
+				handle_face_texture_->SetResource(pTextures[textureId[i]]);
 			}
 			else
 			{
-				effects_->SetBool(handle_is_face_texture_, false);
-				effects_->SetTexture(handle_inner_texture_, inner_texture_);
+				handle_is_face_texture_->SetBool(false);
+				handle_inner_texture_->SetResource(inner_texture_);
 			}
 
-			effects_->CommitChanges();
-			d3d_device_->SetStreamSource(0, vertex_buffer_, 0, sizeof(Vertex));
-			d3d_device_->SetIndices(pIB[i]) ;
-			d3d_device_->SetVertexDeclaration(vertex_declare_);
-
-			d3d_device_->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, 0, 0, 24, 0, 2);
+			// Set index buffer
+			d3d_device_->IASetIndexBuffer(pIB[i], DXGI_FORMAT_R32_UINT, 0);
+			d3d_device_->DrawIndexed(36, 0, 0);
 		}
-
-		effects_->EndPass();
 	}
-
-	effects_->End();
 }
 
 float Cube::GetLength() const

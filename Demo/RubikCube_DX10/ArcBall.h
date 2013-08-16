@@ -1,7 +1,8 @@
 #ifndef __ARCBALL_H__
 #define __ARCBALL_H__
 
-#include "d3dx10.h"
+#include <D3D10.h> // This line is not needed, but without this, the compiler will generate lots of macro redefination warnings. why? it seems there are some confilict between the windows SDK and the DirectX SDK.
+#include <D3DX10.h>
 
 class ArcBall
 {
@@ -36,7 +37,6 @@ private:
 
 	// Convert scree point to arcball point(vector)
 	D3DXVECTOR3	ScreenToVector(int screen_x, int screen_y) ;
-
 };
 
 #endif // end __ARCBALL_H__

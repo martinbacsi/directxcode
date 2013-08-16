@@ -105,6 +105,11 @@ LRESULT Camera::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	return TRUE ;
 }
 
+void Camera::SetWorldMatrix(const D3DXMATRIX& world_matrix)
+{
+	world_matrix_ = world_matrix;
+}
+
 void Camera::SetViewParams(const D3DXVECTOR3& eye_point, const D3DXVECTOR3& lookat_point, const D3DXVECTOR3& up_vector)
 {
 	eye_point_	  = eye_point ;

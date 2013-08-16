@@ -1,10 +1,8 @@
 #ifndef __CUBE_H__
 #define __CUBE_H__
 
-#include <D3D10.h>
-#include <d3dx10.h>
-
-#define VERTEX_FVF ( D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1)
+#include <D3D10.h> // This line is not needed, but without this, the compiler will generate lots of macro redefination warnings. why? it seems there are some confilict between the windows SDK and the DirectX SDK.
+#include <D3DX10.h>
 
 struct Vertex
 {
@@ -22,8 +20,8 @@ public:
 	void Init(D3DXVECTOR3& top_left_front_point);
 	void SetDevice(ID3D10Device* pDevice);
 	void SetTextureId(int faceId, int textureId);
-	static void SetFaceTexture(ID3D10Texture2D* faceTextures, int numTextures);
-	static void SetInnerTexture(ID3D10Texture2D* innerTexture);
+	static void SetFaceTexture(ID3D10ShaderResourceView** faceTextures, int numTextures);
+	static void SetInnerTexture(ID3D10ShaderResourceView* innerTexture);
 	void UpdateMinMaxPoints(D3DXVECTOR3& rotate_axis, int num_half_PI);
 	void UpdateCenter();
 	void UpdateLayerId();
@@ -53,8 +51,6 @@ private:
 	void InitCornerPoints(D3DXVECTOR3& front_bottom_left_point);	// Initialize corner points.
 	void InitRasterizationState();
 	void InitEffects();
-	ID3D10Texture2D* Cube::CreateTexture(int texWidth, int texHeight, DWORD color);
-	ID3D10Texture2D* Cube::CreateInnerTexture(int texWidth, int texHeight, DWORD color);
 	D3DXVECTOR3 CalculateCenter(D3DXVECTOR3& min_point, D3DXVECTOR3& max_point);
 	void InitLayerIds();
 
@@ -77,8 +73,8 @@ private:
 	int layer_id_y_;
 	int layer_id_z_;
 
-	static ID3D10Texture2D* pTextures[kNumFaces_];
-	static ID3D10Texture2D* inner_texture_;	// Inner face texture.
+	static ID3D10ShaderResourceView* pTextures[kNumFaces_];
+	static ID3D10ShaderResourceView* inner_texture_;	// Inner face texture.
 	ID3D10Buffer*			pIB[kNumFaces_] ;
 	D3DXVECTOR3*			corner_points_;		// array to store the 8 corner poinst of the cube 
 	ID3D10Buffer*			vertex_buffer_ ;
@@ -93,8 +89,8 @@ private:
 	D3D10_RASTERIZER_DESC   rasterization_desc_; // rasterization description
 
 	// Shader variables
-	ID3D10EffectMatrixVariable* shader_world_matrix_;
-	ID3D10EffectMatrixVariable*	handle_world_matrix;
+	//ID3D10EffectMatrixVariable* shader_world_matrix_;
+	ID3D10EffectMatrixVariable*	handle_world_matrix_;
 	ID3D10EffectMatrixVariable*	handle_wvp_matrix_;
 	ID3D10EffectShaderResourceVariable*	handle_face_texture_;
 	ID3D10EffectShaderResourceVariable*	handle_inner_texture_;
