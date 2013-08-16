@@ -334,7 +334,6 @@ VOID CreateTextureInMemory(int texWidth, int texHeight, DWORD color)
 
 	// Create shader resource view to bind the texture
 	D3D10_SHADER_RESOURCE_VIEW_DESC srvDesc;
-	ID3D10Texture2D* pTexture2D = g_pTexture;
 
 	D3D10_TEXTURE2D_DESC desc;
 	g_pTexture->GetDesc(&desc);
