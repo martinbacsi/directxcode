@@ -303,10 +303,16 @@ void Cube::InitEffects()
 
 	// Release the Blob
 	if(pErrorBlob)
+	{
 		pErrorBlob->Release();
+	}
 
     // Obtain the technique
     technique_ = effects_->GetTechniqueByName("Render");
+	if (technique_ == NULL)
+	{
+		MessageBox(NULL, L"Get technique failed", L"Error", 0);
+	}
 
 	 // Obtain shader variables
 	handle_world_matrix_	= effects_->GetVariableByName("World")->AsMatrix();
@@ -314,19 +320,21 @@ void Cube::InitEffects()
 	handle_is_face_texture_ = effects_->GetVariableByName("Is_Face_Texture")->AsScalar();
 	handle_face_texture_	= effects_->GetVariableByName("FaceTexture")->AsShaderResource();
 	handle_inner_texture_   = effects_->GetVariableByName("InnerTexture")->AsShaderResource();
-
+	handle_eye_position_    = effects_->GetVariableByName("EyePosition")->AsVector();
 
     // Define the input layout
     D3D10_INPUT_ELEMENT_DESC layout[] =
     {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D10_INPUT_PER_VERTEX_DATA, 0 },
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D10_INPUT_PER_VERTEX_DATA, 0 },
+        { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D10_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D10_INPUT_PER_VERTEX_DATA, 0 },
     };
-    UINT numElements = sizeof(layout) / sizeof(layout[0]);
 
-    // Create the input layout
-    D3D10_PASS_DESC PassDesc;
-    technique_->GetPassByIndex( 0 )->GetDesc( &PassDesc );
+	// Create the input layout
+    UINT numElements = sizeof(layout) / sizeof(layout[0]);
+	D3D10_PASS_DESC PassDesc;
+	ZeroMemory(&PassDesc, sizeof(PassDesc));
+    technique_->GetPassByIndex(0)->GetDesc(&PassDesc);
     hr = d3d_device_->CreateInputLayout(layout, numElements, PassDesc.pIAInputSignature,
                                           PassDesc.IAInputSignatureSize, &input_layout_);
     if(FAILED(hr))

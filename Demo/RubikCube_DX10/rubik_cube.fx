@@ -1,14 +1,14 @@
 // World matrix
-uniform extern float4 World;
+float4x4 World;
 
 // World, View and Projection Matrix
-uniform extern float4x4 gWVP; 
+float4x4 gWVP; 
 
 // Face texture
-texture FaceTexture;
+Texture2D FaceTexture;
 
 // Inner texture
-texture InnerTexture;
+Texture2D InnerTexture;
 
 // Whether current texture is face texture or inner texture?
 bool Is_Face_Texture;
@@ -17,21 +17,19 @@ bool Is_Face_Texture;
 float3 EyePosition;
 
 // Face texture sampler
-sampler FaceTextureSampler = sampler_state
+SamplerState FaceTextureSampler
 {
-	Texture   = <FaceTexture>;
-	MipFilter = LINEAR;
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
+	Filter = MIN_MAG_MIP_LINEAR;
+	AddressU = Wrap;
+	AddressV = Wrap;
 };
 
 // Inner texture sampler
-sampler InnerTextureSampler = sampler_state
+SamplerState InnerTextureSampler
 {
-	Texture   = <InnerTexture>;
-	MipFilter = LINEAR;
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
+	Filter = MIN_MAG_MIP_LINEAR;
+	AddressU = Wrap;
+	AddressV = Wrap;
 };
 
 // Light information
@@ -60,7 +58,7 @@ struct SurfaceInfo
 // Input vertex structure
 struct InputVS
 {
-	float4 pos : POSITION;
+	float3 pos : POSITION;
 	float3 normal : NORMAL;
 	float2 texUV : TEXCOORD0;
 };
@@ -74,10 +72,10 @@ struct OutputVS
 };
 
 // Directional light
-float3 ParallelLight(SurfaceInfo surface, LightInfo light, float3 eyePos)
+float4 ParallelLight(SurfaceInfo surface, LightInfo light, float3 eyePos)
 {
 	// The final result color
-	float3 litColor = float3(0.0f, 0.0f, 0.0f);
+	float4 litColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// The light vector aims opposite the direction the light ray travel
 	float3 lightVec = -light.dir;
@@ -98,7 +96,7 @@ float3 ParallelLight(SurfaceInfo surface, LightInfo light, float3 eyePos)
 		// Calculate the reflection vector of light ray
 		float3 R = reflect(light.dir, surface.normal);
 
-		float3 specFactor = pow(max(dot(R, toEye), 0.0f), specPower);
+		float4 specFactor = pow(max(dot(R, toEye), 0.0f), specPower);
 
 		// Add diffuse color 
 		litColor += diffuseFactor * surface.diffuse * light.diffuse;
@@ -111,9 +109,9 @@ float3 ParallelLight(SurfaceInfo surface, LightInfo light, float3 eyePos)
 }
 
 // Point light
-float3 PointLight(SurfaceInfo surface, LightInfo light, float3 eyePos)
+float4 PointLight(SurfaceInfo surface, LightInfo light, float3 eyePos)
 {
-	float3 litColor = float3(0.0f, 0.0f, 0.0f);
+	float4 litColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// Vector from surface to point light
 	float3 lightVec = light.pos - surface.pos;
@@ -123,7 +121,7 @@ float3 PointLight(SurfaceInfo surface, LightInfo light, float3 eyePos)
 
 	// If point light too far from surface(out of light.range), no light recieved
 	if (d > light.range)
-		return float3(0.0f, 0.0f, 0.0f);
+		return float4(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// Normalize the light vector
 	lightVec = normalize(lightVec);
@@ -159,13 +157,14 @@ OutputVS BasicVS(InputVS inputVS)
 	OutputVS outVS = (OutputVS)0;
 
 	// Transform to homogeneous clip space.
-	outVS.posH = mul(inputVS.pos, gWVP);
+	outVS.posH = mul(float4(inputVS.pos, 1.0f), gWVP);
 
 	// texture coordinate
 	outVS.texUV = inputVS.texUV;
 
 	// Transfer vertex normal to world space and normalize it.
-	float4 normalW = normalize(mul(float4(inputVS.normal, 1.0f), World));
+	// float4 normalW = normalize(mul(float4(inputVS.normal, 1.0f), World));
+	float3 normalW = normalize(mul(inputVS.normal, (float3x3)World));
 
 	// Create a surface(material)
 	SurfaceInfo surfaceInfo;
@@ -198,27 +197,28 @@ OutputVS BasicVS(InputVS inputVS)
 }
 
 // Pixel shader
-float4 BasicPS(OutputVS outputVS) : COLOR
+float4 BasicPS(OutputVS outputVS) : SV_Target
 {
 	float4 Output;
 
 	if (Is_Face_Texture)
 	{
-		Output = /*outputVS.color * */tex2D(FaceTextureSampler, outputVS.texUV);
+		Output = FaceTexture.Sample(FaceTextureSampler, outputVS.texUV);
 	}
 	else
 	{
-		Output = /*outputVS.color * */tex2D(InnerTextureSampler, outputVS.texUV);
+		Output = FaceTexture.Sample(InnerTextureSampler, outputVS.texUV);
 	}
 
 	return Output;
 }
 
-technique Tech1
+technique10 Render
 {
 	pass p0
     {
-		vertexShader = compile vs_2_0 BasicVS();
-		pixelShader  = compile ps_2_0 BasicPS();
+		SetVertexShader(CompileShader(vs_4_0, BasicVS()));
+		SetGeometryShader(NULL);
+		SetPixelShader(CompileShader(ps_4_0, BasicPS()));
     }
 }
