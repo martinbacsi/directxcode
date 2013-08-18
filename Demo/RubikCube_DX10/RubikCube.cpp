@@ -260,7 +260,7 @@ void RubikCube::Render()
 	}
 
 	// Restore world matrix since the Draw function in class Cube has set the world matrix for each cube
-	// camera_->SetWorldMatrix(world_matrix);
+	//camera_->SetWorldMatrix(world_matrix);
 
 	// Present the sence from back buffer to front buffer
 	swap_chain_->Present(0, 0);

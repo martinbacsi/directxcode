@@ -173,14 +173,14 @@ void Cube::InitVertexBuffer(D3DXVECTOR3& front_bottom_left)
 void Cube::InitIndexBuffer()
 {
 	// Indices for triangle strips
-	WORD indicesFront[]  = { 0,  1,  3,  2};
-	WORD indicesBack[]   = { 4,  5,  7,  6};
-	WORD indicesLeft[]   = { 8,  9, 11, 10};
-	WORD indicesRight[]  = {12, 13, 15, 14};
-	WORD indicesTop[]    = {16, 17, 19, 18};
-	WORD indicesBottom[] = {20, 21, 23, 22};
+	DWORD indicesFront[]  = { 0,  1,  3,  2};
+	DWORD indicesBack[]   = { 4,  5,  7,  6};
+	DWORD indicesLeft[]   = { 8,  9, 11, 10};
+	DWORD indicesRight[]  = {12, 13, 15, 14};
+	DWORD indicesTop[]    = {16, 17, 19, 18};
+	DWORD indicesBottom[] = {20, 21, 23, 22};
 
-	WORD* indices[kNumFaces_] = {indicesFront, indicesBack, indicesLeft, indicesRight, indicesTop, indicesBottom};
+	DWORD* indices[kNumFaces_] = {indicesFront, indicesBack, indicesLeft, indicesRight, indicesTop, indicesBottom};
 
 	for(int i = 0; i < kNumFaces_; ++i)
 	{
@@ -191,7 +191,7 @@ void Cube::InitIndexBuffer()
 			D3D10_BUFFER_DESC bd;
 			ZeroMemory(&bd, sizeof(bd));
 			bd.Usage = D3D10_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(indices);
+			bd.ByteWidth = sizeof(indicesFront) * kNumFaces_;
 			bd.BindFlags = D3D10_BIND_INDEX_BUFFER;
 			bd.CPUAccessFlags = 0;
 
@@ -449,7 +449,7 @@ void Cube::Draw(D3DXMATRIX& view_matrix, D3DXMATRIX& proj_matrix, D3DXVECTOR3& e
 	d3d_device_->IASetInputLayout(input_layout_);
 
 	// Set geometry type
-	d3d_device_->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	d3d_device_->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 	// Set rasterazition state
 	d3d_device_->RSSetState(rasterization_state_);
@@ -464,7 +464,7 @@ void Cube::Draw(D3DXMATRIX& view_matrix, D3DXMATRIX& proj_matrix, D3DXVECTOR3& e
 		// Draw cube by draw every face of the cube
 		for(int i = 0; i < kNumFaces_; ++i)
 		{
-			if(textureId[i] >= 0)
+			/*if(textureId[i] >= 0)
 			{
 				handle_is_face_texture_->SetBool(true);
 				handle_face_texture_->SetResource(pTextures[textureId[i]]);
@@ -473,11 +473,11 @@ void Cube::Draw(D3DXMATRIX& view_matrix, D3DXMATRIX& proj_matrix, D3DXVECTOR3& e
 			{
 				handle_is_face_texture_->SetBool(false);
 				handle_inner_texture_->SetResource(inner_texture_);
-			}
+			}*/
 
 			// Set index buffer
 			d3d_device_->IASetIndexBuffer(pIB[i], DXGI_FORMAT_R32_UINT, 0);
-			d3d_device_->DrawIndexed(36, 0, 0);
+			d3d_device_->DrawIndexed(24, 0, 0);
 		}
 	}
 }

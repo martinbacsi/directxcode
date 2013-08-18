@@ -54,7 +54,6 @@ struct SurfaceInfo
 	float4 specular;
 };
 
-
 // Input vertex structure
 struct InputVS
 {
@@ -66,7 +65,7 @@ struct InputVS
 // Output Vertex structure
 struct OutputVS
 {
-	float4 posH : POSITION;
+	float4 posH : SV_Position;
 	float4 color : COLOR;
 	float2 texUV : TEXCOORD0;
 };
@@ -201,14 +200,14 @@ float4 BasicPS(OutputVS outputVS) : SV_Target
 {
 	float4 Output;
 
-	if (Is_Face_Texture)
+	/*if (Is_Face_Texture)
 	{
 		Output = FaceTexture.Sample(FaceTextureSampler, outputVS.texUV);
 	}
 	else
 	{
 		Output = FaceTexture.Sample(InnerTextureSampler, outputVS.texUV);
-	}
+	}*/
 
 	return Output;
 }
