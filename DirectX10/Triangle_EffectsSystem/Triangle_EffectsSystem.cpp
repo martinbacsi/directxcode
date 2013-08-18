@@ -53,12 +53,18 @@ HRESULT InitD3D( HWND hWnd )
 	sd.SampleDesc.Quality = 0; // WHAT'S THIS?
 	sd.Windowed = TRUE; // full-screen mode
 
-	// Create device and swap chain
 	HRESULT hr;
+	UINT flags = D3D10_CREATE_DEVICE_BGRA_SUPPORT;
+
+#if defined( DEBUG ) || defined( _DEBUG )
+	flags |= D3D10_CREATE_DEVICE_DEBUG;
+#endif 
+
+	// Create device and swap chain
 	if (FAILED (hr = D3D10CreateDeviceAndSwapChain( NULL, 
 	    D3D10_DRIVER_TYPE_HARDWARE,
 		NULL,
-		0,
+		flags,
 		D3D10_SDK_VERSION,
 		&sd, 
 		&g_pSwapChain,
@@ -138,11 +144,23 @@ VOID InitEffects()
     // the shaders to be optimized and to run exactly the way they will run in 
     // the release configuration of this program.
     dwShaderFlags |= D3D10_SHADER_DEBUG;
-    #endif
+#endif
 
 	// Compile the effects file
-    HRESULT hr = D3DX10CreateEffectFromFile( L"triangle_shader.fx", NULL, NULL, "fx_4_0", dwShaderFlags, 0,
-                                         g_pd3dDevice, NULL, NULL, &g_pEffect, &pErrorBlob, NULL);
+    HRESULT hr = D3DX10CreateEffectFromFile( 
+		L"triangle_shader.fx", 
+		NULL, 
+		NULL, 
+		"fx_4_0", 
+		dwShaderFlags, 
+		0,
+        g_pd3dDevice, 
+		NULL, 
+		NULL, 
+		&g_pEffect, 
+		&pErrorBlob, 
+		NULL
+		);
 
     // Output the error message if compile failed
 	if(FAILED(hr))
