@@ -5,6 +5,7 @@
 RubikCube::RubikCube(void)
 	: d3d_(NULL),
 	  d3ddevice_(NULL),
+	  effects_(NULL),
 	  is_fullscreen_(false),
 	  kNumLayers(3),
       kNumCubes(kNumLayers * kNumLayers * kNumLayers),
@@ -24,10 +25,7 @@ RubikCube::RubikCube(void)
 	  current_window_width_(init_window_width_),
 	  current_window_height_(init_window_height_),
 	  last_window_width_(current_window_width_),
-	  last_window_height_(current_window_height_),
-	  texture_width_(128),
-	  texture_height_(128),
-	  inner_textures_(NULL)
+	  last_window_height_(current_window_height_)
 {
 	world_arcball_ = new ArcBall();
 
@@ -75,12 +73,10 @@ RubikCube::RubikCube(void)
 	faces[5] = BottomFace;
 
 	texture_id_ = new int[kNumFaces];
-	face_textures_ = new IDirect3DTexture9*[kNumFaces];
 
 	for(int i = 0; i < kNumFaces; ++i)
 	{
 		texture_id_[i] = -1;
-		face_textures_[i] = NULL;
 	}
 }
 
@@ -105,23 +101,12 @@ RubikCube::~RubikCube(void)
 	delete []texture_id_;
 	texture_id_ = NULL;
 
-	// Release face textures
-	for(int i = 0; i < kNumFaces; ++i)
+	if (effects_ != NULL)
 	{
-		if(face_textures_[i] != NULL)
-		{
-			face_textures_[i]->Release();
-			face_textures_[i] = NULL;
-		}
+		effects_->Release();
+		effects_ = NULL;
 	}
 
-	// Release inner texture
-	if (inner_textures_ != NULL)
-	{
-		inner_textures_->Release();
-		inner_textures_ = NULL;
-	}
-	
 	// Release Direct3D Device
 	if(d3ddevice_ != NULL)
 	{
@@ -143,9 +128,9 @@ void RubikCube::Initialize(HWND hWnd)
 
 	InitD3D9(hWnd);
 
-	InitTextures();
-
 	InitCubes();
+
+	InitEffect();
 
 	ResetTextures();
 
@@ -249,8 +234,6 @@ void RubikCube::Render()
 	// Update frame
 	camera_->OnFrameMove();
 
-	//SetupLight();
-
 	// Get view and projection matrix;
 	D3DXMATRIX view_matrix = camera_->GetViewMatrix();
 	D3DXMATRIX proj_matrix = camera_->GetProjMatrix();
@@ -264,7 +247,7 @@ void RubikCube::Render()
 		//draw all unit cubes to build the Rubik cube
 		for(int i = 0; i < kNumCubes; i++)
 		{
-			cubes[i].Draw(view_matrix, proj_matrix, eye_pos);
+			cubes[i].Draw(effects_, view_matrix, proj_matrix, eye_pos);
 		}
 
 		// Restore world matrix since the Draw function in class Cube has set the world matrix for each cube
@@ -800,186 +783,26 @@ void RubikCube::ResizeD3D9Scene(int width, int height)
 	camera_->SetWindow(width, height);
 }
 
-void RubikCube::InitTextures()
+void RubikCube::InitEffect()
 {
-	DWORD colors[] = 
-	{
-		0xffffffff, // White,   front face
-		0xffffff00, // Yellow,	back face
-		0xffff0000, // Red,		left face
-		0xffffa500,	// Orange,	right face
-		0xff00ff00, // Green,	top face
-		0xff0000ff, // Blue,	bottom face
-	};
+	WCHAR* effectFile = L"./rubik_cube.fx";
 
-	// Create face textures
-	for(int i = 0; i < kNumFaces; ++i)
-	{
-		face_textures_[i] = CreateTexture(texture_width_, texture_height_, colors[i]);
+	ID3DXBuffer* errors = 0;
+
+	// Create Effect from file
+	HRESULT hr = D3DXCreateEffectFromFile(
+		d3ddevice_,
+		effectFile, 
+		NULL,
+		NULL,
+		D3DXSHADER_DEBUG,
+		NULL,
+		&effects_,
+		&errors);
+
+	if( errors ) {
+		MessageBoxA(0, (char*)errors->GetBufferPointer(), 0, 0);
 	}
-
-	// Create inner texture
-	inner_textures_ = CreateInnerTexture(texture_width_, texture_height_, 0xffffffff);
-
-	Cube::SetFaceTexture(face_textures_, kNumFaces);
-	Cube::SetInnerTexture(inner_textures_);
-}
-
-void RubikCube::SetupLight()
-{
-	// Create light
-	D3DLIGHT9 pointLight ;
-
-	// Light color
-	D3DXCOLOR color = D3DCOLOR_XRGB(255, 255, 255) ;
-
-	// The light position is always same as the camera eye point
-	// so no matter how you rotate the camera, the cube will keep the same brightness
-	 D3DXVECTOR3 position = camera_->GetEyePoint() ;
-
-	// Light type, we use point light here
-	pointLight.Type			= D3DLIGHT_POINT ;
-
-	// Light attributes
-	pointLight.Ambient		= color * 0.6f;
-	pointLight.Diffuse		= color;
-	pointLight.Specular		= color * 0.6f;
-	pointLight.Position		= position;
-	pointLight.Range		= 320.0f;
-	pointLight.Falloff		= 1.0f;
-	pointLight.Attenuation0	= 1.0f;
-	pointLight.Attenuation1	= 0.0f;
-	pointLight.Attenuation2	= 0.0f;
-
-	// Set material
-	D3DMATERIAL9 material ;
-	material.Ambient = D3DXCOLOR(1.0f, 1.0f, 1.0f, 0) ;
-	material.Diffuse = D3DXCOLOR(1.0f, 1.0f, 1.0f, 0);
-	material.Specular = D3DXCOLOR(1.0f, 1.0f, 1.0f, 0);
-	material.Emissive = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.0f);
-	material.Power = 2.0f ;
-	d3ddevice_->SetMaterial(&material) ;
-
-	// Enable light
-	d3ddevice_->SetLight(0, &pointLight) ;		
-	d3ddevice_->LightEnable(0, true) ;		
-}
-
-void RubikCube::SetupMatrix()
-{
-	// View matrix
-	D3DXMATRIX matView = camera_->GetViewMatrix() ;
-	d3ddevice_->SetTransform(D3DTS_VIEW, &matView) ;
-
-	// Projection matrix
-	D3DXMATRIX matProj = camera_->GetProjMatrix() ;
-	d3ddevice_->SetTransform(D3DTS_PROJECTION, &matProj) ;
-}
-
-LPDIRECT3DTEXTURE9 RubikCube::CreateTexture(int texWidth, int texHeight, D3DCOLOR color)
-{
-	LPDIRECT3DTEXTURE9 pTexture;
-
-	HRESULT hr = D3DXCreateTexture(d3ddevice_, 
-		texWidth, 
-		texHeight, 
-		0, 
-		0, 
-		D3DFMT_A8R8G8B8,  // 4 bytes for a pixel 
-		D3DPOOL_MANAGED, 
-		&pTexture);
-
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"Create texture failed", L"Error", 0);
-	}
-
-	// Lock the texture and fill in color
-	D3DLOCKED_RECT lockedRect;
-	hr = pTexture->LockRect(0, &lockedRect, NULL, 0);
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"Lock texture failed!", L"Error", 0);
-	}
-
-	DWORD sideColor = 0xff000000; // the side line color
-
-	int side_width = 10;
-
-	// Calculate number of rows in the locked Rect
-	int rowCount = (texWidth * texHeight * 4 ) / lockedRect.Pitch;
-
-	for (int i = 0; i < texWidth; ++i)
-	{
-		for (int j = 0; j < texHeight; ++j)
-		{
-			int index = i * rowCount + j;
-
-			int* pData = (int*)lockedRect.pBits;
-
-			if (i <= side_width || i >= texWidth - side_width 
-				|| j <= side_width || j >= texHeight - side_width)
-			{
-				memcpy(&pData[index], &sideColor, 4);
-			}
-			else
-			{
-				memcpy(&pData[index], &color, 4);
-			}
-		}
-	}
-
-	pTexture->UnlockRect(0);
-
-	return pTexture;
-}
-
-LPDIRECT3DTEXTURE9 RubikCube::CreateInnerTexture(int texWidth, int texHeight, D3DCOLOR color)
-{
-	LPDIRECT3DTEXTURE9 pTexture;
-
-	HRESULT hr = D3DXCreateTexture(d3ddevice_, 
-		texWidth, 
-		texHeight, 
-		0, 
-		0, 
-		D3DFMT_A8R8G8B8,  // 4 bytes for a pixel 
-		D3DPOOL_MANAGED, 
-		&pTexture);
-
-	if(FAILED(hr))
-	{
-		MessageBox(NULL, L"Create texture failed", L"Error", 0);
-	}
-
-	// Lock the texture and fill in color
-	D3DLOCKED_RECT lockedRect;
-	hr = pTexture->LockRect(0, &lockedRect, NULL, 0);
-	if(FAILED(hr))
-	{
-		MessageBox(NULL, L"Lock texture failed!", L"Error", 0);
-	}
-
-	DWORD sideColor = 0xff121212; // the side line color
-
-	// Calculate number of rows in the locked Rect
-	int rowCount = (texWidth * texHeight * 4 ) / lockedRect.Pitch;
-
-	for (int i = 0; i < texWidth; ++i)
-	{
-		for (int j = 0; j < texHeight; ++j)
-		{
-			int index = i * rowCount + j;
-
-			int* pData = (int*)lockedRect.pBits;
-		
-			memcpy(&pData[index], &color, 4);
-		}
-	}
-
-	pTexture->UnlockRect(0);
-
-	return pTexture;
 }
 
 void RubikCube::InitCubes()
@@ -1412,6 +1235,8 @@ int  RubikCube::GetHitLayer(Face face, D3DXVECTOR3& rotate_axis, D3DXVECTOR3& hi
 			break;
 		}
 	}
+
+	return -1;
 }
 
 void RubikCube::RotateLayer(int layer, D3DXVECTOR3& axis, float angle)

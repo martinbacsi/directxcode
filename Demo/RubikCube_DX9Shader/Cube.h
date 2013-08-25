@@ -19,13 +19,11 @@ public:
 	void Init(D3DXVECTOR3& top_left_front_point);
 	void SetDevice(LPDIRECT3DDEVICE9 pDevice);
 	void SetTextureId(int faceId, int textureId);
-	static void SetFaceTexture(LPDIRECT3DTEXTURE9* faceTextures, int numTextures);
-	static void SetInnerTexture(LPDIRECT3DTEXTURE9 innerTexture);
 	void UpdateMinMaxPoints(D3DXVECTOR3& rotate_axis, int num_half_PI);
 	void UpdateCenter();
 	void UpdateLayerId();
 	void Rotate(D3DXVECTOR3& axis, float angle);
-	void Draw(D3DXMATRIX& view_matrix, D3DXMATRIX& proj_matrix, D3DXVECTOR3& eye_pos);
+	void Draw(ID3DXEffect* effects, D3DXMATRIX& view_matrix, D3DXMATRIX& proj_matrix, D3DXVECTOR3& eye_pos);
 
 	float GetLength() const;
 
@@ -48,7 +46,6 @@ private:
 	void InitVertexBuffer(D3DXVECTOR3& front_bottom_left);
 	void InitIndexBuffer();
 	void InitCornerPoints(D3DXVECTOR3& front_bottom_left_point);	// Initialize corner points.
-	void InitEffect();
 	D3DXVECTOR3 CalculateCenter(D3DXVECTOR3& min_point, D3DXVECTOR3& max_point);
 	void InitLayerIds();
 
@@ -71,8 +68,6 @@ private:
 	int layer_id_y_;
 	int layer_id_z_;
 
-	static LPDIRECT3DTEXTURE9 pTextures[kNumFaces_];
-	static LPDIRECT3DTEXTURE9 inner_texture_;	// Inner face texture.
 	LPDIRECT3DINDEXBUFFER9  pIB[kNumFaces_] ;
 	D3DXVECTOR3*			corner_points_;		// array to store the 8 corner poinst of the cube 
 	LPDIRECT3DVERTEXBUFFER9 vertex_buffer_ ;
@@ -80,13 +75,9 @@ private:
 	IDirect3DVertexDeclaration9* vertex_declare_;
 	D3DXMATRIX				world_matrix_ ;		// world matrix for unit cube, for rotation.
 
-	ID3DXEffect*			effects_;
 	D3DXHANDLE				technique_;
-	D3DXHANDLE				handle_world_matrix;
+	D3DXHANDLE				handle_faceid;
 	D3DXHANDLE				handle_wvp_matrix_;
-	D3DXHANDLE				handle_face_texture_;
-	D3DXHANDLE				handle_inner_texture_;
-	D3DXHANDLE				handle_is_face_texture_;
 	D3DXHANDLE				handle_eye_position_;
 };
 
