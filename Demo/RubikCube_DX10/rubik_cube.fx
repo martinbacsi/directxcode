@@ -5,27 +5,13 @@ float4x4 World;
 float4x4 gWVP; 
 
 // Face texture
-Texture2D FaceTexture;
-
-// Inner texture
-Texture2D InnerTexture;
-
-// Whether current texture is face texture or inner texture?
-bool Is_Face_Texture;
+Texture2D CubeTexture;
 
 // Eye position 
 float3 EyePosition;
 
 // Face texture sampler
-SamplerState FaceTextureSampler
-{
-	Filter = MIN_MAG_MIP_LINEAR;
-	AddressU = Wrap;
-	AddressV = Wrap;
-};
-
-// Inner texture sampler
-SamplerState InnerTextureSampler
+SamplerState CubeTextureSampler
 {
 	Filter = MIN_MAG_MIP_LINEAR;
 	AddressU = Wrap;
@@ -187,9 +173,8 @@ OutputVS BasicVS(InputVS inputVS)
 
 	// Point light
 	// float3 litColor = PointLight(surfaceInfo, lightInfo, EyePosition);
-	/*float3 litColor = ParallelLight(surfaceInfo, lightInfo, EyePosition);
-
-	outVS.color = float4(litColor, 1.0f);*/
+	float3 litColor = ParallelLight(surfaceInfo, lightInfo, EyePosition);
+	outVS.color = float4(litColor, 1.0f);
 
 	// Done--return the output.
 	return outVS;
@@ -200,14 +185,7 @@ float4 BasicPS(OutputVS outputVS) : SV_Target
 {
 	float4 Output;
 
-	/*if (Is_Face_Texture)
-	{
-		Output = FaceTexture.Sample(FaceTextureSampler, outputVS.texUV);
-	}
-	else
-	{
-		Output = FaceTexture.Sample(InnerTextureSampler, outputVS.texUV);
-	}*/
+	Output = CubeTexture.Sample(CubeTextureSampler, outputVS.texUV);
 
 	return Output;
 }

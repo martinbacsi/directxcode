@@ -1,8 +1,5 @@
 #include "Cube.h"
 
-ID3D10ShaderResourceView* Cube::inner_texture_ = NULL;
-ID3D10ShaderResourceView* Cube::pTextures[kNumFaces_] = { NULL };
-
 Cube::Cube(void)
 	 : kNumCornerPoints_(8),
 	   length_(10.0f),
@@ -10,16 +7,9 @@ Cube::Cube(void)
 	   layer_id_y_(-1),
 	   layer_id_z_(-1),
 	   vertex_buffer_(NULL),
-	   input_layout_(NULL),
-	   effects_(NULL),
-	   technique_(NULL),
-	   handle_world_matrix_(NULL),
+	   face_id_(NULL),
 	   handle_wvp_matrix_(NULL),
-	   handle_face_texture_(NULL),
-	   handle_inner_texture_(NULL),
-	   handle_is_face_texture_(NULL),
-	   handle_eye_position_(NULL),
-	   rasterization_state_(NULL)
+	   handle_eye_position_(NULL)
 {
 	for (int i = 0; i < kNumFaces_; ++i)
 	{
@@ -53,20 +43,6 @@ Cube::~Cube(void)
 			pIB[i] = NULL;
 		}
 	}
-
-	// Relase input layout
-	if (input_layout_)
-	{
-		input_layout_->Release();
-		input_layout_ = NULL;
-	}
-
-	// Release effets
-	if (effects_)
-	{
-		effects_->Release();
-		effects_ = NULL;
-	}
 }
 
 void Cube::Init(D3DXVECTOR3& top_left_front_point)
@@ -74,7 +50,6 @@ void Cube::Init(D3DXVECTOR3& top_left_front_point)
 	InitVertexBuffer(top_left_front_point);
 	InitIndexBuffer();
 	InitCornerPoints(top_left_front_point);
-	InitEffects();
 	UpdateCenter();
 }
 
@@ -100,40 +75,40 @@ void Cube::InitVertexBuffer(D3DXVECTOR3& front_bottom_left)
 	Vertex vertices[] =
 	{
 		// Front face
-		{          x,           y,           z,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f}, // 0
-		{          x, y + length_,           z,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f}, // 1
-		{x + length_, y + length_,           z,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f}, // 2
-		{x + length_,           y,           z,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f}, // 3
-
-		// Back face
-		{x + length_,           y, z + length_,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f}, // 4
-		{x + length_, y + length_, z + length_,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f}, // 5
-		{          x, y + length_, z + length_,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f}, // 6
-		{          x,           y, z + length_,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f}, // 7
-
-		// Left face
-		{          x,           y, z + length_, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f}, // 8
-		{          x, y + length_, z + length_, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f}, // 9
-		{          x, y + length_,           z, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f}, // 10
-		{          x,           y,           z, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f}, // 11
-
-		// Right face 
-		{x + length_,           y,           z,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f}, // 12
-		{x + length_, y + length_,           z,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f}, // 13
-		{x + length_, y + length_, z + length_,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f}, // 14
-		{x + length_,           y, z + length_,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f}, // 15
-
-		// Top face
-		{          x, y + length_,           z,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f}, // 16
-		{          x, y + length_, z + length_,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f}, // 17
-		{x + length_, y + length_, z + length_,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f}, // 18
-		{x + length_, y + length_,           z,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f}, // 19
-
-		// Bottom face
-		{x + length_,           y,           z,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f}, // 20
-		{x + length_,           y, z + length_,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f}, // 21
-		{          x,           y, z + length_,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f}, // 22
-		{          x,           y,           z,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f}, // 23
+		{          x,           y,           z, 0.0f, 0.0f}, // 0
+		{          x, y + length_,           z, 1.0f, 0.0f}, // 1
+		{x + length_, y + length_,           z, 1.0f, 1.0f}, // 2
+		{x + length_,           y,           z, 0.0f, 1.0f}, // 3
+											    
+		// Back face						    
+		{x + length_,           y, z + length_, 0.0f, 0.0f}, // 4
+		{x + length_, y + length_, z + length_, 1.0f, 0.0f}, // 5
+		{          x, y + length_, z + length_, 1.0f, 1.0f}, // 6
+		{          x,           y, z + length_, 0.0f, 1.0f}, // 7
+											    
+		// Left face						    
+		{          x,           y, z + length_, 0.0f, 0.0f}, // 8
+		{          x, y + length_, z + length_, 1.0f, 0.0f}, // 9
+		{          x, y + length_,           z, 1.0f, 1.0f}, // 10
+		{          x,           y,           z, 0.0f, 1.0f}, // 11
+											    
+		// Right face 						    
+		{x + length_,           y,           z, 0.0f, 0.0f}, // 12
+		{x + length_, y + length_,           z, 1.0f, 0.0f}, // 13
+		{x + length_, y + length_, z + length_, 1.0f, 1.0f}, // 14
+		{x + length_,           y, z + length_, 0.0f, 1.0f}, // 15
+											    
+		// Top face							    
+		{          x, y + length_,           z, 0.0f, 0.0f}, // 16
+		{          x, y + length_, z + length_, 1.0f, 0.0f}, // 17
+		{x + length_, y + length_, z + length_, 1.0f, 1.0f}, // 18
+		{x + length_, y + length_,           z, 0.0f, 1.0f}, // 19
+											    
+		// Bottom face						    
+		{x + length_,           y,           z, 0.0f, 0.0f}, // 20
+		{x + length_,           y, z + length_, 1.0f, 0.0f}, // 21
+		{          x,           y, z + length_, 1.0f, 1.0f}, // 22
+		{          x,           y,           z, 0.0f, 1.0f}, // 23
 	};
 
 	// Fill in  vertex buffer description
@@ -172,15 +147,14 @@ void Cube::InitVertexBuffer(D3DXVECTOR3& front_bottom_left)
 
 void Cube::InitIndexBuffer()
 {
-	// Indices for triangle strips
-	DWORD indicesFront[]  = { 0,  1,  3,  2};
-	DWORD indicesBack[]   = { 4,  5,  7,  6};
-	DWORD indicesLeft[]   = { 8,  9, 11, 10};
-	DWORD indicesRight[]  = {12, 13, 15, 14};
-	DWORD indicesTop[]    = {16, 17, 19, 18};
-	DWORD indicesBottom[] = {20, 21, 23, 22};
+	WORD FrontIndices[]  = { 0,  1,  3,  2};
+	WORD BackIndices[]   = { 4,  5,  7,  6};
+	WORD LeftIndices[]   = { 8,  9, 11, 10};
+	WORD RightIndices[]  = {12, 13, 15, 14};
+	WORD TopIndices[]	 = {16, 17, 19, 18};
+	WORD BottomIndices[] = {20, 21, 23, 22};
 
-	DWORD* indices[kNumFaces_] = {indicesFront, indicesBack, indicesLeft, indicesRight, indicesTop, indicesBottom};
+	WORD* indices[] = {FrontIndices, BackIndices, LeftIndices, RightIndices, TopIndices, BottomIndices};
 
 	for(int i = 0; i < kNumFaces_; ++i)
 	{
@@ -191,14 +165,14 @@ void Cube::InitIndexBuffer()
 			D3D10_BUFFER_DESC bd;
 			ZeroMemory(&bd, sizeof(bd));
 			bd.Usage = D3D10_USAGE_DEFAULT;
-			bd.ByteWidth = sizeof(indicesFront) * kNumFaces_;
+			bd.ByteWidth = sizeof(FrontIndices);
 			bd.BindFlags = D3D10_BIND_INDEX_BUFFER;
 			bd.CPUAccessFlags = 0;
 
 			// Create index buffer and copy data
 			D3D10_SUBRESOURCE_DATA index_data;
 			ZeroMemory(&index_data, sizeof(index_data));
-			index_data.pSysMem = indices;
+			index_data.pSysMem = indices[i];
 			HRESULT hr = d3d_device_->CreateBuffer(&bd, &index_data, &pIB[i]);
 			if (FAILED(hr))
 			{
@@ -206,11 +180,11 @@ void Cube::InitIndexBuffer()
 			}
 		}
 
-		// Copy index data
-		void* pIndices;
-		vertex_buffer_->Map(D3D10_MAP_WRITE_DISCARD, 0, &pIndices);
-		memcpy(pIndices, indices, sizeof(indices));
-		vertex_buffer_->Unmap();
+		//// Copy index data
+		//void* pIndices;
+		//vertex_buffer_->Map(D3D10_MAP_WRITE_DISCARD, 0, &pIndices);
+		//memcpy(pIndices, indices, sizeof(indices));
+		//vertex_buffer_->Unmap();
 	}
 }
 
@@ -257,92 +231,6 @@ void Cube::InitCornerPoints(D3DXVECTOR3& front_bottom_left)
 	max_point_ = max_point;
 }
 
-void Cube::InitRasterizationState()
-{
-	rasterization_desc_.AntialiasedLineEnable = true;
-	rasterization_desc_.CullMode = D3D10_CULL_BACK;
-	rasterization_desc_.DepthBias = 0;
-	rasterization_desc_.DepthBiasClamp = 0.0f;
-	rasterization_desc_.DepthClipEnable = true;
-	rasterization_desc_.FillMode = D3D10_FILL_SOLID;
-	rasterization_desc_.FrontCounterClockwise = false;
-	rasterization_desc_.MultisampleEnable = false;
-	rasterization_desc_.ScissorEnable = false;
-	rasterization_desc_.SlopeScaledDepthBias = 0.0f;
-
-	d3d_device_->CreateRasterizerState(&rasterization_desc_, &rasterization_state_);
-}
-
-void Cube::InitEffects()
-{
-	ID3DBlob* pErrorBlob;
-
-	// Create the effect
-    DWORD dwShaderFlags = D3D10_SHADER_ENABLE_STRICTNESS;
-#if defined( DEBUG ) || defined( _DEBUG )
-    // Set the D3D10_SHADER_DEBUG flag to embed debug information in the shaders.
-    // Setting this flag improves the shader debugging experience, but still allows 
-    // the shaders to be optimized and to run exactly the way they will run in 
-    // the release configuration of this program.
-    dwShaderFlags |= D3D10_SHADER_DEBUG;
-#endif
-
-	// Compile the effects file
-    HRESULT hr = D3DX10CreateEffectFromFile( L"rubik_cube.fx", NULL, NULL, "fx_4_0", dwShaderFlags, 0,
-                                         d3d_device_, NULL, NULL, &effects_, &pErrorBlob, NULL);
-
-    // Output the error message if compile failed
-	if(FAILED(hr))
-    {
-        if(pErrorBlob != NULL)
-		{
-			OutputDebugStringA((CHAR*)pErrorBlob->GetBufferPointer());
-			pErrorBlob->Release();
-		}
-    }
-
-	// Release the Blob
-	if(pErrorBlob)
-	{
-		pErrorBlob->Release();
-	}
-
-    // Obtain the technique
-    technique_ = effects_->GetTechniqueByName("Render");
-	if (technique_ == NULL)
-	{
-		MessageBox(NULL, L"Get technique failed", L"Error", 0);
-	}
-
-	 // Obtain shader variables
-	handle_world_matrix_	= effects_->GetVariableByName("World")->AsMatrix();
-	handle_wvp_matrix_      = effects_->GetVariableByName("gWVP")->AsMatrix();
-	handle_is_face_texture_ = effects_->GetVariableByName("Is_Face_Texture")->AsScalar();
-	handle_face_texture_	= effects_->GetVariableByName("FaceTexture")->AsShaderResource();
-	handle_inner_texture_   = effects_->GetVariableByName("InnerTexture")->AsShaderResource();
-	handle_eye_position_    = effects_->GetVariableByName("EyePosition")->AsVector();
-
-    // Define the input layout
-    D3D10_INPUT_ELEMENT_DESC layout[] =
-    {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D10_INPUT_PER_VERTEX_DATA, 0 },
-        { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D10_INPUT_PER_VERTEX_DATA, 0 },
-    };
-
-	// Create the input layout
-    UINT numElements = sizeof(layout) / sizeof(layout[0]);
-	D3D10_PASS_DESC PassDesc;
-	ZeroMemory(&PassDesc, sizeof(PassDesc));
-    technique_->GetPassByIndex(0)->GetDesc(&PassDesc);
-    hr = d3d_device_->CreateInputLayout(layout, numElements, PassDesc.pIAInputSignature,
-                                          PassDesc.IAInputSignatureSize, &input_layout_);
-    if(FAILED(hr))
-	{
-		MessageBox(NULL, L"Create input layout failed", L"Error", 0);
-	}
-}
-
 D3DXVECTOR3 Cube::CalculateCenter(D3DXVECTOR3& min_point, D3DXVECTOR3& max_point)
 {
 	return (min_point + max_point) / 2;
@@ -351,19 +239,6 @@ D3DXVECTOR3 Cube::CalculateCenter(D3DXVECTOR3& min_point, D3DXVECTOR3& max_point
 void Cube::SetTextureId(int faceId, int texId)
 {
 	textureId[faceId] = texId;
-}
-
-void Cube::SetFaceTexture(ID3D10ShaderResourceView** faceTextures, int numTextures)
-{
-	for(int i = 0; i < numTextures; ++i)
-	{
-		pTextures[i] = faceTextures[i];
-	}
-}
-
-void Cube::SetInnerTexture(ID3D10ShaderResourceView* innerTexture)
-{
-	inner_texture_ = innerTexture;
 }
 
 void Cube::SetDevice(ID3D10Device* pDevice)
@@ -427,10 +302,12 @@ void Cube::Rotate(D3DXVECTOR3& axis, float angle)
 	world_matrix_ *= rotate_matrix;
 }
 
-void Cube::Draw(D3DXMATRIX& view_matrix, D3DXMATRIX& proj_matrix, D3DXVECTOR3& eye_pos)
+void Cube::Draw(ID3D10Effect* effects, D3DXMATRIX& view_matrix, D3DXMATRIX& proj_matrix, D3DXVECTOR3& eye_pos)
 {
-	// Setup world matrix for current cube
-	handle_world_matrix_->SetMatrix((float*)world_matrix_);
+	 // Obtain shader variables
+	face_id_             = effects->GetVariableByName("FaceId")->AsScalar();
+ 	handle_wvp_matrix_   = effects->GetVariableByName("gWVP")->AsMatrix();
+	handle_eye_position_ = effects->GetVariableByName("EyePosition")->AsVector();
 
 	// Set world view projection matrix
 	D3DXMATRIX wvp_matrix = world_matrix_ * view_matrix * proj_matrix;
@@ -445,39 +322,33 @@ void Cube::Draw(D3DXMATRIX& view_matrix, D3DXMATRIX& proj_matrix, D3DXVECTOR3& e
 	UINT offset = 0;
 	d3d_device_->IASetVertexBuffers(0, 1, &vertex_buffer_, &stride, &offset);
 
-	// Set the input layout
-	d3d_device_->IASetInputLayout(input_layout_);
-
 	// Set geometry type
 	d3d_device_->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
-	// Set rasterazition state
-	d3d_device_->RSSetState(rasterization_state_);
+	// Obtain the technique
+    ID3D10EffectTechnique* technique = effects->GetTechniqueByName("Render");
+	if (technique == NULL)
+	{
+		MessageBox(NULL, L"Get technique failed", L"Error", 0);
+	}
 
 	// Apply each pass in technique and draw triangle.
 	D3D10_TECHNIQUE_DESC techDesc;
-	technique_->GetDesc(&techDesc);
+	technique->GetDesc(&techDesc);
 	for (unsigned int i = 0; i < techDesc.Passes; ++i)
 	{
-		technique_->GetPassByIndex(i)->Apply(0);
+		ID3D10EffectPass* pass = technique->GetPassByIndex(i);
 
 		// Draw cube by draw every face of the cube
 		for(int i = 0; i < kNumFaces_; ++i)
 		{
-			/*if(textureId[i] >= 0)
-			{
-				handle_is_face_texture_->SetBool(true);
-				handle_face_texture_->SetResource(pTextures[textureId[i]]);
-			}
-			else
-			{
-				handle_is_face_texture_->SetBool(false);
-				handle_inner_texture_->SetResource(inner_texture_);
-			}*/
+			face_id_->SetInt(textureId[i]);
+			d3d_device_->IASetIndexBuffer(pIB[i], DXGI_FORMAT_R16_UINT, 0);
 
+			pass->Apply(0);
+			
 			// Set index buffer
-			d3d_device_->IASetIndexBuffer(pIB[i], DXGI_FORMAT_R32_UINT, 0);
-			d3d_device_->DrawIndexed(24, 0, 0);
+			d3d_device_->DrawIndexed(4, 0, 0);
 		}
 	}
 }

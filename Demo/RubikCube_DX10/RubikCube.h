@@ -48,16 +48,13 @@ private:
 	void OnMouseMove(int x, int y);
 	void OnLeftButtonUp();
 	void InitD3D10(HWND hWnd);
-	HRESULT ResetDevice();
-	void ResizeD3D9Scene(int width, int height);
-	void SetupLight();
+	void ResizeD3DScene(int width, int height);
 	void SetupMatrix();
-	ID3D10ShaderResourceView* CreateTexture(int texWidth, int texHeight, D3DXCOLOR color);
-	ID3D10ShaderResourceView* CreateInnerTexture(int texWidth, int texHeight, D3DXCOLOR color);
-	void InitTextures();
 	void InitCubes();
+	void InitEffects();
 	void ResetLayerIds();
 	void ResetTextures();
+	D3DXVECTOR2 GetMaxScreenResolution();
 	D3DXVECTOR3 ScreenToVector3(int x, int y);
 	Ray CalculatePickingRay(int x, int y);
 	Face GetPickedFace(D3DXVECTOR3 hit_point) const;	// Get the face picking by mouse 
@@ -117,24 +114,20 @@ private:
 	int current_window_width_;
 	int current_window_height_;
 
-	// Textures
-	int texture_width_;						// Texture width in pixel.
-	int texture_height_;					// Texture height in pixel.
-	int* texture_id_;						// The index is the faceId, the value is the texture_id_.
-
-
 	ID3D10Device*			d3ddevice_;			// D3D9 Device
 	IDXGISwapChain*			swap_chain_;		// DXGI swap chain
+	ID3D10Effect*			effects_;			// D3D10 effect
+	ID3D10InputLayout*		input_layout_;
+	IDXGIOutput*			output_;			// DXGI Adapter output
 	ID3D10RenderTargetView* rendertarget_view_; // Rendertarget view
+	ID3D10DepthStencilView* depth_stencil_view_;	// Depth-stencil view
 	DXGI_SWAP_CHAIN_DESC    sd_;				// SwapChain descriptioin
 	D3D10_VIEWPORT			vp_;				// Viewport
-	bool					is_fullscreen_;	// Is Game in Full-Screen mode?
+	bool					is_fullscreen_;		// Is Game in Full-Screen mode?
 
-	HWND hWnd;				// Handle of game window
+	HWND hWnd;			// Handle of game window
 	int screen_width_;	// The maximum resolution width
 	int screen_height_;	// The maximum resolution height
-	ID3D10ShaderResourceView**	face_textures_;		// Face textures
-	ID3D10ShaderResourceView*	inner_textures_;	// Inner face texture.
 };
 
 #endif // end __RUBIK_CUBE_H__

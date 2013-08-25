@@ -4,6 +4,12 @@
 
 RubikCube::RubikCube(void)
 	: d3ddevice_(NULL),
+      swap_chain_(NULL),
+	  output_(NULL),
+	  effects_(NULL),
+	  input_layout_(NULL),
+	  rendertarget_view_(NULL),
+	  depth_stencil_view_(NULL),
 	  is_fullscreen_(false),
 	  kNumLayers(3),
       kNumCubes(kNumLayers * kNumLayers * kNumLayers),
@@ -20,13 +26,12 @@ RubikCube::RubikCube(void)
 	  init_window_y_(0),
 	  init_window_width_(1000),
 	  init_window_height_(1000),
+	  screen_width_(0),
+	  screen_height_(0),
 	  current_window_width_(init_window_width_),
 	  current_window_height_(init_window_height_),
 	  last_window_width_(current_window_width_),
-	  last_window_height_(current_window_height_),
-	  texture_width_(128),
-	  texture_height_(128),
-	  inner_textures_(NULL)
+	  last_window_height_(current_window_height_)
 {
 	world_arcball_ = new ArcBall();
 
@@ -72,15 +77,6 @@ RubikCube::RubikCube(void)
 	faces[3] = RightFace;
 	faces[4] = TopFace;
 	faces[5] = BottomFace;
-
-	texture_id_ = new int[kNumFaces];
-	face_textures_ = new ID3D10ShaderResourceView*[kNumFaces];
-
-	for(int i = 0; i < kNumFaces; ++i)
-	{
-		texture_id_[i] = -1;
-		face_textures_[i] = NULL;
-	}
 }
 
 RubikCube::~RubikCube(void)
@@ -101,26 +97,18 @@ RubikCube::~RubikCube(void)
 	delete []faces;
 	faces = NULL;
 
-	delete []texture_id_;
-	texture_id_ = NULL;
-
-	// Release face textures
-	for(int i = 0; i < kNumFaces; ++i)
+	if (effects_ != NULL)
 	{
-		if(face_textures_[i] != NULL)
-		{
-			face_textures_[i]->Release();
-			face_textures_[i] = NULL;
-		}
+		effects_->Release();
+		effects_ = NULL;
 	}
 
-	// Release inner texture
-	if (inner_textures_ != NULL)
+	if (input_layout_ != NULL)
 	{
-		inner_textures_->Release();
-		inner_textures_ = NULL;
+		input_layout_->Release();
+		input_layout_ = NULL;
 	}
-	
+
 	// Release Direct3D Device
 	if(d3ddevice_ != NULL)
 	{
@@ -135,9 +123,9 @@ void RubikCube::Initialize(HWND hWnd)
 
 	InitD3D10(hWnd);
 
-	InitTextures();
-
 	InitCubes();
+
+	InitEffects();
 
 	ResetTextures();
 
@@ -230,6 +218,64 @@ void RubikCube::ResetTextures()
 	}
 }
 
+D3DXVECTOR2 RubikCube::GetMaxScreenResolution()
+{
+	// Return value
+	int  max_screen_width = 0;
+	int max_screen_height = 0;
+
+	// Create DXGI factory
+	IDXGIFactory* pFactory = NULL;
+	HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)(&pFactory));
+	if (FAILED(hr))
+	{
+		MessageBox(NULL, L"Create DXGI factory failed", L"Error", 0);
+	}
+
+	// Enumerate all adapters in current system
+	IDXGIAdapter* pAdapter = NULL;
+	for (UINT i = 0; pFactory->EnumAdapters(i, &pAdapter) != DXGI_ERROR_NOT_FOUND; ++i)
+	{
+		// Enumerate all output in current adapters
+		IDXGIOutput* pOutput = NULL;
+		for (UINT i = 0; pAdapter->EnumOutputs(i, &pOutput) != DXGI_ERROR_NOT_FOUND; ++i)
+		{
+			// Fetch Output infomation
+			DXGI_OUTPUT_DESC outputDesc;
+			pOutput->GetDesc(&outputDesc);
+
+			// Calculate desktop resolution for current output
+			int current_screen_width  = outputDesc.DesktopCoordinates.right - outputDesc.DesktopCoordinates.left;
+			int current_screen_height = outputDesc.DesktopCoordinates.bottom - outputDesc.DesktopCoordinates.top;
+
+			// Get the maximum screen resolution
+			if (max_screen_width < current_screen_width)
+			{
+				output_ = pOutput;
+				max_screen_width  = current_screen_width;
+
+				// Screen height was updated based on screen width, we don't compare screen width to get the 
+				// maximum value here, this will cause error sometimes, take a look at the following two resolutions
+				// 1600 * 900 and 1360 * 1024, 1600 > 1360, but 900 < 1024.
+				max_screen_height = current_screen_height;
+			}
+		}
+	}
+
+	// When pFactory->EnumAdapters return DXGI_NOT_FOUND, pAdapter was set to NULL
+	// So only call Release when pAdapter was not NULL.
+	if (pAdapter != NULL)
+	{
+		pAdapter->Release();
+		pAdapter = NULL;
+	}
+
+	pFactory->Release();
+	pFactory = NULL;
+
+	return D3DXVECTOR2((float)max_screen_width, (float)max_screen_height);
+}
+
 void RubikCube::Render()
 {
 	// Window was inactive(minimized or hidden by other apps), yields 25ms to other program
@@ -250,17 +296,20 @@ void RubikCube::Render()
 	float color[4] = { 0.0f, 0.125f, 0.3f, 1.0f };
 	d3ddevice_->ClearRenderTargetView(rendertarget_view_, color);
 
+	// Clear the depth-stencil buffer
+	d3ddevice_->ClearDepthStencilView(depth_stencil_view_, D3D10_CLEAR_DEPTH, 1.0f, 0);
+
 	// Store old world matrix
 	D3DXMATRIX world_matrix = camera_->GetWorldMatrix() ;
 
 	//draw all unit cubes to build the Rubik cube
 	for(int i = 0; i < kNumCubes; i++)
 	{
-		cubes[i].Draw(view_matrix, proj_matrix, eye_pos);
+		cubes[i].Draw(effects_, view_matrix, proj_matrix, eye_pos);
 	}
 
 	// Restore world matrix since the Draw function in class Cube has set the world matrix for each cube
-	//camera_->SetWorldMatrix(world_matrix);
+	camera_->SetWorldMatrix(world_matrix);
 
 	// Present the sence from back buffer to front buffer
 	swap_chain_->Present(0, 0);
@@ -323,43 +372,24 @@ void RubikCube::Restore()
 	ResetLayerIds();
 }
 
-// Switch from window mode and full-screen mode
+// Switch between window mode and full-screen mode
 void RubikCube::ToggleFullScreen()
 {
-	wp.length = sizeof(WINDOWPLACEMENT) ;
-
-	// Window -> Full-Screen
-	if(is_fullscreen_ == false)
+	// Window -> Full-screen
+	if (is_fullscreen_ == false)
 	{
 		is_fullscreen_ = true;
-
-		// Get and save window placement
-		GetWindowPlacement(hWnd_, &wp) ;
-
-		// Update back buffer to desktop resolution
-		sd_.BufferDesc.Width = current_window_width_;
-		sd_.BufferDesc.Height = current_window_height_;
+		ResizeD3DScene(screen_width_, screen_height_);
+		//swap_chain_->SetFullscreenState(true, NULL);
 	}
-	else // Full-Screen -> Window
+	
+	// Full-screen -> Window
+	else 
 	{
 		is_fullscreen_ = false;
-
-		// Update back buffer size
-		sd_.BufferDesc.Width = current_window_width_;
-		sd_.BufferDesc.Height = current_window_height_;
-
-
-		// When swith from Full-Screen mode to window mode and the wp structe was not initialized
-		// The window position and size was unavailable, this will happened when the app start as full-screen mode
-		// give a defaul value of it.
-		//
-
-		// Restore window placement
-		SetWindowPlacement(hWnd_, &wp) ;
+		ResizeD3DScene(screen_width_, screen_height_);
+		swap_chain_->SetFullscreenState(false, NULL);
 	}
-
-	// Display mode changed, we need to reset device
-	ResizeD3D9Scene(sd_.BufferDesc.Width, sd_.BufferDesc.Height);
 }
 
 void RubikCube::OnLeftButtonDown(int x, int y)
@@ -555,11 +585,6 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		}
 		break ;
 
-	/*case WM_CAPTURECHANGED:
-		OnLeftButtonUp();
-		ReleaseCapture();
-		break;*/
-
 	case WM_LBUTTONUP:
 		{
 			OnLeftButtonUp();
@@ -603,6 +628,9 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 	case WM_SIZE: // why not use WM_EXITSIZEMOVE?
 		{
+			if (!swap_chain_)
+				return 0;
+
 			// inactive the app when window is minimized
 			if(wParam == SIZE_MINIMIZED)
 				window_active_ = false ;
@@ -618,7 +646,7 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					// Update back buffer to desktop resolution
 					sd_.BufferDesc.Width = current_window_width_;
 					sd_.BufferDesc.Height = current_window_height_;
-					ResizeD3D9Scene(current_window_width_, current_window_height_);
+					ResizeD3DScene(current_window_width_, current_window_height_);
 
 					last_window_width_ = current_window_width_ ;
 					last_window_height_ = current_window_height_ ;
@@ -633,11 +661,11 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				if (is_fullscreen_ == true)
 				{
 					// Update back buffer to desktop resolution
-					sd_.BufferDesc.Width = current_window_width_;
-					sd_.BufferDesc.Height = current_window_height_;
+					sd_.BufferDesc.Width = screen_width_;
+					sd_.BufferDesc.Height = screen_height_;
 
-					// Reset device
-					ResizeD3D9Scene(current_window_width_, current_window_height_);
+					// resize scene
+					ResizeD3DScene(screen_width_, screen_width_);
 				}
 				else
 				{
@@ -648,7 +676,7 @@ LRESULT RubikCube::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					// Reset device
 					sd_.BufferDesc.Width = current_window_width_;
 					sd_.BufferDesc.Height = current_window_height_;
-					ResizeD3D9Scene(current_window_width_, current_window_height_);
+					ResizeD3DScene(current_window_width_, current_window_height_);
 
 					last_window_width_ = current_window_width_ ;
 					last_window_height_ = current_window_height_ ;
@@ -725,6 +753,60 @@ void RubikCube::InitD3D10(HWND hWnd)
 		MessageBox(hWnd, L"Create device and swap chain failed!", L"Error", 0);
 	}
 
+	// Create depth-stencil resource
+	D3D10_TEXTURE2D_DESC tex_desc;
+	ZeroMemory(&tex_desc, sizeof(tex_desc));
+	tex_desc.Width = sd_.BufferDesc.Width;
+	tex_desc.Height = sd_.BufferDesc.Height;
+	tex_desc.MipLevels = 1;
+	tex_desc.ArraySize = 1;
+	tex_desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	tex_desc.SampleDesc = sd_.SampleDesc;
+	tex_desc.Usage = D3D10_USAGE_DEFAULT;
+	tex_desc.BindFlags = D3D10_BIND_DEPTH_STENCIL;
+	tex_desc.CPUAccessFlags = 0;
+	tex_desc.MiscFlags = 0;
+
+	ID3D10Texture2D* depth_stencil = NULL;
+	hr = d3ddevice_->CreateTexture2D(&tex_desc, NULL, &depth_stencil);
+	if (FAILED(hr))
+	{
+		MessageBox(hWnd, L"Create depth and stencil buffer failed!", L"Error", 0);
+	}
+
+	// Create depth-stencil state
+	D3D10_DEPTH_STENCIL_DESC dsDesc;
+	ZeroMemory(&dsDesc, sizeof(dsDesc));
+	dsDesc.DepthEnable = true;
+	dsDesc.DepthWriteMask = D3D10_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D10_COMPARISON_LESS;
+
+	ID3D10DepthStencilState* pDSState = NULL;
+	hr = d3ddevice_->CreateDepthStencilState(&dsDesc, &pDSState);
+	if (FAILED(hr))
+	{
+		MessageBox(hWnd, L"Create depth and stencil state failed!", L"Error", 0);
+	}
+
+	// Bind depth-stencil state.
+	d3ddevice_->OMSetDepthStencilState(pDSState, 1);
+
+	// Bind the depth_stencil resource using a view.
+	D3D10_DEPTH_STENCIL_VIEW_DESC descDSV;
+	ZeroMemory(&descDSV, sizeof(descDSV));
+	descDSV.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	descDSV.ViewDimension = D3D10_DSV_DIMENSION_TEXTURE2D;
+	descDSV.Texture2D.MipSlice = 0;
+
+	hr = d3ddevice_->CreateDepthStencilView(
+		depth_stencil,
+		&descDSV,
+		&depth_stencil_view_);
+	if (FAILED(hr))
+	{
+		MessageBox(hWnd, L"Create depth and stencil view failed!", L"Error", 0);
+	}
+
 	// Create render target and bind the back-buffer
 	ID3D10Texture2D* pBackBuffer;
 
@@ -738,17 +820,25 @@ void RubikCube::InitD3D10(HWND hWnd)
 	// Create a render-target view
 	d3ddevice_->CreateRenderTargetView(pBackBuffer, NULL, &rendertarget_view_);
 
+	// Release temporary back buffer
+	pBackBuffer->Release();
+
 	// Bind the view
-	d3ddevice_->OMSetRenderTargets(1, &rendertarget_view_, NULL); // WHAT'S OM here mean?
+	d3ddevice_->OMSetRenderTargets(1, &rendertarget_view_, depth_stencil_view_); 
 
 	// Setup the viewport
-	vp_.Width = width; // this should be similar with the back-buffer width, global it!
-	vp_.Height = height;
+	vp_.Width    = width; // this should be similar with the back-buffer width, global it!
+	vp_.Height   = height;
 	vp_.MinDepth = 0.0f;
 	vp_.MaxDepth = 1.0f;
 	vp_.TopLeftX = 0;
 	vp_.TopLeftY = 0;
 	d3ddevice_->RSSetViewports(1, &vp_);
+
+	// Get maximum screen resolution
+	D3DXVECTOR2 max_screen_resolution = GetMaxScreenResolution();
+	screen_width_  = (int)max_screen_resolution.x;
+	screen_height_ = (int)max_screen_resolution.y;
 
 	// Setup view matrix
 	D3DXVECTOR3 vecEye(0.0f, 0.0f, -10.0f);
@@ -761,7 +851,7 @@ void RubikCube::InitD3D10(HWND hWnd)
 	camera_->SetProjParams((float)D3DX_PI / 4, aspectRatio, 1.0f, 1000.0f) ;
 }
 
-void RubikCube::ResizeD3D9Scene(int width, int height)
+void RubikCube::ResizeD3DScene(int width, int height)
 {
 	if (height == 0)				// Prevent A Divide By Zero By
 		height = 1;					// Making Height Equal One
@@ -773,216 +863,40 @@ void RubikCube::ResizeD3D9Scene(int width, int height)
 	camera_->SetProjParams((float)D3DX_PI / 4, fAspectRatio, 1.0f, 1000.0f);
 
 	camera_->SetWindow(width, height);
-}
 
-void RubikCube::InitTextures()
-{
-	DWORD colors[] = 
-	{
-		0xffffffff, // White,   front face
-		0xffffff00, // Yellow,	back face
-		0xffff0000, // Red,		left face
-		0xffffa500,	// Orange,	right face
-		0xff00ff00, // Green,	top face
-		0xff0000ff, // Blue,	bottom face
-	};
+	// Release all references to swap chain
+	rendertarget_view_->Release();
 
-	// Create face textures
-	for(int i = 0; i < kNumFaces; ++i)
-	{
-		face_textures_[i] = CreateTexture(texture_width_, texture_height_, colors[i]);
-	}
+	// Resize back buffer
+	swap_chain_->ResizeBuffers(1, width, height, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
 
-	// Create inner texture
-	inner_textures_ = CreateInnerTexture(texture_width_, texture_height_, 0xffffffff);
+	// Create render target and bind the back-buffer
+	ID3D10Texture2D* pBackBuffer;
 
-	Cube::SetFaceTexture(face_textures_, kNumFaces);
-	Cube::SetInnerTexture(inner_textures_);
-}
-
-ID3D10ShaderResourceView* RubikCube::CreateTexture(int texWidth, int texHeight, D3DXCOLOR color)
-{
-	// Create a texture Description and fill it.
-	D3D10_TEXTURE2D_DESC texDesc;
-	ZeroMemory(&texDesc, sizeof(texDesc));
-
-	texDesc.ArraySize		= 1;				// Number of textures
-	texDesc.Usage			= D3D10_USAGE_DYNAMIC; 
-	texDesc.BindFlags		= D3D10_BIND_SHADER_RESOURCE;
-	texDesc.CPUAccessFlags	= D3D10_CPU_ACCESS_WRITE;	// CPU will write this resource
-	texDesc.Format			= DXGI_FORMAT_R8G8B8A8_UNORM;
-	texDesc.Width			= texWidth;
-	texDesc.Height			= texHeight;
-	texDesc.MipLevels		= 1;
-	texDesc.MiscFlags		= 0;
-
-	DXGI_SAMPLE_DESC sampleDes;
-	ZeroMemory(&sampleDes, sizeof(sampleDes));
-	sampleDes.Count = 1;
-	sampleDes.Quality = 0;
-	texDesc.SampleDesc = sampleDes;
-
-	// Create sub resource
-	D3D10_SUBRESOURCE_DATA texData;
-	ZeroMemory(&texData, sizeof(texData));
-	texData.pSysMem = 0;
-	texData.SysMemPitch = 0;
-	texData.SysMemSlicePitch = 0;
-
-	// Create texture
-	ID3D10Texture2D* pTexture = NULL;
-	HRESULT hr = d3ddevice_->CreateTexture2D(&texDesc, NULL, &pTexture);
+	// Get a pointer to the back buffer
+	HRESULT hr = swap_chain_->GetBuffer(0, __uuidof(ID3D10Texture2D), (LPVOID* )&pBackBuffer);
 	if (FAILED(hr))
 	{
-		MessageBox(NULL, L"Create texture in memory failed", L"Error", 0);
+		MessageBox(hWnd, L"Get buffer failed!", L"Error", 0);
 	}
 
-	// Lock texture and fill in colors
-	D3D10_MAPPED_TEXTURE2D mappedTex;
-	ZeroMemory(&mappedTex, sizeof(mappedTex));
+	// Create a render-target view
+	d3ddevice_->CreateRenderTargetView(pBackBuffer, NULL, &rendertarget_view_);
 
-	hr = pTexture->Map(0, D3D10_MAP_WRITE_DISCARD, 0, &mappedTex);
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"Map texture failed", L"Error", 0);
-	}
+	// Release temporary back buffer
+	pBackBuffer->Release();
 
-	DWORD sideColor = 0xff000000; // the side line color
+	// Bind the view
+	d3ddevice_->OMSetRenderTargets(1, &rendertarget_view_, NULL); 
 
-	int side_width = 10;
-
-	// Calculate number of rows in the locked Rect
-	int rowCount = (texWidth * texHeight * 4 ) / mappedTex.RowPitch;
-
-	for (int i = 0; i < texWidth; ++i)
-	{
-		for (int j = 0; j < texHeight; ++j)
-		{
-			int index = i * rowCount + j;
-
-			int* pData = (int*)mappedTex.pData;
-
-			if (i <= side_width || i >= texWidth - side_width 
-				|| j <= side_width || j >= texHeight - side_width)
-			{
-				memcpy(&pData[index], &sideColor, 4);
-			}
-			else
-			{
-				memcpy(&pData[index], &color, 4);
-			}
-		}
-	}
-
-	// Unlock texture
-	pTexture->Unmap(0);
-
-	// Create shader resource view to bind the texture
-	D3D10_SHADER_RESOURCE_VIEW_DESC srvDesc;
-
-	D3D10_TEXTURE2D_DESC desc;
-	pTexture->GetDesc(&desc);
-	srvDesc.Format = desc.Format;
-	srvDesc.ViewDimension = D3D10_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = desc.MipLevels;
-	srvDesc.Texture2D.MostDetailedMip = desc.MipLevels - 1;
-
-	ID3D10ShaderResourceView* texture_view;
-	hr = d3ddevice_->CreateShaderResourceView(pTexture, &srvDesc, &texture_view);
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"Create shader resource view failed", L"Error", 0);
-	}
-
-	return texture_view;
-}
-
-ID3D10ShaderResourceView* RubikCube::CreateInnerTexture(int texWidth, int texHeight, D3DXCOLOR color)
-{
-	// Create a texture Description and fill it.
-	D3D10_TEXTURE2D_DESC texDesc;
-	ZeroMemory(&texDesc, sizeof(texDesc));
-
-	texDesc.ArraySize		= 1;				// Number of textures
-	texDesc.Usage			= D3D10_USAGE_DYNAMIC; 
-	texDesc.BindFlags		= D3D10_BIND_SHADER_RESOURCE;
-	texDesc.CPUAccessFlags	= D3D10_CPU_ACCESS_WRITE;	// CPU will write this resource
-	texDesc.Format			= DXGI_FORMAT_R8G8B8A8_UNORM;
-	texDesc.Width			= texWidth;
-	texDesc.Height			= texHeight;
-	texDesc.MipLevels		= 1;
-	texDesc.MiscFlags		= 0;
-
-	DXGI_SAMPLE_DESC sampleDes;
-	ZeroMemory(&sampleDes, sizeof(sampleDes));
-	sampleDes.Count = 1;
-	sampleDes.Quality = 0;
-	texDesc.SampleDesc = sampleDes;
-
-	// Create sub resource
-	D3D10_SUBRESOURCE_DATA texData;
-	ZeroMemory(&texData, sizeof(texData));
-	texData.pSysMem = 0;
-	texData.SysMemPitch = 0;
-	texData.SysMemSlicePitch = 0;
-
-	// Create texture
-	ID3D10Texture2D* pTexture = NULL;
-	HRESULT hr = d3ddevice_->CreateTexture2D(&texDesc, NULL, &pTexture);
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"Create texture in memory failed", L"Error", 0);
-	}
-
-	// Lock texture and fill in colors
-	D3D10_MAPPED_TEXTURE2D mappedTex;
-	ZeroMemory(&mappedTex, sizeof(mappedTex));
-
-	hr = pTexture->Map(0, D3D10_MAP_WRITE_DISCARD, 0, &mappedTex);
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"Map texture failed", L"Error", 0);
-	}
-
-	// Fill in colors
-	DWORD sideColor = 0xff121212; // the side line color
-
-	// Calculate number of rows in the locked Rect
-	int rowCount = (texWidth * texHeight * 4 ) / mappedTex.RowPitch;
-
-	for (int i = 0; i < texWidth; ++i)
-	{
-		for (int j = 0; j < texHeight; ++j)
-		{
-			int index = i * rowCount + j;
-
-			int* pData = (int*)mappedTex.pData;
-		
-			memcpy(&pData[index], &color, 4);
-		}
-	}
-
-	// Unlock texture
-	pTexture->Unmap(0);
-
-	// Create shader resource view to bind the texture
-	D3D10_SHADER_RESOURCE_VIEW_DESC srvDesc;
-
-	D3D10_TEXTURE2D_DESC desc;
-	pTexture->GetDesc(&desc);
-	srvDesc.Format = desc.Format;
-	srvDesc.ViewDimension = D3D10_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = desc.MipLevels;
-	srvDesc.Texture2D.MostDetailedMip = desc.MipLevels - 1;
-
-	ID3D10ShaderResourceView* texture_view;
-	hr = d3ddevice_->CreateShaderResourceView(pTexture, &srvDesc, &texture_view);
-	if (FAILED(hr))
-	{
-		MessageBox(NULL, L"Create shader resource view failed", L"Error", 0);
-	}
-
-	return texture_view;
+	// Setup the viewport
+	vp_.Width = width; // this should be similar with the back-buffer width, global it!
+	vp_.Height = height;
+	vp_.MinDepth = 0.0f;
+	vp_.MaxDepth = 1.0f;
+	vp_.TopLeftX = 0;
+	vp_.TopLeftY = 0;
+	d3ddevice_->RSSetViewports(1, &vp_);
 }
 
 void RubikCube::InitCubes()
@@ -1039,6 +953,81 @@ void RubikCube::InitCubes()
 	{
 		cubes[i].SetWorldMatrix(world_matrix);
 	}
+}
+
+void RubikCube::InitEffects()
+{
+	ID3DBlob* pErrorBlob;
+
+	// Create the effect
+    DWORD dwShaderFlags = D3D10_SHADER_ENABLE_STRICTNESS;
+#if defined( DEBUG ) || defined( _DEBUG )
+    // Set the D3D10_SHADER_DEBUG flag to embed debug information in the shaders.
+    // Setting this flag improves the shader debugging experience, but still allows 
+    // the shaders to be optimized and to run exactly the way they will run in 
+    // the release configuration of this program.
+    dwShaderFlags |= D3D10_SHADER_DEBUG;
+#endif
+
+	// Compile the effects file
+    HRESULT hr = D3DX10CreateEffectFromFile( 
+		L"multiple_texture.fx", 
+		NULL, 
+		NULL, 
+		"fx_4_0", 
+		dwShaderFlags, 
+		0,
+		d3ddevice_, 
+		NULL, 
+		NULL, 
+		&effects_, 
+		&pErrorBlob, 
+		NULL);
+
+    // Output the error message if compile failed
+	if(FAILED(hr))
+    {
+        if(pErrorBlob != NULL)
+		{
+			OutputDebugStringA((CHAR*)pErrorBlob->GetBufferPointer());
+			pErrorBlob->Release();
+		}
+    }
+
+	// Release the Blob
+	if(pErrorBlob)
+	{
+		pErrorBlob->Release();
+	}
+
+	// Obtain the technique
+    ID3D10EffectTechnique* technique_ = effects_->GetTechniqueByName("Render");
+	if (technique_ == NULL)
+	{
+		MessageBox(NULL, L"Get technique failed", L"Error", 0);
+	}
+
+	// Define the input layout
+    D3D10_INPUT_ELEMENT_DESC layout[] =
+    {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D10_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 12, D3D10_INPUT_PER_VERTEX_DATA, 0 },
+    };
+
+	// Create the input layout
+    UINT numElements = sizeof(layout) / sizeof(layout[0]);
+	D3D10_PASS_DESC PassDesc;
+	ZeroMemory(&PassDesc, sizeof(PassDesc));
+    technique_->GetPassByIndex(0)->GetDesc(&PassDesc);
+    hr = d3ddevice_->CreateInputLayout(layout, numElements, PassDesc.pIAInputSignature,
+                                          PassDesc.IAInputSignatureSize, &input_layout_);
+    if(FAILED(hr))
+	{
+		MessageBox(NULL, L"Create input layout failed", L"Error", 0);
+	}
+
+	// Set input layout
+	d3ddevice_->IASetInputLayout(input_layout_);
 }
 
 int RubikCube::GetWindowPosX() const
@@ -1407,6 +1396,8 @@ int  RubikCube::GetHitLayer(Face face, D3DXVECTOR3& rotate_axis, D3DXVECTOR3& hi
 			break;
 		}
 	}
+
+	return -1;
 }
 
 void RubikCube::RotateLayer(int layer, D3DXVECTOR3& axis, float angle)

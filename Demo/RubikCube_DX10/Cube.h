@@ -7,7 +7,6 @@
 struct Vertex
 {
 	float  x,  y,  z; // position
-	float nx, ny, nz; // normal
 	float  u,  v;     // texture
 };
 
@@ -20,13 +19,11 @@ public:
 	void Init(D3DXVECTOR3& top_left_front_point);
 	void SetDevice(ID3D10Device* pDevice);
 	void SetTextureId(int faceId, int textureId);
-	static void SetFaceTexture(ID3D10ShaderResourceView** faceTextures, int numTextures);
-	static void SetInnerTexture(ID3D10ShaderResourceView* innerTexture);
 	void UpdateMinMaxPoints(D3DXVECTOR3& rotate_axis, int num_half_PI);
 	void UpdateCenter();
 	void UpdateLayerId();
 	void Rotate(D3DXVECTOR3& axis, float angle);
-	void Draw(D3DXMATRIX& view_matrix, D3DXMATRIX& proj_matrix, D3DXVECTOR3& eye_pos);
+	void Draw(ID3D10Effect* effects, D3DXMATRIX& view_matrix, D3DXMATRIX& proj_matrix, D3DXVECTOR3& eye_pos);
 
 	float GetLength() const;
 
@@ -49,8 +46,7 @@ private:
 	void InitVertexBuffer(D3DXVECTOR3& front_bottom_left);
 	void InitIndexBuffer();
 	void InitCornerPoints(D3DXVECTOR3& front_bottom_left_point);	// Initialize corner points.
-	void InitRasterizationState();
-	void InitEffects();
+	void InitInputLayout();
 	D3DXVECTOR3 CalculateCenter(D3DXVECTOR3& min_point, D3DXVECTOR3& max_point);
 	void InitLayerIds();
 
@@ -73,30 +69,16 @@ private:
 	int layer_id_y_;
 	int layer_id_z_;
 
-	static ID3D10ShaderResourceView* pTextures[kNumFaces_];
-	static ID3D10ShaderResourceView* inner_texture_;	// Inner face texture.
 	ID3D10Buffer*			pIB[kNumFaces_] ;
 	D3DXVECTOR3*			corner_points_;		// array to store the 8 corner poinst of the cube 
 	ID3D10Buffer*			vertex_buffer_ ;
 	ID3D10Device*			d3d_device_ ;
-	ID3D10Effect*			effects_;
-	ID3D10EffectTechnique*  technique_;
-	ID3D10InputLayout*		input_layout_;
-	ID3D10RasterizerState*  rasterization_state_;
-	ID3D10ShaderResourceView*   face_texture_view_;
-	ID3D10ShaderResourceView*   inner_texture_view_;
 	D3DXMATRIX				world_matrix_ ;		// world matrix for unit cube, for rotation.
-	D3D10_RASTERIZER_DESC   rasterization_desc_; // rasterization description
 
 	// Shader variables
-	//ID3D10EffectMatrixVariable* shader_world_matrix_;
-	ID3D10EffectMatrixVariable*	handle_world_matrix_;
+	ID3D10EffectScalarVariable* face_id_;
 	ID3D10EffectMatrixVariable*	handle_wvp_matrix_;
-	ID3D10EffectShaderResourceVariable*	handle_face_texture_;
-	ID3D10EffectShaderResourceVariable*	handle_inner_texture_;
-	ID3D10EffectScalarVariable*	handle_is_face_texture_;
 	ID3D10EffectVectorVariable*	handle_eye_position_;
-
 };
 
 #endif // end __CUBE_H__
