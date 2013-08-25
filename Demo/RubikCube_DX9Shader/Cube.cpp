@@ -10,6 +10,7 @@ Cube::Cube(void)
 	   layer_id_y_(-1),
 	   layer_id_z_(-1),
 	   vertex_buffer_(NULL),
+	   vertex_declare_(NULL),
 	   effects_(NULL)
 {
 	for (int i = 0; i < kNumFaces_; ++i)
@@ -33,6 +34,12 @@ Cube::~Cube(void)
 	{
 		vertex_buffer_->Release();
 		vertex_buffer_ = NULL;
+	}
+
+	if (vertex_declare_ != NULL)
+	{
+		vertex_declare_->Release();
+		vertex_declare_ = NULL;
 	}
 
 	// Release index buffer
@@ -120,6 +127,17 @@ void Cube::InitVertexBuffer(D3DXVECTOR3& front_bottom_left)
 		{          x,           y,           z,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f}, // 23
 	};
 	
+	// Create vertex declaration
+	D3DVERTEXELEMENT9 VertexPNElements[] =
+	{
+		{0, 0,  D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0},
+		{0, 12, D3DDECLTYPE_FLOAT3, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_NORMAL,   0},
+		{0, 24, D3DDECLTYPE_FLOAT2, D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0},
+		D3DDECL_END()
+	};
+
+	d3d_device_->CreateVertexDeclaration(VertexPNElements, &vertex_declare_);
+
 	// This function will also used to restore the Rubik Cube, but the CreateVertexBuffer function will cost and hold the memory if vertex_buffer_ not released
 	// When user press the 'R' frequently, memory usage increase time and time. so it's better to add a if branch to determine whether the buffer was created, if
 	// that's true, we didn't create it again, we only lock it and copy the data, so the buffer will  only created once the app starts.
@@ -128,7 +146,7 @@ void Cube::InitVertexBuffer(D3DXVECTOR3& front_bottom_left)
 		// Create vertex buffer
 		if (FAILED(d3d_device_->CreateVertexBuffer(sizeof(vertices) * sizeof(Vertex),
 			D3DUSAGE_WRITEONLY, 
-			VERTEX_FVF,
+			0,
 			D3DPOOL_MANAGED, 
 			&vertex_buffer_, 
 			NULL)))
@@ -246,10 +264,13 @@ void Cube::InitEffect()
 		MessageBoxA(0, (char*)errors->GetBufferPointer(), 0, 0);
 	}
 
+	handle_world_matrix = effects_->GetParameterByName(0, "World");
 	handle_wvp_matrix_ = effects_->GetParameterByName(0, "gWVP");
 	technique_         = effects_->GetTechniqueByName("Tech1");
 	handle_face_texture_ = effects_->GetParameterByName(0, "FaceTexture");
 	handle_inner_texture_ = effects_->GetAnnotationByName(0, "InnerTexture");
+	handle_is_face_texture_ = effects_->GetParameterByName(0, "Is_Face_Texture");
+	handle_eye_position_ = effects_->GetParameterByName(0, "EyePosition");
 }
 
 D3DXVECTOR3 Cube::CalculateCenter(D3DXVECTOR3& min_point, D3DXVECTOR3& max_point)
@@ -336,18 +357,26 @@ void Cube::Rotate(D3DXVECTOR3& axis, float angle)
 	world_matrix_ *= rotate_matrix;
 }
 
-void Cube::Draw(D3DXMATRIX view_matrix, D3DXMATRIX proj_matrix)
+void Cube::Draw(D3DXMATRIX& view_matrix, D3DXMATRIX& proj_matrix, D3DXVECTOR3& eye_pos)
 {
+	// Set world matrix
+	effects_->SetMatrix(handle_world_matrix, &world_matrix_);
+
 	// Set world view projection matrix
 	D3DXMATRIX wvp_matrix = world_matrix_ * view_matrix * proj_matrix;
 	effects_->SetMatrix(handle_wvp_matrix_, &wvp_matrix);
+
+	D3DXVECTOR4 eye_position(eye_pos.x, eye_pos.y, eye_pos.z, 1.0f);
+
+	// Get eye position
+	effects_->SetVector(handle_eye_position_, &eye_position);
 
 	// Set technique 
 	effects_->SetTechnique(technique_);
 
 	// Begin render 
 	unsigned int numPass = 0;
-	effects_->Begin(&numPass, 0);
+	effects_->Begin(&numPass, D3DXFX_DONOTSAVESTATE);
 
 	for (unsigned int i = 0; i < numPass; ++i)
 	{
@@ -358,18 +387,19 @@ void Cube::Draw(D3DXMATRIX view_matrix, D3DXMATRIX proj_matrix)
 		{
 			if(textureId[i] >= 0)
 			{
+				effects_->SetBool(handle_is_face_texture_, true);
 				effects_->SetTexture(handle_face_texture_, pTextures[textureId[i]]);
 			}
 			else
 			{
+				effects_->SetBool(handle_is_face_texture_, false);
 				effects_->SetTexture(handle_inner_texture_, inner_texture_);
 			}
 
 			effects_->CommitChanges();
-
 			d3d_device_->SetStreamSource(0, vertex_buffer_, 0, sizeof(Vertex));
 			d3d_device_->SetIndices(pIB[i]) ;
-			d3d_device_->SetFVF(VERTEX_FVF);
+			d3d_device_->SetVertexDeclaration(vertex_declare_);
 
 			d3d_device_->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, 0, 0, 24, 0, 2);
 		}

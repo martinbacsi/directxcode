@@ -254,6 +254,7 @@ void RubikCube::Render()
 	// Get view and projection matrix;
 	D3DXMATRIX view_matrix = camera_->GetViewMatrix();
 	D3DXMATRIX proj_matrix = camera_->GetProjMatrix();
+	D3DXVECTOR3 eye_pos    = camera_->GetEyePoint();
 
 	// Clear the back buffer to a black color
 	d3ddevice_->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x4F94CD, 1.0f, 0);
@@ -263,7 +264,7 @@ void RubikCube::Render()
 		//draw all unit cubes to build the Rubik cube
 		for(int i = 0; i < kNumCubes; i++)
 		{
-			cubes[i].Draw(view_matrix, proj_matrix);
+			cubes[i].Draw(view_matrix, proj_matrix, eye_pos);
 		}
 
 		// Restore world matrix since the Draw function in class Cube has set the world matrix for each cube
@@ -389,6 +390,10 @@ void RubikCube::OnLeftButtonDown(int x, int y)
 	total_rotate_angle_ = 0;
 
 	Ray ray = CalculatePickingRay(x, y) ;
+
+	// Get Projection matrix
+	D3DXMATRIX proj;
+    d3ddevice_->GetTransform(D3DTS_PROJECTION, &proj);
 
 	previous_vector_ = ScreenToVector3(x, y);
 
@@ -744,7 +749,7 @@ void RubikCube::InitD3D9(HWND hWnd)
 	float aspectRatio = (float)d3dpp_.BackBufferWidth / (float)d3dpp_.BackBufferHeight ;
 	camera_->SetProjParams(D3DX_PI / 4, aspectRatio, 1.0f, 1000.0f) ;
 
-	ResetDevice();
+	// ResetDevice();
 }
 
 HRESULT RubikCube::ResetDevice()
@@ -1062,20 +1067,17 @@ D3DXVECTOR3 RubikCube::ScreenToVector3(int x, int y)
 	d3ddevice_->GetViewport(&vp);
 
 	// Get Projection matrix
-	D3DXMATRIX proj;
-	d3ddevice_->GetTransform(D3DTS_PROJECTION, &proj);
+	D3DXMATRIX proj = camera_->GetProjMatrix();
 
 	vector3.x = ((( 2.0f*x) / vp.Width)  - 1.0f) / proj(0, 0);
 	vector3.y = (((-2.0f*y) / vp.Height) + 1.0f) / proj(1, 1);
 	vector3.z = 1.0f ;
 
-	// Get view matrix
-	D3DXMATRIX view;
-	d3ddevice_->GetTransform(D3DTS_VIEW, &view);
-
 	// Get world matrix
-	D3DXMATRIX world;
-	d3ddevice_->GetTransform(D3DTS_WORLD, &world);
+	D3DXMATRIX world = camera_->GetWorldMatrix();
+
+	// Get view matrix
+	D3DXMATRIX view = camera_->GetViewMatrix();
 
 	// Concatinate them in to single matrix
 	D3DXMATRIX WorldView = world * view;
@@ -1103,8 +1105,7 @@ Ray RubikCube::CalculatePickingRay(int x, int y)
 	d3ddevice_->GetViewport(&vp);
 
 	// Get Projection matrix
-	D3DXMATRIX proj;
-	d3ddevice_->GetTransform(D3DTS_PROJECTION, &proj);
+	D3DXMATRIX proj = camera_->GetProjMatrix();
 
 	px = ((( 2.0f*x) / vp.Width)  - 1.0f) / proj(0, 0);
 	py = (((-2.0f*y) / vp.Height) + 1.0f) / proj(1, 1);
@@ -1114,12 +1115,11 @@ Ray RubikCube::CalculatePickingRay(int x, int y)
 	ray.direction = D3DXVECTOR3(px, py, 1.0f); 
 
 	// Get view matrix
-	D3DXMATRIX view;
-	d3ddevice_->GetTransform(D3DTS_VIEW, &view);
+	D3DXMATRIX view = camera_->GetViewMatrix();
 
 	// Get world matrix
-	D3DXMATRIX world;
-	d3ddevice_->GetTransform(D3DTS_WORLD, &world);
+	D3DXMATRIX world = camera_->GetWorldMatrix();
+	// d3ddevice_->GetTransform(D3DTS_WORLD, &world);
 
 	// Concatinate them in to single matrix
 	D3DXMATRIX WorldView = world * view;
@@ -1127,7 +1127,6 @@ Ray RubikCube::CalculatePickingRay(int x, int y)
 	// inverse it
 	D3DXMATRIX worldviewInverse;
 	D3DXMatrixInverse(&worldviewInverse, 0, &WorldView);
-
 
 	// Transform the ray to model space
 	D3DXVec3TransformCoord(&ray.origin, &ray.origin, &worldviewInverse) ;

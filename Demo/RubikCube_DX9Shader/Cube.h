@@ -3,13 +3,11 @@
 
 #include "d3dx9.h"
 
-#define VERTEX_FVF ( D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1)
-
 struct Vertex
 {
-	float  x,  y,  z; // position
-	float nx, ny, nz; // normal
-	float  u,  v;     // texture
+	float  x,  y,  z;	// position
+	float  nx, ny, nz;	// normal
+	float  u,  v;		// texture
 };
 
 class Cube
@@ -27,7 +25,7 @@ public:
 	void UpdateCenter();
 	void UpdateLayerId();
 	void Rotate(D3DXVECTOR3& axis, float angle);
-	void Draw(D3DXMATRIX view_matrix, D3DXMATRIX proj_matrix);
+	void Draw(D3DXMATRIX& view_matrix, D3DXMATRIX& proj_matrix, D3DXVECTOR3& eye_pos);
 
 	float GetLength() const;
 
@@ -79,13 +77,17 @@ private:
 	D3DXVECTOR3*			corner_points_;		// array to store the 8 corner poinst of the cube 
 	LPDIRECT3DVERTEXBUFFER9 vertex_buffer_ ;
 	LPDIRECT3DDEVICE9		d3d_device_ ;
+	IDirect3DVertexDeclaration9* vertex_declare_;
 	D3DXMATRIX				world_matrix_ ;		// world matrix for unit cube, for rotation.
 
 	ID3DXEffect*			effects_;
 	D3DXHANDLE				technique_;
+	D3DXHANDLE				handle_world_matrix;
 	D3DXHANDLE				handle_wvp_matrix_;
 	D3DXHANDLE				handle_face_texture_;
 	D3DXHANDLE				handle_inner_texture_;
+	D3DXHANDLE				handle_is_face_texture_;
+	D3DXHANDLE				handle_eye_position_;
 };
 
 #endif // end __CUBE_H__
