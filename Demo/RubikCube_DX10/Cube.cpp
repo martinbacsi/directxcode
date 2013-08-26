@@ -7,9 +7,8 @@ Cube::Cube(void)
 	   layer_id_y_(-1),
 	   layer_id_z_(-1),
 	   vertex_buffer_(NULL),
-	   face_id_(NULL),
-	   handle_wvp_matrix_(NULL),
-	   handle_eye_position_(NULL)
+	   texture_id_(NULL),
+	   wvp_matrix_(NULL)
 {
 	for (int i = 0; i < kNumFaces_; ++i)
 	{
@@ -305,17 +304,12 @@ void Cube::Rotate(D3DXVECTOR3& axis, float angle)
 void Cube::Draw(ID3D10Effect* effects, D3DXMATRIX& view_matrix, D3DXMATRIX& proj_matrix, D3DXVECTOR3& eye_pos)
 {
 	 // Obtain shader variables
-	face_id_             = effects->GetVariableByName("FaceId")->AsScalar();
- 	handle_wvp_matrix_   = effects->GetVariableByName("gWVP")->AsMatrix();
-	handle_eye_position_ = effects->GetVariableByName("EyePosition")->AsVector();
+	texture_id_        = effects->GetVariableByName("TextureId")->AsScalar();
+ 	wvp_matrix_ = effects->GetVariableByName("WVPMatrix")->AsMatrix();
 
 	// Set world view projection matrix
 	D3DXMATRIX wvp_matrix = world_matrix_ * view_matrix * proj_matrix;
-	handle_wvp_matrix_->SetMatrix((float*)wvp_matrix);
-
-	// Set eye position
-	D3DXVECTOR4 eye_position(eye_pos.x, eye_pos.y, eye_pos.z, 1.0f);
-	handle_eye_position_->SetFloatVector((float*)eye_position);
+	wvp_matrix_->SetMatrix((float*)wvp_matrix);
 
 	// Set vertex buffer
 	UINT stride = sizeof(Vertex);
@@ -338,16 +332,19 @@ void Cube::Draw(ID3D10Effect* effects, D3DXMATRIX& view_matrix, D3DXMATRIX& proj
 	for (unsigned int i = 0; i < techDesc.Passes; ++i)
 	{
 		ID3D10EffectPass* pass = technique->GetPassByIndex(i);
-
+		pass->Apply(0);
+		
 		// Draw cube by draw every face of the cube
 		for(int i = 0; i < kNumFaces_; ++i)
 		{
-			face_id_->SetInt(textureId[i]);
+			// Set texture id
+			texture_id_->SetInt(textureId[i]);
+
+			// Set index buffer
 			d3d_device_->IASetIndexBuffer(pIB[i], DXGI_FORMAT_R16_UINT, 0);
 
 			pass->Apply(0);
 			
-			// Set index buffer
 			d3d_device_->DrawIndexed(4, 0, 0);
 		}
 	}

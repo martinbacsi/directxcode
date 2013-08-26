@@ -297,13 +297,13 @@ void RubikCube::Render()
 	d3ddevice_->ClearRenderTargetView(rendertarget_view_, color);
 
 	// Clear the depth-stencil buffer
-	d3ddevice_->ClearDepthStencilView(depth_stencil_view_, D3D10_CLEAR_DEPTH, 1.0f, 0);
+	d3ddevice_->ClearDepthStencilView(depth_stencil_view_, D3D10_CLEAR_DEPTH | D3D10_CLEAR_STENCIL, 1.0f, 120);
 
 	// Store old world matrix
 	D3DXMATRIX world_matrix = camera_->GetWorldMatrix() ;
 
 	//draw all unit cubes to build the Rubik cube
-	for(int i = 0; i < kNumCubes; i++)
+	for(int i = 0; i < kNumCubes - 25; i++)
 	{
 		cubes[i].Draw(effects_, view_matrix, proj_matrix, eye_pos);
 	}
@@ -781,6 +781,23 @@ void RubikCube::InitD3D10(HWND hWnd)
 	dsDesc.DepthWriteMask = D3D10_DEPTH_WRITE_MASK_ALL;
 	dsDesc.DepthFunc = D3D10_COMPARISON_LESS;
 
+	// Stencil test parameters
+	dsDesc.StencilEnable = true;
+	dsDesc.StencilReadMask = 0xFF;
+	dsDesc.StencilWriteMask = 0xFF;
+
+	// Stencil operations if pixel is front-facing
+	dsDesc.FrontFace.StencilFailOp = D3D10_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilDepthFailOp = D3D10_STENCIL_OP_INCR;
+	dsDesc.FrontFace.StencilPassOp = D3D10_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilFunc = D3D10_COMPARISON_ALWAYS;
+
+	// Stencil operations if pixel is back-facing
+	dsDesc.BackFace.StencilFailOp = D3D10_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilDepthFailOp = D3D10_STENCIL_OP_DECR;
+	dsDesc.BackFace.StencilPassOp = D3D10_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilFunc = D3D10_COMPARISON_ALWAYS;
+
 	ID3D10DepthStencilState* pDSState = NULL;
 	hr = d3ddevice_->CreateDepthStencilState(&dsDesc, &pDSState);
 	if (FAILED(hr))
@@ -818,7 +835,11 @@ void RubikCube::InitD3D10(HWND hWnd)
 	}
 
 	// Create a render-target view
-	d3ddevice_->CreateRenderTargetView(pBackBuffer, NULL, &rendertarget_view_);
+	hr = d3ddevice_->CreateRenderTargetView(pBackBuffer, NULL, &rendertarget_view_);
+	if (FAILED(hr))
+	{
+		MessageBox(hWnd, L"Create render target view failed!", L"Error", 0);
+	}
 
 	// Release temporary back buffer
 	pBackBuffer->Release();
@@ -841,7 +862,7 @@ void RubikCube::InitD3D10(HWND hWnd)
 	screen_height_ = (int)max_screen_resolution.y;
 
 	// Setup view matrix
-	D3DXVECTOR3 vecEye(0.0f, 0.0f, -10.0f);
+	D3DXVECTOR3 vecEye(0.0f, 0.0f, -20.0f);
 	D3DXVECTOR3 vecAt (0.0f, 0.0f, 0.0f);
 	D3DXVECTOR3 vecUp (0.0f, 1.0f, 0.0f) ;
 	camera_->SetViewParams(vecEye, vecAt, vecUp);
@@ -971,7 +992,7 @@ void RubikCube::InitEffects()
 
 	// Compile the effects file
     HRESULT hr = D3DX10CreateEffectFromFile( 
-		L"multiple_texture.fx", 
+		L"rubik_cube.fx", 
 		NULL, 
 		NULL, 
 		"fx_4_0", 

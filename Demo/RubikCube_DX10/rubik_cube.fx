@@ -1,201 +1,84 @@
-// World matrix
-float4x4 World;
+int TextureId;
+matrix WVPMatrix; // World-View-Porj matrix
 
-// World, View and Projection Matrix
-float4x4 gWVP; 
-
-// Face texture
-Texture2D CubeTexture;
-
-// Eye position 
-float3 EyePosition;
-
-// Face texture sampler
-SamplerState CubeTextureSampler
+//--------------------------------------------------------------------------------------
+struct VS_INPUT
 {
-	Filter = MIN_MAG_MIP_LINEAR;
-	AddressU = Wrap;
-	AddressV = Wrap;
+    float4 Pos : POSITION;
+    float2 Tex : TEXCOORD;
 };
 
-// Light information
-struct LightInfo
+//--------------------------------------------------------------------------------------
+struct PS_INPUT
 {
-	float3 pos;	// position
-	float3 dir; // direction
-	float4 ambient; 
-	float4 diffuse;
-	float4 specular;
-	float3 att;			// attenuation parameters (a0, a1 and a2), for spot and point light only
-	float spotPower;	// power factor for spot light
-	float range;		// Not available for directional light
+    float4 Pos : SV_POSITION;
+    float2 Tex : TEXCOORD0;
 };
 
-// Surface information, server as material
-struct SurfaceInfo
+//--------------------------------------------------------------------------------------
+// Vertex Shader
+//--------------------------------------------------------------------------------------
+PS_INPUT VS( VS_INPUT input )
 {
-	float3 pos;		// position
-	float3 normal;	
-	float4 diffuse;
-	float4 specular;
-};
+    PS_INPUT output = (PS_INPUT)0;
+    output.Pos = mul(input.Pos, WVPMatrix);
+    output.Tex = input.Tex;
 
-// Input vertex structure
-struct InputVS
+    return output;
+}
+
+//--------------------------------------------------------------------------------------
+// Pixel Shader
+//--------------------------------------------------------------------------------------
+float4 PS( PS_INPUT input ) : SV_Target
 {
-	float3 pos : POSITION;
-	float3 normal : NORMAL;
-	float2 texUV : TEXCOORD0;
-};
-
-// Output Vertex structure
-struct OutputVS
-{
-	float4 posH : SV_Position;
-	float4 color : COLOR;
-	float2 texUV : TEXCOORD0;
-};
-
-// Directional light
-float4 ParallelLight(SurfaceInfo surface, LightInfo light, float3 eyePos)
-{
-	// The final result color
-	float4 litColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
-
-	// The light vector aims opposite the direction the light ray travel
-	float3 lightVec = -light.dir;
-
-	// Add the ambient term. why here use *, but not +?
-	litColor += surface.diffuse * light.ambient;
-
-	float diffuseFactor = max(dot(lightVec, surface.normal), 0);
-
-	[branch]
-	if (diffuseFactor > 0.0f)
+	// Side color, black
+	if (input.Tex.x >  0.0f && input.Tex.x < 0.05f ||
+	    input.Tex.x > 0.95f && input.Tex.x <  1.0f ||
+		input.Tex.y >  0.0f && input.Tex.y < 0.05f ||
+	    input.Tex.y > 0.95f && input.Tex.y <  1.0f )
 	{
-		float specPower = max(surface.specular.a, 1.0f);
-
-		// Vector from reflection point to eye position
-		float3 toEye = normalize(eyePos - surface.pos);
-
-		// Calculate the reflection vector of light ray
-		float3 R = reflect(light.dir, surface.normal);
-
-		float4 specFactor = pow(max(dot(R, toEye), 0.0f), specPower);
-
-		// Add diffuse color 
-		litColor += diffuseFactor * surface.diffuse * light.diffuse;
-
-		// Add specular color
-		litColor += specFactor * surface.specular * light.specular;
+		return float4(0.0f, 0.0f, 0.0f, 0.0f);
 	}
 
-	return litColor;
-}
-
-// Point light
-float4 PointLight(SurfaceInfo surface, LightInfo light, float3 eyePos)
-{
-	float4 litColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
-
-	// Vector from surface to point light
-	float3 lightVec = light.pos - surface.pos;
-
-	// Distance from surface to light
-	float d = length(lightVec);
-
-	// If point light too far from surface(out of light.range), no light recieved
-	if (d > light.range)
-		return float4(0.0f, 0.0f, 0.0f, 1.0f);
-
-	// Normalize the light vector
-	lightVec = normalize(lightVec);
-	// lightVec /= d;
-
-	// Add the ambient light term
-	litColor += surface.diffuse * light.ambient;
-
-	float diffuseFactor = dot(lightVec, surface.normal);
-
-//	[branch]
-	if (diffuseFactor > 0.0f)
+	// Face color
+	if (TextureId == 0)
 	{
-		float specPower = max(surface.specular.a, 1.0f);
-		float3 toEye    = normalize(eyePos - surface.pos);
-		float3 R        = reflect(light.dir, surface.normal);
-		float specFactor= pow(max(dot(R, toEye), 0.0f), specPower);
-
-		// Add diffuse color
-		litColor += diffuseFactor * surface.diffuse * light.diffuse;
-
-		// Add specular color
-		litColor += specFactor * surface.specular * light.specular;
+		return float4(1.0f, 1.0f, 1.0f, 1.0f); // White
 	}
-
-	return litColor / dot(light.att, float3(1.0f, d, d * d));
+	else if (TextureId == 1)
+	{
+		return float4(1.0f, 1.0f, 0.0, 1.0f); // Yellow
+	}
+	else if (TextureId == 2)
+	{
+		return float4(1.0f, 0.0f, 0.0f, 1.0f); // Red
+	}
+	else if (TextureId == 3)
+	{
+		return float4(1.0f, 0.65f, 0.0f, 1.0f); // Orange
+	}
+	else if (TextureId == 4)
+	{
+		return float4(0.0f, 1.0f, 0.0f, 1.0f); // Green
+	}
+	else if (TextureId == 5)
+	{
+		return float4(0.0f, 0.0f, 1.0f, 1.0f); // Blue
+	}
+	else 
+	{
+		return float4(0.0f, 0.0f, 0.0f, 1.0f); // Black
+	}
 }
 
-// Vertex shader
-OutputVS BasicVS(InputVS inputVS)
-{
-	// Zero out our output.
-	OutputVS outVS = (OutputVS)0;
-
-	// Transform to homogeneous clip space.
-	outVS.posH = mul(float4(inputVS.pos, 1.0f), gWVP);
-
-	// texture coordinate
-	outVS.texUV = inputVS.texUV;
-
-	// Transfer vertex normal to world space and normalize it.
-	// float4 normalW = normalize(mul(float4(inputVS.normal, 1.0f), World));
-	float3 normalW = normalize(mul(inputVS.normal, (float3x3)World));
-
-	// Create a surface(material)
-	SurfaceInfo surfaceInfo;
-	surfaceInfo.pos      = inputVS.pos;
-	surfaceInfo.normal   = normalW;
-	surfaceInfo.diffuse  = float4(1.0f, 1.0f, 1.0f, 1.0f);
-	surfaceInfo.specular = float4(1.0f, 1.0f, 1.0f, 1.0f);
-
-	// Create a light 
-	LightInfo lightInfo;
-	// lightInfo.pos      = EyePosition; // not used in parallel light
-	lightInfo.dir	   = float3(0.0f, 0.0f, 0.0f); // not used in point light
-	// lightInfo.range    = 250.0f; // not used in parallel light
-	// lightInfo.att.x    = 0.0f;
-	// lightInfo.att.y    = 0.05f;
-	// lightInfo.att.z    = 0.0f;
-	// lightInfo.spotPower= 0.0f; // not use in point light or parallel light
-	lightInfo.ambient  = float4(1.0f, 1.0f, 1.0f, 1.0f);
-	lightInfo.diffuse  = float4(1.0f, 1.0f, 0.0f, 1.0f);
-	lightInfo.specular = float4(1.0f, 1.0f, 0.0f, 1.0f);
-
-	// Point light
-	// float3 litColor = PointLight(surfaceInfo, lightInfo, EyePosition);
-	float3 litColor = ParallelLight(surfaceInfo, lightInfo, EyePosition);
-	outVS.color = float4(litColor, 1.0f);
-
-	// Done--return the output.
-	return outVS;
-}
-
-// Pixel shader
-float4 BasicPS(OutputVS outputVS) : SV_Target
-{
-	float4 Output;
-
-	Output = CubeTexture.Sample(CubeTextureSampler, outputVS.texUV);
-
-	return Output;
-}
-
+//--------------------------------------------------------------------------------------
 technique10 Render
 {
-	pass p0
+    pass P0
     {
-		SetVertexShader(CompileShader(vs_4_0, BasicVS()));
-		SetGeometryShader(NULL);
-		SetPixelShader(CompileShader(ps_4_0, BasicPS()));
+        SetVertexShader( CompileShader( vs_4_0, VS() ) );
+        SetGeometryShader( NULL );
+        SetPixelShader( CompileShader( ps_4_0, PS() ) );
     }
 }

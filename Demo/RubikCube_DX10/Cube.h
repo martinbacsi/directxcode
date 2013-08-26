@@ -76,9 +76,8 @@ private:
 	D3DXMATRIX				world_matrix_ ;		// world matrix for unit cube, for rotation.
 
 	// Shader variables
-	ID3D10EffectScalarVariable* face_id_;
-	ID3D10EffectMatrixVariable*	handle_wvp_matrix_;
-	ID3D10EffectVectorVariable*	handle_eye_position_;
+	ID3D10EffectScalarVariable* texture_id_;
+	ID3D10EffectMatrixVariable*	wvp_matrix_;
 };
 
 #endif // end __CUBE_H__
