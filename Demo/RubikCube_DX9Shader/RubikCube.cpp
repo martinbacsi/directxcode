@@ -731,8 +731,6 @@ void RubikCube::InitD3D9(HWND hWnd)
 	// Setup projection matrix
 	float aspectRatio = (float)d3dpp_.BackBufferWidth / (float)d3dpp_.BackBufferHeight ;
 	camera_->SetProjParams(D3DX_PI / 4, aspectRatio, 1.0f, 1000.0f) ;
-
-	// ResetDevice();
 }
 
 HRESULT RubikCube::ResetDevice()
