@@ -18,7 +18,7 @@ public:
 	D3DXQUATERNION QuatFromBallPoints(D3DXVECTOR3& start_point, D3DXVECTOR3& end_point);
 	const D3DXMATRIX* GetRotationMatrix() ;
 	D3DXQUATERNION GetRotationQuatIncreament() ;
-	void SetWindow(int window_width, int window_height, float arcball_radius = 0.9f) ;
+	void SetWindow(int window_width, int window_height, float arcball_radius = 1.0f) ;
 
 private:
 	int		window_width_ ;	// arc ball's window width
