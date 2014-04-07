@@ -96,7 +96,6 @@ bool QuadTree::createTree(TreeNode* root, float centerX, float centerZ, float ra
 		DWORD numVertexperCol = numCellsperCol + 1;
 
 		// Fill the index array
-
 		for (DWORD i = 0; i < numCellsperRow; ++i)
 		{
 			for (DWORD j = 0; j < numCellsperCol; ++j)

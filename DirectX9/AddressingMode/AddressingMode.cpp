@@ -79,9 +79,15 @@ void InitVB()
 	Vertex Quad[] = 
 	{
 		{-2.0f,  2.0f, 0,    0,    0},	
-		{ 2.0f,  2.0f, 0, 3.0f,    0},	
+		{ 2.0f,  2.0f, 0, 3.0f,    0},	// repeat 3 times on x and y
 		{-2.0f, -2.0f, 0,    0, 3.0f},	
 		{ 2.0f, -2.0f, 0, 3.0f, 3.0f},	
+
+		// scale effect
+		/*{-2.0f,  2.0f, 0,    0,    0},	
+		{ 2.0f,  2.0f, 0, 0.5f,    0},	
+		{-2.0f, -2.0f, 0,    0, 0.5f},	
+		{ 2.0f, -2.0f, 0, 0.5f, 0.5f},*/
 	} ;
 
 	// Create vertex buffer

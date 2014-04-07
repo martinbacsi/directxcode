@@ -13,7 +13,7 @@ ID3DXMesh*				g_pTeapotMesh		= NULL ; // Hold the teapot
 
 void SetupViewport()
 {
-	D3DVIEWPORT9 viewport = {150, 150, 300, 300, 0, 0.0f} ;
+	D3DVIEWPORT9 viewport = {150, 150, 300, 300, 0.0f, 1.0f} ;
 	HRESULT hr = g_pd3dDevice->SetViewport(&viewport) ;
 	if (FAILED(hr))
 	{

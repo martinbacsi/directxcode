@@ -5,7 +5,6 @@ The steps to rotate object by its own origin
 3. Move object back to its original position
 
 Suppose a object at position(1.0f, 1.0f, 1.0f)
-
 1. Move it to (0.0f, 0.0f, 0.0f)
 2. Rotate
 3. Move it back to (1.0f, 1.0f, 1.0f)
@@ -43,15 +42,13 @@ HRESULT InitD3D( HWND hWnd )
 		return E_FAIL;
 	}
 
-	// Wire frame mode
+	// Wire frame mode.
 	g_pd3dDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME) ;
 
-	// Turn off culling, so we see the front and back of the triangle   
-	g_pd3dDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );   
-
-	//g_pd3dDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);   
+	// Disable lighting.
 	g_pd3dDevice->SetRenderState( D3DRS_LIGHTING , FALSE );   
 
+	// Create geometries.
 	D3DXCreateTeapot(g_pd3dDevice, &g_pMeshes[0], NULL) ; // Teapot
 	D3DXCreateSphere(g_pd3dDevice, 1.2f, 20, 20, &g_pMeshes[1], NULL) ; // Sphere
 	D3DXCreateCylinder(g_pd3dDevice, 1.0f, 1.0f, 2.0f, 20, 5, &g_pMeshes[2], NULL) ; // Cylinder
@@ -140,7 +137,7 @@ VOID Render(float timeDelta)
 			D3DXMatrixMultiply(&matWorld[i], &matWorld[i], &matRotation) ;
 		}
 
-		// Move to object back to its original position
+		// Move object back to its original position
 		D3DXMATRIX world[4];
 		D3DXMatrixTranslation(&world[0], -2.0f, 0.0f, 0.0f) ;
 		D3DXMatrixTranslation(&world[1], 2.0f, 0.0f, 0.0f) ;
@@ -239,6 +236,4 @@ INT WINAPI wWinMain( HINSTANCE hInst, HINSTANCE, LPWSTR, INT )
 	UnregisterClass( L"D3D Tutorial", wc.hInstance );
 	return 0;
 }
-
-
 

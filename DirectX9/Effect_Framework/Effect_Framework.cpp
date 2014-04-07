@@ -1,6 +1,20 @@
 /*
 This demo show you how to write code with DirectX Effect, we create a effect framework here
 So that every effect can reuse this framework, in this framework, we simply render a teapot.
+
+1. Use D3DXCreateEffectFromFile to create effect, say g_pEffect
+2. Use g_pEffect->GetParameterByName to get handle of the shader variables
+3. Use g_pEffect->SetMatrix to set value for shader variables
+4. Use the following code to draw.
+	// Render pass
+	UINT numPass = 0;
+	g_pEffect->Begin(&numPass, 0);
+	g_pEffect->BeginPass(0);
+	g_pTeapotMesh->DrawSubset(0);
+	g_pEffect->EndPass();
+	g_pEffect->End();
+5. don't forget to release the effect in cleanup phase.
+   g_pEffect->Release();
 */
 
 /*

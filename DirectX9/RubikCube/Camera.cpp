@@ -93,7 +93,7 @@ LRESULT Camera::HandleMessages(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 		m_bDragSinceLastUpdate = true ;
 		int iMouseX = ( short )LOWORD( lParam );
 		int iMouseY = ( short )HIWORD( lParam );
-		m_WorldArcBall.OnMove(iMouseX, iMouseY) ;
+		//m_WorldArcBall.OnMove(iMouseX, iMouseY) ;
 		m_ViewArcBall.OnMove(iMouseX, iMouseY) ;
 	}
 
