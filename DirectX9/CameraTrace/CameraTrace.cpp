@@ -113,15 +113,9 @@ VOID InitVertexBuffer()
 
 void SetupEyePoint(float angle)
 {
-	//D3DXMATRIX matRot ;
-	//D3DXMatrixRotationY(&matRot, angle) ;
-
-	//// set view
-	//D3DXVec3TransformNormal(&g_EyePt, &g_EyePt, &matRot) ;
-
-	g_EyePt.x = 20 * cosf(angle) ;
-	g_EyePt.z = 40 * sinf(angle) ;
-	g_EyePt.y = 10.0f ;
+	g_EyePt.x = 50 * cosf(angle);
+	g_EyePt.z = 10 * sinf(angle);
+	g_EyePt.y = 10 ;
 
 	D3DXVECTOR3 upVec(0.0f, 1.0f, 0.0f) ;
 	D3DXVECTOR3 lookCenter(0.0f, 0.0f, 0.0f) ;
