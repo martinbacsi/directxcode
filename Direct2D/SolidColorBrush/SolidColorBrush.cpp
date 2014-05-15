@@ -68,6 +68,37 @@ VOID CreateD2DResource(HWND hWnd)
 	}
 }
 
+//VOID DrawRectangle()
+//{
+//	CreateD2DResource(g_Hwnd) ;
+//
+//	pRenderTarget->BeginDraw() ;
+//
+//	// Clear background color to dark cyan
+//	pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
+//
+//	D2D1_RECT_F rectangle = D2D1::RectF(100.f, 100.f, 200.f, 200.f) ;
+//
+//	// Draw Rectangle
+//	pRenderTarget->DrawRectangle(
+//		&rectangle,
+//		pBlackBrush,
+//		5.0f
+//		);
+//
+//	// Fill rectangle
+//	pRenderTarget->FillRectangle(
+//		&rectangle,
+//		pGreenBrush
+//		) ;
+//
+//	HRESULT hr = pRenderTarget->EndDraw() ;
+//	if (FAILED(hr))
+//	{
+//		MessageBox(NULL, "Draw failed!", "Error", 0) ;
+//	}
+//}
+
 VOID DrawRectangle()
 {
 	CreateD2DResource(g_Hwnd) ;
@@ -77,21 +108,64 @@ VOID DrawRectangle()
 	// Clear background color to dark cyan
 	pRenderTarget->Clear(D2D1::ColorF(D2D1::ColorF::White));
 
-	D2D1_RECT_F rectangle = D2D1::RectF(100.f, 100.f, 500.f, 500.f) ;
+	ID2D1RectangleGeometry*		g_pRectangleGeometry	= NULL;	// rectangle geometry
+
+	// Create a rectangle
+	pD2DFactory->CreateRectangleGeometry(
+			D2D1::RectF(100.f, 100.f, 200.f, 200.f),
+			&g_pRectangleGeometry
+			);
+
+	//// Draw Rectangle
+	//pRenderTarget->DrawGeometry(
+	//	g_pRectangleGeometry,
+	//	pBlackBrush, 
+	//	15.0f
+	//	);
+
+	//// Fill rectangle
+	//pRenderTarget->FillGeometry(
+	//	g_pRectangleGeometry,
+	//	pGreenBrush
+	//	);
+
+	// new added code
+	// Create a translation matrix based on the time elapsed
+	D2D1_MATRIX_3X2_F matrix = D2D1::Matrix3x2F::Scale(1.5f,1.5f);
+
+	pRenderTarget->SetTransform(&matrix);
+
+	ID2D1TransformedGeometry* g_pTransformedGeometry	= NULL;	// rectangle geometry
+
+	// Create a transformed geometry
+	HRESULT hr = pD2DFactory->CreateTransformedGeometry(
+     g_pRectangleGeometry,
+     &matrix,
+     &g_pTransformedGeometry
+     );
+
+	if (FAILED(hr))
+	{
+		MessageBox(NULL, "Create transformed geometry failed!", "Error", 0) ;
+		return;
+	}
 
 	// Draw Rectangle
-	pRenderTarget->DrawRectangle(
-		&rectangle,
-		pBlackBrush
+	pRenderTarget->DrawGeometry(
+		g_pTransformedGeometry,
+		pBlackBrush, 
+		5.0f
 		);
 
 	// Fill rectangle
-	pRenderTarget->FillRectangle(
-		&rectangle,
+	pRenderTarget->FillGeometry(
+		g_pTransformedGeometry,
 		pGreenBrush
-		) ;
+		);
 
-	HRESULT hr = pRenderTarget->EndDraw() ;
+	// new added code end
+
+	hr = pRenderTarget->EndDraw() ;
 	if (FAILED(hr))
 	{
 		MessageBox(NULL, "Draw failed!", "Error", 0) ;
