@@ -1,0 +1,1 @@
+code about directx, such as direcx9/10/11, d2d, directwrite, direct audio
